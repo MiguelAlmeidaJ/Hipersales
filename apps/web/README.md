@@ -17,3 +17,7 @@ Acessar http://localhost:3000. A API atual continua em http://localhost:8000; o 
 - Validar todos os formulários, efeitos colaterais, status de pedidos e relatórios.
 - Confirmar upload de anexos, PDFs e WhatsApp.
 - Confirmar responsividade e funcionamento PWA.
+
+## Migração de clientes
+
+Cadastro e edição básica de clientes estão disponíveis em React, incluindo busca e situação. As validações de CNPJ, enriquecimento de dados e isolamento por tenant continuam no backend. Associações, exclusão e formulários avançados continuam no legado até testes completos. Nenhum código antigo foi removido neste commit.
