@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type SessionUser } from "../lib/api";
 import ProposalForm from "./proposal-form";
+import OrderAdmin from "./order-admin";
 
 type Item = {id:number;name:string;code:string;quantity:number;negotiated_price:number};
 type Timeline = {id:number;title:string;notes?:string;status:string;created_at:string;created_by_name?:string};
@@ -37,6 +38,7 @@ export default function OrdersView({user}:{user:SessionUser}){
   <div className="mb-5 flex flex-wrap justify-between gap-4"><div><h2 className="text-xl font-bold">Pedido #{current.order_number||current.id}</h2><p className="text-sm text-slate-500">{current.customer_name} · {current.company_name}</p></div><div className="flex gap-2"><a className="rounded-lg bg-brand px-4 py-2 text-sm text-white" target="_blank" rel="noreferrer" href={`/api/proposals/${current.id}/pdf`}>Gerar PDF</a><button className="rounded-lg border border-slate-300 px-4 py-2" onClick={()=>setSelected(null)}>Fechar</button></div></div>
   <dl className="grid gap-3 text-sm sm:grid-cols-2"><div><dt className="text-slate-500">Representante</dt><dd>{current.seller_name}</dd></div><div><dt className="text-slate-500">Condição de pagamento</dt><dd>{current.payment_terms||"—"}</dd></div><div><dt className="text-slate-500">Frete</dt><dd>{current.freight_type||"—"}</dd></div><div><dt className="text-slate-500">Entrega</dt><dd>{current.delivery_type||"—"}</dd></div></dl>
   <h3 className="mt-5 font-semibold">Itens</h3><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr>{["Produto","Código","Quantidade","Unitário","Total"].map(x=><th className="border-b p-3" key={x}>{x}</th>)}</tr></thead><tbody>{(current.items||[]).map(i=><tr key={i.id}><td className="border-b p-3">{i.name}</td><td className="border-b p-3">{i.code}</td><td className="border-b p-3">{i.quantity}</td><td className="border-b p-3">{cash(i.negotiated_price)}</td><td className="border-b p-3">{cash(i.quantity*i.negotiated_price)}</td></tr>)}</tbody></table></div>
+  {user.role==="admin"&&<OrderAdmin key={current.id} order={current} onSaved={()=>setRefresh(v=>v+1)}/>}
   <h3 className="mt-5 font-semibold">Histórico</h3><ol className="mt-3 space-y-3">{(current.timeline||[]).map((t,i)=><li className="border-l-2 border-blue-200 pl-4 text-sm" key={t.id||i}><strong>{t.title}</strong><p className="text-slate-500">{t.created_at} {t.created_by_name||""}</p>{t.notes&&<p>{t.notes}</p>}</li>)}</ol>
  </section>}
  </section>;
