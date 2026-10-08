@@ -21,3 +21,7 @@ data/
 .DS_Store
 .refactor-backup/
 .whatsapp-internal-token
+
+.next/
+**/.next/
+*.tsbuildinfo
