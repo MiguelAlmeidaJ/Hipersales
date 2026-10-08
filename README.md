@@ -1,49 +1,37 @@
-# Hipersales
+# Hipersales — monorepo
 
-Emissor de pedidos/propostas online com backend em Python, frontend HTML/JS e PWA para uso mobile.
+Aplicacao existente reorganizada sem mudar regras de negocio, rotas, payloads ou esquema SQLite.
 
-## Como rodar
+## Estrutura
 
-```powershell
-cd c:\hypersales
-venv\Scripts\python.exe backend\app.py
+- `apps/api/`: backend Python HTTP nativo, SQLite e integracao Evolution API existente.
+- `apps/web/`: frontend HTML, JS e PWA sem novo framework.
+- `packages/contracts/`: contratos de integracao e regras de compatibilidade.
+- `infra/docker/`: PostgreSQL/Redis/Evolution API v2 e a API Hipersales.
+- `scripts/`: utilitarios de importacao e relatorios (validar caminhos antes da execucao).
+
+## Desenvolvimento local
+
+```bash
+python apps/api/app.py
 ```
 
-Acesse:
+Abra http://localhost:8000. O banco local padrao fica em `database/hypersales.sqlite3` (ignorado pelo Git). Antes de atualizar uma instalacao existente, preserve o arquivo SQLite e a configuracao .env.
 
-```text
-http://localhost:8000
+## Docker
+
+```bash
+cp .env.example .env
+# preencha as chaves e a senha
+docker compose up -d --build
 ```
 
-## Acessos de teste
+A aplicacao escuta na porta 8000 e o Evolution na porta 8081 vinculada ao localhost. Em producao, defina HYPERSALES_PUBLIC_URL com URL HTTPS publica do Hipersales; a Evolution usa esse endereco para callback de webhook. Configure TLS e proxy reverso para o backend; nao publique PostgreSQL, Redis ou painel Evolution na internet sem controles.
 
-Administrador:
+**Importante:** a Evolution API e um servico distinto e usa internamente um mecanismo WhatsApp denominado WHATSAPP-BAILEYS. A dependencia Baileys **foi removida do codigo do Hipersales**, nao do funcionamento interno do produto de terceiros.
 
-```text
-thalles
-admin123
-```
+## Compatibilidade
 
-Representante comercial:
+Preservados: endpoints /api/*, formato de sessao, frontend, tabelas e jobs Python. O unico ajuste funcional de infraestrutura e o caminho de frontend agora em `apps/web`. A integracao Evolution ja existia no backend antes desta reorganizacao. Nao ha migracao de dados automatica.
 
-```text
-vendedor
-vendedor123
-```
-
-## O que ja esta implementado
-
-- Login com sessao por cookie.
-- Perfis de administrador e representante comercial.
-- Menu lateral com clientes, propostas, pedidos e sair.
-- Solicitação de cadastro de cliente pelo representante comercial.
-- Consulta de clientes, respeitando associação representante comercial x cliente.
-- Envio de proposta com empresa, cliente, condições comerciais e itens.
-- Consulta de propostas/pedidos pelo representante comercial.
-- Painel administrador para cadastrar cliente, associar cliente a representante comercial e atualizar status da proposta.
-- PWA com manifest, service worker e icone instalavel.
-- Banco SQLite local em `database/hypersales.sqlite3`.
-
-## Observacao sobre e-mail
-
-Nesta primeira versao, os e-mails que seriam enviados para `vendas@hipermixrepresentacoes.com.br` e para o representante ficam registrados na tabela `email_outbox`. O envio SMTP real pode ser ligado na proxima etapa usando variaveis de ambiente.
+Consulte `packages/contracts/README.md` e `infra/docker/README.md`. Execute testes de regressao e validacao em ambiente de homologacao antes de substituir a implantacao atual.
