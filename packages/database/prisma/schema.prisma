@@ -7,88 +7,271 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Contratos iniciais espelhados das tabelas SQLite.
-// A migracao do esquema completo e das regras SQL ainda nao esta concluida.
-// Nao execute db push em producao antes da revisao integral.
-model Tenant {
-  id         Int     @id @default(autoincrement())
-  name       String
-  slug       String  @unique
-  status     String  @default("active")
-  ownerEmail String? @map("owner_email")
-  createdAt  String  @map("created_at")
+// Migracao de esquema em preparo. Campos de datas permanecem String para
+// manter o contrato ISO 8601 atual; flags 0/1 continuam Int.
+// Revisar indices, unicidade, constraints, FK e tipos antes do cutover.
 
+model Tenants {
+  id                        Int @id @default(autoincrement())
+  name                      String 
+  slug                      String @unique
+  status                    String @default("active")
+  ownerEmail                String? @map("owner_email")
+  createdAt                 String @map("created_at")
   @@map("tenants")
 }
 
-model User {
-  id                   Int     @id @default(autoincrement())
-  tenantId             Int?    @map("tenant_id")
-  name                 String
-  email                String  @unique
-  communicationEmail   String? @map("communication_email")
-  whatsappPhone        String? @map("whatsapp_phone")
-  passwordHash         String  @map("password_hash")
-  role                 String
-  isSuperAdmin         Int     @default(0) @map("is_super_admin")
-  active               Int     @default(1)
-  mustChangePassword   Int     @default(0) @map("must_change_password")
-  passwordUpdatedAt    String? @map("password_updated_at")
-  createdAt            String  @map("created_at")
-
+model Users {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int? @map("tenant_id")
+  name                      String 
+  email                     String @unique
+  communicationEmail        String? @map("communication_email")
+  whatsappPhone             String? @map("whatsapp_phone")
+  passwordHash              String @map("password_hash")
+  role                      String 
+  isSuperAdmin              Int @default(0) @map("is_super_admin")
+  active                    Int @default(1)
+  mustChangePassword        Int @default(0) @map("must_change_password")
+  passwordUpdatedAt         String? @map("password_updated_at")
+  createdAt                 String @map("created_at")
   @@map("users")
 }
 
-model Session {
-  token      String @id
-  userId     Int    @map("user_id")
-  expiresAt  Int    @map("expires_at")
-  createdAt  String @map("created_at")
-
+model Sessions {
+  token                     String @id
+  userId                    Int @map("user_id")
+  expiresAt                 Int @map("expires_at")
+  createdAt                 String @map("created_at")
   @@map("sessions")
 }
 
-model Company {
-  id        Int     @id @default(autoincrement())
-  tenantId  Int     @default(1) @map("tenant_id")
-  name      String
-  legalName String? @map("legal_name")
-  active    Int     @default(1)
-
+model Companies {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  name                      String 
+  legalName                 String? @map("legal_name")
+  active                    Int @default(1)
   @@map("companies")
 }
 
-model Customer {
-  id                Int     @id @default(autoincrement())
-  tenantId          Int     @default(1) @map("tenant_id")
-  legalName         String  @map("legal_name")
-  tradeName         String? @map("trade_name")
-  cnpj              String  @unique
-  stateRegistration String? @map("state_registration")
-  address           String?
-  phone             String?
-  email             String?
-  formPayload       String? @map("form_payload")
-  active            Int     @default(1)
-  createdAt         String  @map("created_at")
-
+model Customers {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  legalName                 String @map("legal_name")
+  tradeName                 String? @map("trade_name")
+  cnpj                      String @unique
+  stateRegistration         String? @map("state_registration")
+  address                   String? 
+  phone                     String? 
+  email                     String? 
+  formPayload               String? @map("form_payload")
+  active                    Int @default(1)
+  createdAt                 String @map("created_at")
   @@map("customers")
 }
 
-model SystemSetting {
-  key       String @id
-  value     String
-  updatedAt String @map("updated_at")
+model CustomerSellers {
+  customerId                Int @map("customer_id")
+  sellerId                  Int @map("seller_id")
 
+  @@id([customerId, sellerId])
+  @@map("customer_sellers")
+}
+
+model Products {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  companyId                 Int @map("company_id")
+  code                      String 
+  name                      String 
+  unit                      String @default("UN")
+  price                     Float @default(0)
+  active                    Int @default(1)
+  @@unique([companyId, code])
+  @@map("products")
+}
+
+model RegistrationRequests {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  orderNumber               Int? @unique @map("order_number")
+  sellerId                  Int @map("seller_id")
+  legalName                 String @map("legal_name")
+  tradeName                 String? @map("trade_name")
+  cnpj                      String 
+  stateRegistration         String? @map("state_registration")
+  address                   String? 
+  phone                     String? 
+  email                     String? 
+  notes                     String? 
+  formPayload               String? @map("form_payload")
+  status                    String @default("pendente")
+  createdAt                 String @map("created_at")
+  @@map("registration_requests")
+}
+
+model Proposals {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  sellerId                  Int @map("seller_id")
+  companyId                 Int @map("company_id")
+  customerId                Int @map("customer_id")
+  orderType                 String @map("order_type")
+  purchaseOrder             String? @map("purchase_order")
+  commissionPercent         Float @default(0) @map("commission_percent")
+  invoiceType               String @map("invoice_type")
+  taxOperatorInvoice        Int @default(0) @map("tax_operator_invoice")
+  freightType               String @map("freight_type")
+  deliveryType              String @map("delivery_type")
+  scheduledDeliveryDate     String? @map("scheduled_delivery_date")
+  discountPercent           Float @default(0) @map("discount_percent")
+  discountOn                String? @map("discount_on")
+  paymentTerms              String @map("payment_terms")
+  notes                     String? 
+  status                    String @default("em_analise")
+  adminNotes                String? @map("admin_notes")
+  deliveryForecast          String? @map("delivery_forecast")
+  industryOrderNumber       String? @map("industry_order_number")
+  invoiceNumber             String? @map("invoice_number")
+  createdAt                 String @map("created_at")
+  updatedAt                 String @map("updated_at")
+  orderNumber               Int? @map("order_number")
+  @@map("proposals")
+}
+
+model ProposalItems {
+  id                        Int @id @default(autoincrement())
+  proposalId                Int @map("proposal_id")
+  productId                 Int @map("product_id")
+  quantity                  Float 
+  negotiatedPrice           Float @map("negotiated_price")
+  @@map("proposal_items")
+}
+
+model EmailOutbox {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  kind                      String 
+  recipients                String 
+  subject                   String 
+  body                      String 
+  attempts                  Int @default(0)
+  sentAt                    String? @map("sent_at")
+  error                     String? 
+  createdAt                 String @map("created_at")
+  @@map("email_outbox")
+}
+
+model ProposalEvents {
+  id                        Int @id @default(autoincrement())
+  proposalId                Int @map("proposal_id")
+  status                    String 
+  title                     String 
+  notes                     String? 
+  createdBy                 Int? @map("created_by")
+  createdAt                 String @map("created_at")
+  @@map("proposal_events")
+}
+
+model WhatsappAutoReplies {
+  tenantId                  Int @default(1) @map("tenant_id")
+  instanceId                String @map("instance_id")
+  messageId                 String @map("message_id")
+  remoteJid                 String @map("remote_jid")
+  repliedAt                 String @map("replied_at")
+
+  @@id([tenantId, instanceId, messageId])
+  @@map("whatsapp_auto_replies")
+}
+
+model Occurrences {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  sellerId                  Int @map("seller_id")
+  customerId                Int @map("customer_id")
+  reason                    String 
+  description               String 
+  attachmentNames           String? @map("attachment_names")
+  status                    String @default("aberta")
+  resolution                String? 
+  resolvedAt                String? @map("resolved_at")
+  createdAt                 String @map("created_at")
+  updatedAt                 String @map("updated_at")
+  @@map("occurrences")
+}
+
+model OccurrenceAttachments {
+  id                        Int @id @default(autoincrement())
+  occurrenceId              Int @map("occurrence_id")
+  tenantId                  Int @default(1) @map("tenant_id")
+  filename                  String 
+  mimetype                  String 
+  content                   Bytes 
+  createdAt                 String @map("created_at")
+  @@map("occurrence_attachments")
+}
+
+model OccurrenceEvents {
+  id                        Int @id @default(autoincrement())
+  occurrenceId              Int @map("occurrence_id")
+  tenantId                  Int @default(1) @map("tenant_id")
+  status                    String 
+  title                     String 
+  notes                     String? 
+  createdBy                 Int? @map("created_by")
+  createdAt                 String @map("created_at")
+  @@map("occurrence_events")
+}
+
+model SystemSettings {
+  key                       String @id
+  value                     String 
+  updatedAt                 String @map("updated_at")
   @@map("system_settings")
 }
 
-model TenantSetting {
-  tenantId  Int    @map("tenant_id")
-  key       String
-  value     String
-  updatedAt String @map("updated_at")
+model TenantSettings {
+  tenantId                  Int @map("tenant_id")
+  key                       String 
+  value                     String 
+  updatedAt                 String @map("updated_at")
 
   @@id([tenantId, key])
   @@map("tenant_settings")
 }
+
+model CompanySellers {
+  companyId                 Int @map("company_id")
+  sellerId                  Int @map("seller_id")
+
+  @@id([companyId, sellerId])
+  @@map("company_sellers")
+}
+
+model SellerGoals {
+  id                        Int @id @default(autoincrement())
+  tenantId                  Int @default(1) @map("tenant_id")
+  sellerId                  Int @map("seller_id")
+  year                      Int 
+  month                     Int 
+  salesGoal                 Float? @map("sales_goal")
+  newCustomersGoal          Int? @map("new_customers_goal")
+  customerPositivationGoal  Float? @map("customer_positivation_goal")
+  updatedAt                 String @map("updated_at")
+  @@unique([tenantId, sellerId, year, month])
+  @@map("seller_goals")
+}
+
+model SellerGoalReminders {
+  tenantId                  Int @default(1) @map("tenant_id")
+  sellerId                  Int @map("seller_id")
+  year                      Int 
+  month                     Int 
+  day                       Int 
+  sentAt                    String @map("sent_at")
+
+  @@id([tenantId, sellerId, year, month, day])
+  @@map("seller_goal_reminders")
+}
+
