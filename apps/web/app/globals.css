@@ -1,6 +1,56 @@
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:#15263c;background:#f2f6fc}button,input{font:inherit}button{cursor:pointer}.wrap{min-height:100vh;display:grid;place-items:center;padding:24px}.panel{width:min(440px,100%);padding:32px;background:white;border:1px solid #d9e3f0;border-radius:18px;box-shadow:0 14px 45px #112d5012}.panel h1{margin:0 0 12px;font-size:26px}.panel p{color:#566a81;line-height:1.5}.field{display:flex;flex-direction:column;gap:6px;margin:18px 0}.field input{padding:12px;border:1px solid #b9c9db;border-radius:8px;width:100%}.primary{background:#0b3d8f;color:white;border:0;padding:12px 18px;border-radius:9px;font-weight:bold;width:100%}.primary:disabled{opacity:.6}.error{color:#ab2431}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 26px;background:white;border-bottom:1px solid #dce5f0}.content{max-width:1160px;margin:35px auto;padding:0 20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.tile{padding:24px;background:white;border:1px solid #dce5f0;border-radius:12px;min-height:120px}.tile button{border:0;background:transparent;color:#0b3d8f;font-weight:700;padding:0;text-align:left}.secondary{padding:9px 15px;background:white;border:1px solid #c9d7e8;border-radius:8px}.muted{color:#64748b}.legacy-frame{width:100%;height:100dvh;border:0;display:block}.switch{font-size:13px}.top .primary{width:auto}.status{font-size:14px}
-.workspace{display:flex;min-height:100vh}.nav-side{width:245px;background:#102846;color:white;padding:22px;flex-shrink:0}.nav-side h2{margin:0}.nav-side p{font-size:13px;opacity:.75}.nav-side nav{display:flex;flex-direction:column;gap:5px;margin:28px 0}.nav-side nav button{padding:11px 13px;text-align:left;background:transparent;color:white;border:0;border-radius:9px}.nav-side nav button.selected,.nav-side nav button:hover{background:#1c528d}.nav-side a{color:#d9ebff}.workspace-main{min-width:0;flex:1}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #e4ebf3;padding:12px 10px;text-align:left;max-width:260px;overflow-wrap:anywhere}th{text-transform:capitalize;background:#f6f8fb}.key-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}.key-values div{padding:12px;background:#f7f9fc;border-radius:8px}.key-values dt{color:#65788f;font-size:12px}.key-values dd{margin:5px 0;font-weight:600;overflow-wrap:anywhere}@media(max-width:800px){.workspace{display:block}.nav-side{width:100%;padding:15px}.nav-side nav{display:flex;flex-direction:row;overflow:auto;margin:14px 0}.nav-side nav button{white-space:nowrap}.content{margin:18px auto}.tile{padding:15px}}
-
-.editor-form{display:flex;flex-wrap:wrap;gap:15px;align-items:end;margin:22px 0}.editor-form label{display:flex;flex-direction:column;gap:5px;min-width:160px;flex:1}.editor-form input,.editor-form select{padding:11px;border:1px solid #c8d6e7;border-radius:8px;max-width:100%}.editor-form .checkbox-row{flex-direction:row;align-items:center}.editor-form button.primary{width:auto}
-
-.editor-form textarea,.field textarea{padding:11px;border:1px solid #c8d6e7;border-radius:8px;min-width:100%}.editor-form label.wide{flex-basis:100%}.tile .tile{margin-top:20px}
+@import "tailwindcss";
+@theme {
+  --color-brand: #0b3d8f;
+  --color-ink: #15263c;
+  --color-canvas: #f2f6fc;
+}
+@layer base {
+  body { @apply m-0 min-h-screen bg-canvas text-ink antialiased; }
+  button { @apply cursor-pointer; }
+  h1 { @apply text-2xl font-bold; }
+  h2 { @apply text-xl font-semibold; }
+  a { @apply text-brand underline-offset-2 hover:underline; }
+}
+/* Transitional aliases keep the original React components usable while
+   removing bespoke layout rules. New components should use utilities directly. */
+@layer components {
+  .wrap { @apply grid min-h-screen place-items-center p-6; }
+  .panel { @apply w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl; }
+  .panel p { @apply my-3 text-slate-500; }
+  .field { @apply my-4 flex flex-col gap-1.5; }
+  .field input, .field textarea { @apply w-full rounded-lg border border-slate-300 p-3; }
+  .primary { @apply rounded-lg bg-brand px-4 py-3 font-semibold text-white disabled:opacity-60; }
+  .secondary { @apply rounded-lg border border-slate-300 bg-white px-4 py-2 hover:bg-slate-50; }
+  .error { @apply my-3 text-red-700; }
+  .muted { @apply text-slate-500; }
+  .status { @apply text-sm; }
+  .top { @apply flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4; }
+  .content { @apply mx-auto max-w-6xl px-5 py-8; }
+  .grid { @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3; }
+  .tile { @apply min-w-0 rounded-xl border border-slate-200 bg-white p-5; }
+  .tile h2 { @apply mb-4; }
+  .workspace { @apply min-h-screen md:flex; }
+  .workspace-main { @apply min-w-0 flex-1; }
+  .nav-side { @apply bg-slate-900 px-5 py-5 text-white md:w-60 md:shrink-0; }
+  .nav-side h2 { @apply text-lg font-semibold; }
+  .nav-side p { @apply mt-2 text-xs text-slate-300; }
+  .nav-side nav { @apply my-5 flex gap-1 overflow-auto md:flex-col; }
+  .nav-side nav button { @apply whitespace-nowrap rounded-lg px-3 py-2.5 text-left text-sm text-white hover:bg-slate-700; }
+  .nav-side nav button.selected { @apply bg-blue-700; }
+  .nav-side a { @apply text-blue-200; }
+  .table-wrap { @apply w-full overflow-x-auto; }
+  .table-wrap table { @apply w-full border-collapse text-left text-sm; }
+  .table-wrap th { @apply bg-slate-50 font-semibold capitalize; }
+  .table-wrap th, .table-wrap td { @apply border-b border-slate-200 px-3 py-3 align-top; }
+  .key-values { @apply grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3; }
+  .key-values div { @apply rounded-lg bg-slate-50 p-3; }
+  .key-values dt { @apply text-xs text-slate-500; }
+  .key-values dd { @apply mt-1 break-words font-semibold; }
+  .editor-form { @apply my-5 flex flex-wrap items-end gap-4; }
+  .editor-form label { @apply flex min-w-40 flex-1 flex-col gap-1.5 text-sm; }
+  .editor-form input, .editor-form select, .editor-form textarea { @apply w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base; }
+  .editor-form .checkbox-row { @apply flex-row items-center; }
+  .editor-form .checkbox-row input { @apply w-auto; }
+  .editor-form .wide { @apply basis-full; }
+  .tile .tile { @apply mt-5; }
+}
