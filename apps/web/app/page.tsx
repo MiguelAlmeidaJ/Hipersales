@@ -1,67 +1,59 @@
 "use client";
-
 import { useEffect, useState, type FormEvent } from "react";
 import { api, type SessionUser } from "../lib/api";
 
-type View = "loading" | "login" | "home" | "legacy";
-const links = [
-  ["dashboard", "Dashboard"],
-  ["orders", "Pedidos e propostas"],
-  ["customers", "Clientes"],
-  ["companies", "Empresas"],
-  ["products", "Produtos"],
-  ["occurrences", "Ocorrências"],
-  ["reports", "Relatórios"],
-  ["goals", "Metas"],
-  ["users", "Usuários"],
-  ["admin", "Configurações"],
-] as const;
-
-export default function Home() {
-  const [view, setView] = useState<View>("loading");
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    api<{ user: SessionUser }>("/api/me")
-      .then(({ user }) => { if (active) { setUser(user); setView("home"); } })
-      .catch(() => { if (active) setView("login"); });
-    return () => { active = false; };
-  }, []);
-
-  async function login(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true); setError("");
-    try {
-      // O backend mantem o contrato de autenticacao atual.
-      await api("/api/login", { method: "POST", body: JSON.stringify({ username, password }) });
-      const result = await api<{ user: SessionUser }>("/api/me");
-      setUser(result.user); setView("home"); setPassword("");
-    } catch (err) { setError(err instanceof Error ? err.message : "Falha no login."); }
-    finally { setBusy(false); }
-  }
-  async function logout() {
-    setBusy(true);setError("");
-    try { await api("/api/logout", { method: "POST" }); setUser(null);setView("login"); }
-    catch (err) { setError(err instanceof Error ? err.message : "Falha ao sair."); }
-    finally { setBusy(false); }
-  }
-
-  if (view === "loading") return <main className="wrap"><p>Carregando Hipersales…</p></main>;
-  if (view === "legacy") return <iframe title="Hipersales — módulos legados" className="legacy-frame" src="/legacy" />;
-  if (view === "login") return <main className="wrap"><form className="panel" onSubmit={login}>
-    <h1>Hipersales</h1><p>Entre com sua conta para acessar o ambiente comercial.</p>
-    <label className="field">Usuário<input autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)} required /></label>
-    <label className="field">Senha<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required /></label>
-    {error && <p role="alert" className="error">{error}</p>}
-    <button disabled={busy} className="primary">{busy?"Entrando…":"Entrar"}</button>
-  </form></main>;
-  return <><header className="top"><div><strong>Hipersales</strong><div className="muted status">{user?.name}</div></div><div><button className="secondary" onClick={()=>setView("legacy")}>Abrir sistema completo</button> <button className="secondary" disabled={busy} onClick={logout}>Sair</button></div></header>
-    <main className="content"><h1>Área comercial</h1><p className="muted">Novo frontend Next.js + TypeScript em migração gradual. Os módulos atuais continuam disponíveis sem mudança de regras.</p>
-    <div className="grid">{links.filter(([route])=>user?.role==="admin"||route!=="users").map(([route,label])=><article key={route} className="tile"><button onClick={()=>setView("legacy")}>{label} →</button><p className="muted status">Abrir módulo existente</p></article>)}</div>
-    </main></>;
+type Route = "dashboard" | "orders" | "customers" | "companies" | "products" | "occurrences" | "reports" | "goals" | "users" | "admin" | "superAdmin";
+type RecordData = Record<string, unknown>;
+const adminRoutes: { id:Route; title:string; endpoint?:`/api/${string}`; key?:string }[] = [
+ {id:"dashboard",title:"Dashboard",endpoint:"/api/admin/overview"},
+ {id:"orders",title:"Pedidos e propostas",endpoint:"/api/proposals",key:"proposals"},
+ {id:"customers",title:"Clientes",endpoint:"/api/admin/customers",key:"customers"},
+ {id:"companies",title:"Empresas",endpoint:"/api/admin/companies",key:"companies"},
+ {id:"products",title:"Produtos",endpoint:"/api/admin/products",key:"products"},
+ {id:"occurrences",title:"Ocorrências",endpoint:"/api/occurrences",key:"occurrences"},
+ {id:"reports",title:"Relatórios"},
+ {id:"goals",title:"Metas",endpoint:"/api/admin/goals"},
+ {id:"users",title:"Usuários",endpoint:"/api/admin/users",key:"users"},
+ {id:"admin",title:"Configurações",endpoint:"/api/admin/settings"}
+];
+const sellerRoutes = adminRoutes.filter(x=>["dashboard","orders","customers","companies","products","occurrences","goals"].includes(x.id)).map(x=>({
+ ...x,
+ endpoint: ({dashboard:"/api/dashboard",customers:"/api/customers",companies:"/api/companies",products:"/api/products",goals:"/api/goals/my"} as Record<string,`/api/${string}`>)[x.id] || x.endpoint
+}));
+const asText=(v:unknown):string => v == null ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v);
+const scalarRows=(data:RecordData)=>Object.entries(data).filter(([,v])=>typeof v!=="object"||v===null);
+function DataView({route}:{route:(typeof adminRoutes)[number]}) {
+ const [value,setValue]=useState<RecordData|null>(null);const [error,setError]=useState("");const [loading,setLoading]=useState(false);
+ const endpoint=route.endpoint;
+ useEffect(()=>{let active=true;if(!endpoint){setValue(null);return;}setLoading(true);setError("");setValue(null);
+ api<RecordData>(endpoint).then(v=>{if(active)setValue(v)}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Falha ao carregar")}).finally(()=>{if(active)setLoading(false)});
+ return()=>{active=false};},[endpoint]);
+ if(!endpoint)return <section className="tile"><h2>{route.title}</h2><p>Esta área ainda depende dos formulários e operações do painel anterior. Continue utilizando a versão clássica até a migração dos fluxos.</p><a href="/legacy">Abrir sistema clássico</a></section>;
+ if(loading)return <p>Carregando {route.title.toLowerCase()}…</p>;
+ if(error)return <p className="error" role="alert">{error} <a href="/legacy">Abrir sistema clássico</a></p>;
+ if(!value)return null;
+ const items=route.key&&Array.isArray(value[route.key])?value[route.key] as RecordData[]:null;
+ return <section className="tile"><h2>{route.title}</h2>{items?<><p className="muted">{items.length} registro(s)</p>
+ <div className="table-wrap"><table><thead><tr>{Object.keys(items[0]||{}).filter(k=>!["password_hash","content","form_payload"].includes(k)).slice(0,7).map(k=><th key={k}>{k.replaceAll("_"," ")}</th>)}</tr></thead>
+ <tbody>{items.slice(0,100).map((item,i)=><tr key={String(item.id??i)}>{Object.keys(items[0]||{}).filter(k=>!["password_hash","content","form_payload"].includes(k)).slice(0,7).map(k=><td key={k}>{asText(item[k])}</td>)}</tr>)}</tbody></table></div>
+ {items.length>100&&<p className="muted">Exibindo os primeiros 100 registros.</p>}</>:<dl className="key-values">{scalarRows(value).map(([key,v])=><div key={key}><dt>{key.replaceAll("_"," ")}</dt><dd>{asText(v)}</dd></div>)}</dl>}
+ <p className="muted">Consultas nativas em React. Edição, exclusão e formulários complexos permanecem na interface anterior durante a migração.</p>
+ <a href="/legacy">Abrir operações completas</a></section>;
+}
+export default function Home(){
+ const [view,setView]=useState<"loading"|"login"|"home">("loading");
+ const [user,setUser]=useState<SessionUser|null>(null);
+ const [route,setRoute]=useState<Route>("dashboard");
+ const [username,setUsername]=useState("");const [password,setPassword]=useState("");
+ const [busy,setBusy]=useState(false);const [error,setError]=useState("");
+ useEffect(()=>{let active=true;api<{user:SessionUser}>("/api/me").then(r=>{if(!active)return;setUser(r.user);setRoute(r.user.is_super_admin?"superAdmin":"dashboard");setView("home")}).catch(()=>{if(active)setView("login")});return()=>{active=false}},[]);
+ async function login(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");
+ try{await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});const r=await api<{user:SessionUser}>("/api/me");setUser(r.user);setRoute(r.user.is_super_admin?"superAdmin":"dashboard");setView("home");setPassword("")}
+ catch(e){setError(e instanceof Error?e.message:"Falha no login")}finally{setBusy(false)}}
+ async function logout(){setBusy(true);try{await api("/api/logout",{method:"POST"});setView("login");setUser(null)}catch(e){setError(e instanceof Error?e.message:"Falha ao sair")}finally{setBusy(false)}}
+ if(view==="loading")return <main className="wrap">Carregando Hipersales…</main>;
+ if(view==="login")return <main className="wrap"><form className="panel" onSubmit={login}><h1>Hipersales</h1><p>Portal comercial</p><label className="field">Usuário<input required autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)}/></label><label className="field">Senha<input required type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></label>{error&&<p role="alert" className="error">{error}</p>}<button className="primary" disabled={busy}>{busy?"Entrando…":"Entrar"}</button></form></main>;
+ const nav=user?.is_super_admin?[{id:"superAdmin" as Route,title:"Superadmin",endpoint:"/api/super-admin/overview" as const}]:user?.role==="admin"?adminRoutes:sellerRoutes;
+ const selected=nav.find(v=>v.id===route)||nav[0];
+ return <div className="workspace"><aside className="nav-side"><h2>Hipersales</h2><p>{user?.name}</p><nav>{nav.map(x=><button type="button" key={x.id} onClick={()=>setRoute(x.id)} className={x.id===selected.id?"selected":""}>{x.title}</button>)}</nav><a href="/legacy">Sistema clássico</a></aside><div className="workspace-main"><header className="top"><strong>{selected.title}</strong><button className="secondary" disabled={busy} onClick={logout}>Sair</button></header><main className="content"><DataView key={selected.id} route={selected}/></main></div></div>;
 }
