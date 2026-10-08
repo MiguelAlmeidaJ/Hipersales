@@ -1,0 +1,1515 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 1385 >>
+stream
+0.035 0.095 0.200 rg
+0.00 0.00 595.28 841.89 re f
+0.060 0.560 0.480 rg
+0.00 823.89 595.28 18.00 re f
+0.060 0.560 0.480 rg
+46.00 490.00 7.00 190.00 re f
+0.060 0.560 0.480 rg
+BT /F2 12.00 Tf 1 0 0 1 72.00 690.00 Tm (HIPERSALES) Tj ET
+1.000 1.000 1.000 rg
+BT /F2 25.00 Tf 1 0 0 1 72.00 646.00 Tm (RELATÓRIO COMPLETO) Tj ET
+1.000 1.000 1.000 rg
+BT /F2 25.00 Tf 1 0 0 1 72.00 613.00 Tm (DE ANÁLISE DO SISTEMA) Tj ET
+0.780 0.840 0.910 rg
+BT /F1 11.00 Tf 1 0 0 1 72.00 571.00 Tm (Funcionalidade, segurança, arquitetura e plano de melhoria) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 72.00 542.00 m 510.00 542.00 l S
+0.060 0.560 0.480 rg
+BT /F2 8.00 Tf 1 0 0 1 72.00 466.00 Tm (AUTORIA) Tj ET
+1.000 1.000 1.000 rg
+BT /F2 17.00 Tf 1 0 0 1 72.00 440.00 Tm (Miguel Alameida) Tj ET
+0.780 0.840 0.910 rg
+BT /F1 11.00 Tf 1 0 0 1 72.00 418.00 Tm (Desenvolvedor Nível 3) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 8.00 Tf 1 0 0 1 72.00 330.00 Tm (DATA DA ANÁLISE) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 11.00 Tf 1 0 0 1 72.00 305.00 Tm (6 de outubro de 2026) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 8.00 Tf 1 0 0 1 72.00 232.00 Tm (CLASSIFICAÇÃO) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 11.00 Tf 1 0 0 1 72.00 207.00 Tm (Uso interno e confidencial) Tj ET
+0.020 0.060 0.130 rg
+0.00 0.00 595.28 44.00 re f
+0.650 0.730 0.820 rg
+BT /F1 8.00 Tf 1 0 0 1 72.00 18.00 Tm (HiperSales Web  •  Revisão estática e validações não destrutivas) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3734 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (CONTROLE DO DOCUMENTO) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (1. Controle do documento) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.340 0.400 0.480 rg
+BT /F2 7.50 Tf 1 0 0 1 48.00 729.89 Tm (DOCUMENTO) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 193.00 729.89 Tm (Relatório completo de análise do sistema HiperSales) Tj ET
+0.340 0.400 0.480 rg
+BT /F2 7.50 Tf 1 0 0 1 48.00 709.89 Tm (AUTOR) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 193.00 709.89 Tm (Miguel Alameida) Tj ET
+0.340 0.400 0.480 rg
+BT /F2 7.50 Tf 1 0 0 1 48.00 689.89 Tm (CARGO) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 193.00 689.89 Tm (Desenvolvedor Nível 3) Tj ET
+0.340 0.400 0.480 rg
+BT /F2 7.50 Tf 1 0 0 1 48.00 669.89 Tm (DATA) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 193.00 669.89 Tm (6 de outubro de 2026) Tj ET
+0.340 0.400 0.480 rg
+BT /F2 7.50 Tf 1 0 0 1 48.00 649.89 Tm (CLASSIFICAÇÃO) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 193.00 649.89 Tm (Uso interno e confidencial) Tj ET
+0.340 0.400 0.480 rg
+BT /F2 7.50 Tf 1 0 0 1 48.00 629.89 Tm (ESCOPO) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 193.00 629.89 Tm (Código-fonte, banco SQLite, frontend PWA e serviço WhatsApp) Tj ET
+0.340 0.400 0.480 rg
+BT /F2 7.50 Tf 1 0 0 1 48.00 609.89 Tm (MÉTODO) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 193.00 609.89 Tm (Revisão estática e verificações locais não destrutivas) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 519.89 499.28 80.00 re B
+0.860 0.430 0.050 rg
+48.00 519.89 5.00 80.00 re f
+0.860 0.430 0.050 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 579.89 Tm (Nota importante) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 560.89 Tm (Nenhum arquivo funcional foi alterado e o servidor não foi iniciado. A inicialização do) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 548.89 Tm (backend executa migrações, inicia rotinas automáticas e redefine a credencial fixa do) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 536.89 Tm (superadministrador.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 503.89 Tm (Objetivo) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 483.89 Tm (Este relatório documenta o funcionamento do HiperSales, avalia sua arquitetura e segurança, identifica) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 470.40 Tm (riscos técnicos e operacionais e propõe uma sequência prática de correções para elevar o sistema a um) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 456.91 Tm (padrão seguro de produção e operação multiempresa.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 433.42 Tm (Limitações) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 413.42 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 413.42 Tm (Não foi realizado teste de invasão ativo contra ambiente publicado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 397.22 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 397.22 Tm (Não foram usados dados pessoais individuais nem exibidas credenciais ou tokens encontrados.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 381.02 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 381.02 Tm (Riscos de dependências refletem o resultado do npm audit em 6 de outubro de 2026.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 2 de 19) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 4318 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (RESUMO EXECUTIVO) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (2. Resumo executivo) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 659.89 499.28 80.00 re B
+0.720 0.120 0.120 rg
+48.00 659.89 5.00 80.00 re f
+0.720 0.120 0.120 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 719.89 Tm (Avaliação geral: risco alto) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 700.89 Tm (O sistema entrega o fluxo comercial esperado e possui controles básicos corretos, mas não) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 688.89 Tm (deve ser exposto publicamente como solução multiempresa antes da correção das credenciais) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 676.89 Tm (fixas, anexos executáveis e falhas de isolamento entre tenants.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 643.89 Tm (A aplicação começou como um sistema local de uma empresa e recebeu posteriormente recursos de) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 630.40 Tm (multi-tenancy. Essa evolução é visível na boa cobertura de tenant_id nas consultas principais, porém os) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 616.91 Tm (caminhos legados de configurações, relatórios, notificações e WhatsApp ainda assumem o tenant 1 ou usam) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 603.42 Tm (destinatários globais.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 579.93 Tm (Síntese dos riscos) Tj ET
+0.720 0.120 0.120 rg
+48.00 539.93 90.00 27.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 58.00 549.93 Tm (CRÍTICA) Tj ET
+0.080 0.130 0.210 rg
+BT /F2 9.00 Tf 1 0 0 1 156.00 549.93 Tm (3) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.50 Tf 1 0 0 1 208.00 549.93 Tm (Comprometimento administrativo ou vazamento entre empresas) Tj ET
+0.860 0.430 0.050 rg
+48.00 505.93 90.00 27.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 58.00 515.93 Tm (ALTA) Tj ET
+0.080 0.130 0.210 rg
+BT /F2 9.00 Tf 1 0 0 1 156.00 515.93 Tm (3) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.50 Tf 1 0 0 1 208.00 515.93 Tm (Tomada de conta, exposição de segredos ou componente vulnerável) Tj ET
+0.930 0.680 0.100 rg
+48.00 471.93 90.00 27.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 58.00 481.93 Tm (MÉDIA) Tj ET
+0.080 0.130 0.210 rg
+BT /F2 9.00 Tf 1 0 0 1 156.00 481.93 Tm (5) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.50 Tf 1 0 0 1 208.00 481.93 Tm (Defesas incompletas, indisponibilidade ou injeção de conteúdo) Tj ET
+0.050 0.310 0.720 rg
+48.00 437.93 90.00 27.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 58.00 447.93 Tm (FUNCIONAL) Tj ET
+0.080 0.130 0.210 rg
+BT /F2 9.00 Tf 1 0 0 1 156.00 447.93 Tm (5) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.50 Tf 1 0 0 1 208.00 447.93 Tm (Resultados incorretos, baixa manutenibilidade ou operação inconsistente) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 423.93 Tm (Decisão recomendada) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 403.93 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 403.93 Tm (Manter o sistema restrito a rede ou acesso controlado até concluir os itens críticos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 387.73 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 387.73 Tm (Executar um hotfix de segurança antes de adicionar novas funcionalidades.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 371.53 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 371.53 Tm (Realizar backup consistente do SQLite e iniciar controle de versão antes das alterações.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 355.33 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 355.33 Tm (Tratar a correção de multi-tenancy como projeto de dados e autorização, não apenas como filtros) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 342.13 Tm (adicionais.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 3 de 19) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 3557 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (ARQUITETURA E FUNCIONAMENTO) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (3. Arquitetura e funcionamento) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 729.89 Tm (Fluxo principal) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 651.89 499.28 68.00 re B
+0.050 0.310 0.720 rg
+48.00 651.89 5.00 68.00 re f
+0.050 0.310 0.720 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 699.89 Tm (Navegador) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 680.89 Tm (SPA/PWA em HTML, CSS e JavaScript puro. A interface utiliza fetch com cookie de sessão e) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 668.89 Tm (mantém o estado da aplicação em memória.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 577.89 499.28 68.00 re B
+0.060 0.560 0.480 rg
+48.00 577.89 5.00 68.00 re f
+0.060 0.560 0.480 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 625.89 Tm (Backend) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 606.89 Tm (Servidor Python baseado em ThreadingHTTPServer. O mesmo processo entrega arquivos) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 594.89 Tm (estáticos, implementa a API REST, gera PDFs e executa schedulers em threads daemon.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 503.89 499.28 68.00 re B
+0.080 0.550 0.340 rg
+48.00 503.89 5.00 68.00 re f
+0.080 0.550 0.340 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 551.89 Tm (Persistência) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 532.89 Tm (SQLite em modo WAL, com migrações e seed executados na inicialização. Sessões,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 520.89 Tm (configurações, anexos e fila de mensagens ficam no mesmo banco.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 429.89 499.28 68.00 re B
+0.860 0.430 0.050 rg
+48.00 429.89 5.00 68.00 re f
+0.860 0.430 0.050 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 477.89 Tm (Integrações) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 458.89 Tm (SMTP, APIs públicas de CNPJ, Evolution API e um serviço Node/Baileys separado que consulta) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 446.89 Tm (endpoints internos do backend.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 413.89 Tm (Pontos de entrada) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 393.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 393.89 Tm (backend/app.py: servidor, banco, autenticação, regras de negócio, PDFs e schedulers.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 377.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 377.69 Tm (frontend/app.js: interface completa, navegação, formulários e renderização.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 361.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 361.49 Tm (whatsapp-service/index.mjs: conexão Baileys e consumo da fila interna.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 345.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 345.29 Tm (scripts/import_carga_leon.py: importação de planilha, usuários e vínculos comerciais.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 4 de 19) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 3810 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (FUNCIONALIDADES) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (4. Funcionalidades identificadas) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 729.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 729.89 Tm (Autenticação por cookie e perfis superadministrador, administrador e representante comercial.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 713.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 713.69 Tm (Criação de tenants e administração de usuários por empresa.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 697.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 697.49 Tm (Cadastro, consulta, edição, inativação e associação de clientes.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 681.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 681.29 Tm (Cadastro de empresas representadas, produtos e importação/exportação de catálogo.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 665.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 665.09 Tm (Propostas e pedidos com itens, valores negociados, descontos, comissão, frete e pagamento.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 648.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 648.89 Tm (Fluxo de status, linha do tempo, PDFs e notificações de pedidos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 632.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 632.69 Tm (Registro de ocorrências com anexos, parecer administrativo e retenção temporária.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 616.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 616.49 Tm (Metas comerciais, acompanhamento de carteira, dashboards e relatórios gerenciais.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 600.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 600.29 Tm (Consulta automática de CNPJ em dois provedores públicos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 584.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 584.09 Tm (Configuração de SMTP, templates de mensagens e WhatsApp.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 567.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 567.89 Tm (PWA com manifest, service worker e cache de recursos estáticos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 551.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 551.69 Tm (Rotinas automáticas para relatórios, lembretes de metas e respostas de WhatsApp.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 535.49 Tm (Perfis e autorização) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 515.49 Tm (O representante visualiza sua carteira, empresas associadas, pedidos e ocorrências. O administrador opera) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 502.00 Tm (os dados do tenant, usuários, produtos, clientes, pedidos, metas e configurações. O superadministrador) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 488.51 Tm (cria e acompanha tenants. A autorização é aplicada no backend, mas possui exceções legadas descritas nos) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 475.02 Tm (achados.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 5 de 19) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 3581 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (PONTOS POSITIVOS) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (5. Controles positivos observados) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 729.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 729.89 Tm (Consultas SQL majoritariamente parametrizadas, reduzindo significativamente o risco de SQL injection.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 713.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 713.69 Tm (Tokens de sessão gerados com secrets.token_urlsafe, fornecendo entropia adequada.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 697.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 697.49 Tm (Passwords armazenadas com salt aleatório e comparação em tempo constante.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 681.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 681.29 Tm (Cookie de sessão com HttpOnly e SameSite=Lax.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 665.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 665.09 Tm (Respostas internas de erro não devolvem stack traces para o navegador.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 648.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 648.89 Tm (Escape centralizado de HTML no frontend para a maior parte dos dados apresentados.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 632.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 632.69 Tm (Filtros de tenant e associação de vendedor presentes nos fluxos comerciais principais.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 616.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 616.49 Tm (Controle de acesso específico para download de anexos de ocorrências.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 600.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 600.29 Tm (Limite agregado de 25 MB para anexos após decodificação.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 584.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 584.09 Tm (Banco em WAL, chaves estrangeiras habilitadas e busy timeout configurado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 567.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 567.89 Tm (Service worker evita interceptar rotas iniciadas por /api/.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 481.69 499.28 80.00 re B
+0.060 0.560 0.480 rg
+48.00 481.69 5.00 80.00 re f
+0.060 0.560 0.480 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 541.69 Tm (Leitura equilibrada) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 522.69 Tm (Os achados críticos não significam que todo o sistema esteja inseguro. A base possui) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 510.69 Tm (decisões corretas; o principal problema é a combinação de credenciais fixas, conteúdo não) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 498.69 Tm (confiável servido no mesmo domínio e uma migração multiempresa incompleta.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 6 de 19) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 4494 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (ACHADOS CRÍTICOS) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (6. Achados críticos) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.720 0.120 0.120 rg
+48.00 701.89 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 713.89 Tm (CRIT-01  |  CRÍTICA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 684.89 Tm (Credencial fixa e redefinição automática do superadministrador) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 664.89 Tm (Evidência: backend/app.py, linhas 597-616; chamada durante migração e seed; README.md, seção de acessos de teste.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 646.82 Tm (Impacto: A senha administrativa é conhecida por qualquer pessoa com acesso ao código ou documentação. Mesmo) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 633.76 Tm (que seja alterada pelo usuário, volta ao valor fixo após reiniciar o backend. Com o login sem rate limiting,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 620.69 Tm (o risco de tomada completa da plataforma é imediato.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 601.63 Tm (Recomendação: Remover a credencial do código, rotacionar a conta, criar bootstrap único por segredo externo,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 588.56 Tm (obrigar troca no primeiro acesso, invalidar sessões existentes e habilitar MFA para superadministradores.) Tj ET
+0.720 0.120 0.120 rg
+48.00 533.50 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 545.50 Tm (CRIT-02  |  CRÍTICA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 516.50 Tm (Stored XSS por anexos HTML ou SVG) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 496.50 Tm (Evidência: backend/app.py, linhas 1824-1832 e 2917-2931.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 478.43 Tm (Impacto: O MIME declarado pelo cliente é armazenado sem validação e o arquivo é devolvido como inline no) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 465.37 Tm (mesmo domínio. Um representante pode enviar HTML/SVG com JavaScript; quando um administrador abrir o anexo,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 452.30 Tm (o código executará na origem do HiperSales e poderá operar a API com a sessão administrativa.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 433.24 Tm (Recomendação: Validar extensão, assinatura binária e MIME por allowlist; bloquear HTML/SVG; usar attachment) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 420.17 Tm (para conteúdo não confiável; aplicar CSP sandbox/default-src none e preferir um domínio de arquivos sem) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 407.11 Tm (cookies.) Tj ET
+0.720 0.120 0.120 rg
+48.00 352.05 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 364.05 Tm (CRIT-03  |  CRÍTICA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 335.05 Tm (Isolamento multiempresa incompleto) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 315.05 Tm (Evidência: backend/app.py, linhas 898-937, 3223-3245, 3453-3494, 6312-6335 e 6465-6471.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 296.98 Tm (Impacto: O tenant é mantido em dicionário global por id da conexão e assume tenant 1 quando ausente.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 283.91 Tm (Configurações podem cair para valores globais, a senha SMTP pode ser exposta a tenants novos, a fila do) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 270.85 Tm (WhatsApp não filtra tenant e rotinas de relatório usam consultas e destinatários globais.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 251.78 Tm (Recomendação: Eliminar TENANT_CONTEXT, exigir tenant_id explícito e fail-closed, criar configurações por) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 238.72 Tm (tenant, filtrar todas as filas e schedulers, remover destinatários fixos e criar testes automatizados de) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 225.66 Tm (isolamento negativo.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 7 de 19) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 4107 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (ACHADOS ALTOS) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (7. Achados de severidade alta) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.860 0.430 0.050 rg
+48.00 701.89 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 713.89 Tm (HIGH-01  |  ALTA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 684.89 Tm (Proteção insuficiente de login e sessão) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 664.89 Tm (Evidência: backend/app.py, linhas 1845-1918 e 4064-4085.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 646.82 Tm (Impacto: O login aceita tentativas ilimitadas. O cookie não usa Secure, não existe MFA, mudança de senha não) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 633.76 Tm (invalida sessões anteriores e must_change_password é principalmente uma barreira de interface. O status do) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 620.69 Tm (tenant também não é verificado ao validar a sessão.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 601.63 Tm (Recomendação: Adicionar rate limiting por IP e conta, MFA para perfis críticos, cookie __Host- com Secure,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 588.56 Tm (bloqueio server-side durante troca obrigatória, revogação de sessões e verificação de tenant ativo.) Tj ET
+0.860 0.430 0.050 rg
+48.00 533.50 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 545.50 Tm (HIGH-02  |  ALTA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 516.50 Tm (Gestão inadequada de segredos e artefatos sensíveis) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 496.50 Tm (Evidência: .whatsapp-internal-token não está no .gitignore; SMTP é armazenado no SQLite e retornado pela API;) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 484.43 Tm (CARGA_LEON.xlsx é consumida com campo de senha em texto claro.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 466.36 Tm (Impacto: Cópias do diretório, backups ou futuros commits podem expor tokens, credenciais SMTP, dados) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 453.30 Tm (empresariais e senhas iniciais. A configuração global amplia o impacto para tenants adicionais.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 434.23 Tm (Recomendação: Rotacionar segredos, usar secret manager ou variáveis protegidas, nunca devolver senha SMTP,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 421.17 Tm (remover planilhas após migração segura, ampliar .gitignore e adicionar varredura de segredos no CI.) Tj ET
+0.860 0.430 0.050 rg
+48.00 366.10 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 378.10 Tm (HIGH-03  |  ALTA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 349.10 Tm (Dependência transitiva sharp vulnerável) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 329.10 Tm (Evidência: whatsapp-service/package-lock.json: sharp 0.34.5. npm audit reportou advisory GHSA-wq5f-xc86-pv6w.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 311.03 Tm (Impacto: A versão instalada está abaixo da 0.35.5 corrigida. O advisory classifica a vulnerabilidade como) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 297.97 Tm (alta e descreve possibilidade de comprometimento de memória/RCE em condições específicas no Linux.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 278.91 Tm (Recomendação: Atualizar Baileys ou aplicar override compatível para sharp >= 0.35.5, reinstalar a partir do) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 265.84 Tm (lockfile, repetir npm audit e validar conexão, QR, envio e recebimento de mensagens.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 8 de 19) Tj ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 3644 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (ACHADOS MÉDIOS) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (8. Achados de severidade média) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.930 0.680 0.100 rg
+48.00 701.89 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 713.89 Tm (MED-01  |  MÉDIA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 684.89 Tm (Requisições sem limite global de tamanho) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 664.89 Tm (Evidência: backend/app.py, linhas 1789-1796.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 646.82 Tm (Impacto: Content-Length é lido integralmente antes da validação. O endpoint de login também aceita corpos) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 633.76 Tm (arbitrariamente grandes. Em conjunto com ThreadingHTTPServer, isso permite consumo excessivo de memória e) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 620.69 Tm (threads.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 601.63 Tm (Recomendação: Rejeitar corpos acima de limites por rota antes da leitura, configurar timeouts e limites no) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 588.56 Tm (proxy e usar servidor WSGI/ASGI de produção.) Tj ET
+0.930 0.680 0.100 rg
+48.00 533.50 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 545.50 Tm (MED-02  |  MÉDIA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 516.50 Tm (Custo de hash de senha abaixo da referência atual) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 496.50 Tm (Evidência: backend/app.py, linhas 259-270: PBKDF2-HMAC-SHA256 com 150.000 iterações.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 478.43 Tm (Impacto: O algoritmo possui salt e comparação correta, porém oferece proteção inferior à recomendação atual) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 465.37 Tm (em caso de vazamento do banco.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 446.30 Tm (Recomendação: Migrar progressivamente para Argon2id. Se PBKDF2 for obrigatório, elevar o custo para pelo) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 433.24 Tm (menos 600.000 e rehash no próximo login, após benchmark de capacidade.) Tj ET
+0.930 0.680 0.100 rg
+48.00 378.17 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 390.17 Tm (MED-03  |  MÉDIA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 361.17 Tm (Injeção de HTML em mensagens de e-mail) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 341.17 Tm (Evidência: backend/app.py, linhas 1593-1597: placeholders são substituídos sem escape contextual.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 323.10 Tm (Impacto: Nomes, observações e outros campos controlados por usuários podem alterar o HTML dos e-mails,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 310.04 Tm (inserir links ou elementos de rastreamento e produzir mensagens enganosas.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 290.98 Tm (Recomendação: Escapar todos os valores por contexto HTML e permitir HTML apenas no template administrativo) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 277.91 Tm (validado/sanitizado.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 9 de 19) Tj ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 3413 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (DEFESAS E OPERAÇÃO) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (9. Outros riscos técnicos e operacionais) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.930 0.680 0.100 rg
+48.00 701.89 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 713.89 Tm (MED-04  |  MÉDIA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 684.89 Tm (Cabeçalhos e servidor de produção incompletos) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 664.89 Tm (Evidência: backend/app.py, linhas 1724-1757 e 7672-7681.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 646.82 Tm (Impacto: O servidor adiciona nosniff, mas não define CSP, frame-ancestors, HSTS, Referrer-Policy ou) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 633.76 Tm (Permissions-Policy. Ele escuta em 0.0.0.0 e não implementa TLS diretamente.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 614.69 Tm (Recomendação: Colocar o backend atrás de proxy HTTPS endurecido, impedir acesso direto à porta, configurar) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 601.63 Tm (cabeçalhos de segurança e migrar a camada HTTP para framework/servidor mantido para produção.) Tj ET
+0.930 0.680 0.100 rg
+48.00 546.56 499.28 34.00 re f
+1.000 1.000 1.000 rg
+BT /F2 9.00 Tf 1 0 0 1 60.00 558.56 Tm (MED-05  |  MÉDIA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 12.20 Tf 1 0 0 1 48.00 529.56 Tm (Proteção CSRF baseada principalmente em SameSite) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 8.50 Tf 1 0 0 1 48.00 509.56 Tm (Evidência: Cookie SameSite=Lax; ausência de token CSRF e validação Origin/Referer; backend não valida Content-Type.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 491.49 Tm (Impacto: SameSite reduz o risco, mas não cobre cenários same-site em subdomínios, browsers legados, ataques) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 478.43 Tm (client-side ou futuras mudanças de implantação.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 459.37 Tm (Recomendação: Validar Origin/Referer em operações mutáveis, exigir application/json, adicionar token ou) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.20 Tf 1 0 0 1 48.00 446.30 Tm (header CSRF e manter SameSite como defesa adicional.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 419.24 Tm (Referências de segurança) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 399.24 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 399.24 Tm (OWASP Session Management Cheat Sheet — cookies Secure/HttpOnly/SameSite e ciclo de vida de sessão.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 383.04 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 383.04 Tm (OWASP CSRF Prevention Cheat Sheet — token, header customizado e validação de origem.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 366.84 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 366.84 Tm (OWASP Password Storage Cheat Sheet — Argon2id e parâmetros de PBKDF2.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 10 de 19) Tj ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 22 0 R >>
+endobj
+24 0 obj
+<< /Length 3772 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (FUNCIONAL E ARQUITETURA) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (10. Problemas funcionais e de arquitetura) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 729.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 729.89 Tm (FUNC-01: O relatório chamado semanal usa período inicial de 365 dias em backend/app.py, linhas) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 716.69 Tm (4741-4746.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 700.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 700.49 Tm (FUNC-02: A rotina semanal seleciona representantes sem filtro de tenant e pode falhar ou operar apenas) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 687.29 Tm (o tenant padrão.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 671.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 671.09 Tm (FUNC-03: customers.cnpj possui UNIQUE global, impedindo o mesmo CNPJ legítimo em tenants diferentes.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 654.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 654.89 Tm (FUNC-04: Evolution API e Baileys coexistem como dois caminhos de WhatsApp, aumentando estados) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 641.69 Tm (divergentes e manutenção.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 625.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 625.49 Tm (FUNC-05: O banco contém sessões expiradas até que uma rota autenticada execute a limpeza.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 609.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 609.29 Tm (ENG-01: Backend com 7.685 linhas e frontend com 10.292 linhas concentram responsabilidades demais.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 593.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 593.09 Tm (ENG-02: Não foram encontrados testes próprios do projeto.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 576.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 576.89 Tm (ENG-03: Não existe requirements.txt ou pyproject.toml para reproduzir o ambiente Python.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 560.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 560.69 Tm (ENG-04: As migrações são executadas no startup sem versionamento, dry-run ou rollback formal.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 544.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 544.49 Tm (ENG-05: Há textos com mojibake, como sequências Ã e Â, indicando inconsistência de codificação.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 458.29 499.28 80.00 re B
+0.860 0.430 0.050 rg
+48.00 458.29 5.00 80.00 re f
+0.860 0.430 0.050 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 518.29 Tm (Consequência) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 499.29 Tm (A ausência de modularização e testes torna correções de segurança mais arriscadas, pois) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 487.29 Tm (uma alteração em autenticação, tenant ou pedidos pode produzir regressões em áreas) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 475.29 Tm (distantes do mesmo arquivo.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 11 de 19) Tj ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 24 0 R >>
+endobj
+26 0 obj
+<< /Length 3716 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (BANCO E DADOS) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (11. Avaliação do banco e dos dados) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 729.89 Tm (Snapshot observado) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 709.89 Tm (A inspeção foi realizada em modo somente leitura, sem consultar ou expor registros individuais.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 686.40 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 686.40 Tm (Banco principal: database/hypersales.sqlite3, aproximadamente 10,3 MB.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 670.20 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 670.20 Tm (21 tabelas de aplicação.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 654.00 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 654.00 Tm (1 tenant ativo, 22 usuários, 308 clientes e 300 produtos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 637.80 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 637.80 Tm (208 propostas, 3 ocorrências e 2.090 registros de outbox.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 621.60 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 621.60 Tm (11 sessões presentes, todas expiradas no momento da verificação.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 605.40 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 605.40 Tm (PRAGMA integrity_check: ok.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 589.20 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 589.20 Tm (PRAGMA foreign_key_check: nenhuma violação.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 573.00 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 573.00 Tm (Journal mode: WAL.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 556.80 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 556.80 Tm (backend/hipersales.db existe com tamanho zero e aparenta ser artefato obsoleto.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 540.60 Tm (Riscos de proteção de dados) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 520.60 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 520.60 Tm (Dados cadastrais, comunicações e anexos ficam sem criptografia no SQLite.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 504.40 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 504.40 Tm (O outbox retém destinatários, assunto, corpo e erros de envio.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 488.20 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 488.20 Tm (O form_payload armazena cópia ampla de dados e resposta bruta da consulta de CNPJ.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 472.00 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 472.00 Tm (Backup do arquivo principal isolado pode perder alterações ainda presentes no WAL.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 455.80 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 455.80 Tm (É necessário definir retenção, acesso, backup, restauração e descarte compatíveis com a LGPD.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 12 de 19) Tj ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 26 0 R >>
+endobj
+28 0 obj
+<< /Length 3355 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (VALIDAÇÕES) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (12. Validações realizadas) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 729.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 729.89 Tm (Parsing AST de backend/app.py e scripts/import_carga_leon.py: aprovado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 713.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 713.69 Tm (node --check em frontend/app.js: aprovado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 697.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 697.49 Tm (node --check em whatsapp-service/index.mjs: aprovado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 681.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 681.29 Tm (PRAGMA integrity_check: aprovado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 665.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 665.09 Tm (PRAGMA foreign_key_check: zero violações.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 648.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 648.89 Tm (Verificação de listener local: nenhuma aplicação escutava na porta 8000.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 632.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 632.69 Tm (npm ls: árvore principal resolvida com Baileys 7.0.0-rc13, Pino 9.14.0 e qrcode-terminal 0.12.0.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 616.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 616.49 Tm (npm audit: uma vulnerabilidade alta e uma moderada.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 600.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 600.29 Tm (protobufjs 7.6.2: advisory de DoS; versão corrigida indicada 7.6.5.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 584.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 584.09 Tm (sharp 0.34.5: advisory de alta severidade; versão corrigida indicada 0.35.5.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 567.89 Tm (O que não foi executado) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 547.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 547.89 Tm (O backend não foi iniciado para evitar mutações, redefinição de senha e disparos automáticos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 531.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 531.69 Tm (Não foram enviados e-mails, mensagens de WhatsApp ou requisições de teste aos provedores externos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 515.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 515.49 Tm (Não houve exploração do XSS ou tentativa de autenticação com credenciais conhecidas.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 13 de 19) Tj ET
+endstream
+endobj
+29 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 28 0 R >>
+endobj
+30 0 obj
+<< /Length 3272 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (PLANO DE CORREÇÃO) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (13. Plano de correção priorizado) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 729.89 Tm (Fase 0 — contenção imediata, 0 a 48 horas) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 709.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 709.89 Tm (Rotacionar superadministrador, token interno, SMTP e credenciais relacionadas.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 693.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 693.69 Tm (Remover a redefinição automática e as credenciais do README.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 677.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 677.49 Tm (Bloquear upload/visualização inline de HTML e SVG.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 661.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 661.29 Tm (Restringir a aplicação a HTTPS e acesso controlado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 645.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 645.09 Tm (Fazer backup consistente do SQLite com WAL e testar a cópia.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 628.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 628.89 Tm (Atualizar sharp e protobufjs por versão compatível do Baileys/overrides.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 612.69 Tm (Fase 1 — hotfix de segurança, até 15 dias) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 592.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 592.69 Tm (Substituir TENANT_CONTEXT por tenant explícito e fail-closed.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 576.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 576.49 Tm (Corrigir filas, relatórios, notificações e configurações por tenant.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 560.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 560.29 Tm (Adicionar rate limiting, política server-side de senha e invalidação de sessões.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 544.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 544.09 Tm (Adicionar validação Origin/CSRF, limites de corpo e cabeçalhos de segurança.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 527.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 527.89 Tm (Mascarar segredos nas respostas e externalizar sua persistência.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 511.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 511.69 Tm (Criar testes de autorização e isolamento para todas as rotas mutáveis.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 14 de 19) Tj ET
+endstream
+endobj
+31 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 30 0 R >>
+endobj
+32 0 obj
+<< /Length 3360 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (PLANO 30-90 DIAS) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (14. Evolução em 30 a 90 dias) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 729.89 Tm (De 15 a 45 dias) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 709.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 709.89 Tm (Migrar hashes para Argon2id e implementar MFA para contas privilegiadas.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 693.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 693.69 Tm (Separar autenticação, tenants, clientes, pedidos, ocorrências, relatórios e integrações em módulos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 677.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 677.49 Tm (Adotar framework web mantido, migrações versionadas e servidor de produção.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 661.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 661.29 Tm (Escolher uma única integração de WhatsApp e remover o caminho legado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 645.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 645.09 Tm (Criar logs estruturados, auditoria de ações críticas e alertas operacionais.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 628.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 628.89 Tm (Corrigir o relatório semanal e parametrizar destinatários por tenant.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 612.69 Tm (De 45 a 90 dias) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 592.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 592.69 Tm (Avaliar PostgreSQL para concorrência, constraints compostas e crescimento multiempresa.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 576.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 576.49 Tm (Implantar CI com testes, lint, auditoria de dependências e detecção de segredos.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 560.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 560.29 Tm (Implementar backups automáticos criptografados e testes periódicos de restauração.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 544.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 544.09 Tm (Definir políticas de retenção para anexos, outbox, sessões e payloads de terceiros.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 527.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 527.89 Tm (Executar teste de invasão independente após as correções críticas.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 511.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 511.69 Tm (Documentar resposta a incidentes e responsabilidades de acesso conforme LGPD.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 15 de 19) Tj ET
+endstream
+endobj
+33 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 32 0 R >>
+endobj
+34 0 obj
+<< /Length 3669 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (ARQUITETURA ALVO) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (15. Arquitetura alvo recomendada) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 683.89 499.28 56.00 re B
+0.035 0.095 0.200 rg
+48.00 683.89 5.00 56.00 re f
+0.035 0.095 0.200 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 719.89 Tm (Entrada) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 700.89 Tm (Proxy HTTPS/WAF com rate limiting, limites de corpo, HSTS e cabeçalhos de segurança.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 609.89 499.28 68.00 re B
+0.050 0.310 0.720 rg
+48.00 609.89 5.00 68.00 re f
+0.050 0.310 0.720 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 657.89 Tm (Aplicação) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 638.89 Tm (Framework Python mantido, rotas modulares, middleware de autenticação/tenant e validação) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 626.89 Tm (tipada.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 535.89 499.28 68.00 re B
+0.060 0.560 0.480 rg
+48.00 535.89 5.00 68.00 re f
+0.060 0.560 0.480 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 583.89 Tm (Dados) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 564.89 Tm (PostgreSQL ou SQLite com disciplina operacional, migrations versionadas, constraints por) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 552.89 Tm (tenant e backups testados.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 461.89 499.28 68.00 re B
+0.080 0.550 0.340 rg
+48.00 461.89 5.00 68.00 re f
+0.080 0.550 0.340 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 509.89 Tm (Arquivos) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 490.89 Tm (Object storage ou domínio separado, download autenticado e conteúdo não confiável sempre) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 478.89 Tm (isolado.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 387.89 499.28 68.00 re B
+0.860 0.430 0.050 rg
+48.00 387.89 5.00 68.00 re f
+0.860 0.430 0.050 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 435.89 Tm (Filas) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 416.89 Tm (Worker dedicado para e-mail, WhatsApp e relatórios, sempre com tenant_id obrigatório e) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 404.89 Tm (idempotência.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 313.89 499.28 68.00 re B
+0.720 0.120 0.120 rg
+48.00 313.89 5.00 68.00 re f
+0.720 0.120 0.120 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 361.89 Tm (Segredos) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 342.89 Tm (Secret manager/variáveis protegidas; a interface recebe apenas indicação de que o segredo) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 330.89 Tm (está configurado.) Tj ET
+0.050 0.310 0.720 rg
+BT /F2 12.50 Tf 1 0 0 1 48.00 297.89 Tm (Princípio central) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 277.89 Tm (Nenhuma função deve descobrir o tenant por fallback ou estado global. O tenant precisa ser derivado da) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 264.40 Tm (sessão validada, passado explicitamente até o repositório de dados e incluído em todas as chaves,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 250.91 Tm (consultas, filas, logs e testes.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 16 de 19) Tj ET
+endstream
+endobj
+35 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 34 0 R >>
+endobj
+36 0 obj
+<< /Length 3318 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (CRITÉRIOS DE ACEITE) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (16. Critérios mínimos para produção) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 729.89 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 729.89 Tm (Não existe senha, token ou chave fixa no código, documentação ou planilha versionável.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 713.69 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 713.69 Tm (Reiniciar a aplicação não modifica senhas nem dados de negócio.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 697.49 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 697.49 Tm (Anexos maliciosos não executam código na origem do HiperSales.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 681.29 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 681.29 Tm (Um tenant não consegue ler, alterar, associar, enviar ou inferir dados de outro tenant.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 665.09 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 665.09 Tm (Tenant suspenso não autentica e perde acesso em sessões existentes.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 648.89 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 648.89 Tm (Login possui limitação, monitoração e MFA para contas privilegiadas.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 632.69 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 632.69 Tm (Troca de senha revoga sessões anteriores e é imposta pelo backend.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 616.49 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 616.49 Tm (Cookie usa Secure, HttpOnly, SameSite e prefixo __Host- em HTTPS.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 600.29 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 600.29 Tm (Todas as operações mutáveis possuem proteção CSRF/origin.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 584.09 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 584.09 Tm (npm audit não apresenta vulnerabilidade alta ou crítica aplicável.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 567.89 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 567.89 Tm (Testes automatizados cobrem autorização, tenant, anexos, pedidos e integrações.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 551.69 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 551.69 Tm (Backup e restauração foram executados com sucesso em ambiente separado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 535.49 Tm (?) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 535.49 Tm (Logs de auditoria permitem identificar autor, tenant, ação, data e resultado.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 17 de 19) Tj ET
+endstream
+endobj
+37 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 36 0 R >>
+endobj
+38 0 obj
+<< /Length 4427 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (MAPA DE EVIDÊNCIAS) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (17. Mapa resumido de evidências) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 729.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 729.89 Tm (backend/app.py:259 — PBKDF2-HMAC-SHA256 com 150.000 iterações.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 713.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 713.69 Tm (backend/app.py:358-364 — unicidade global de CNPJ.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 697.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 697.49 Tm (backend/app.py:597-616 — criação/redefinição do superadministrador.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 681.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 681.29 Tm (backend/app.py:898-937 — fallback de configurações e tenant 1.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 665.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 665.09 Tm (backend/app.py:1593-1597 — substituição de template sem escape HTML.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 648.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 648.89 Tm (backend/app.py:1724-1796 — servidor HTTP e leitura integral do corpo.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 632.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 632.69 Tm (backend/app.py:1824-1832 — arquivos servidos inline pelo MIME informado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 616.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 616.49 Tm (backend/app.py:1845-1918 — sessão e cookie sem Secure.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 600.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 600.29 Tm (backend/app.py:2917-2931 — upload aceita MIME do cliente.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 584.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 584.09 Tm (backend/app.py:3223-3245 — resposta inclui configuração SMTP.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 567.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 567.89 Tm (backend/app.py:3453-3494 — fila WhatsApp sem tenant.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 551.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 551.69 Tm (backend/app.py:4741-4746 — relatório semanal com 365 dias.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 535.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 535.49 Tm (backend/app.py:6312-6335 — scheduler semanal sem escopo de tenant.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 519.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 519.29 Tm (backend/app.py:6465-6471 — associação legada sem validação de tenant.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 503.09 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 503.09 Tm (backend/app.py:7672-7681 — schedulers e ThreadingHTTPServer.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 486.89 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 486.89 Tm (frontend/app.js:778-795 — escape HTML centralizado.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 470.69 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 470.69 Tm (whatsapp-service/index.mjs:44-57 — token interno em todas as chamadas.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 454.49 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 454.49 Tm (scripts/import_carga_leon.py:107-128 — importação redefine senhas.) Tj ET
+0.060 0.560 0.480 rg
+BT /F2 9.30 Tf 1 0 0 1 50.00 438.29 Tm (•) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.30 Tf 1 0 0 1 66.00 438.29 Tm (whatsapp-service/package-lock.json:1046 e 1133 — protobufjs e sharp vulneráveis.) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 18 de 19) Tj ET
+endstream
+endobj
+39 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 38 0 R >>
+endobj
+40 0 obj
+<< /Length 3036 >>
+stream
+0.035 0.095 0.200 rg
+0.00 799.89 595.28 42.00 re f
+1.000 1.000 1.000 rg
+BT /F2 8.50 Tf 1 0 0 1 48.00 814.89 Tm (HIPERSALES  |  ANÁLISE TÉCNICA E DE SEGURANÇA) Tj ET
+1.000 1.000 1.000 rg
+BT /F1 7.50 Tf 1 0 0 1 547.28 814.89 Tm (CONCLUSÃO) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 18.00 Tf 1 0 0 1 48.00 765.89 Tm (18. Conclusão) Tj ET
+0.060 0.560 0.480 RG
+2.00 w 48.00 753.89 m 547.28 753.89 l S
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 729.89 Tm (O HiperSales possui valor funcional real e uma base capaz de evoluir. Os fluxos de clientes, produtos,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 716.40 Tm (pedidos, ocorrências e relatórios estão amplamente implementados, e há bons controles locais de SQL,) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 702.91 Tm (sessões aleatórias, escape de interface e integridade do banco.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 679.42 Tm (Entretanto, três condições impedem uma recomendação de produção pública no estado atual: a credencial) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 665.93 Tm (fixa do superadministrador, a possibilidade de execução de JavaScript por anexos e o isolamento) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 652.44 Tm (multiempresa incompleto. Esses pontos podem resultar em comprometimento administrativo, vazamento de) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 638.95 Tm (dados e envio de informações pelo canal errado.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 615.46 Tm (A recomendação é executar primeiro a contenção e o hotfix de segurança, preservando o escopo funcional.) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 601.97 Tm (Depois, modularizar gradualmente o sistema com testes de autorização e tenant. Essa sequência reduz risco) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 9.50 Tf 1 0 0 1 48.00 588.48 Tm (sem exigir uma reescrita imediata.) Tj ET
+0.940 0.960 0.980 rg
+0.830 0.870 0.920 RG
+48.00 494.99 499.28 80.00 re B
+0.720 0.120 0.120 rg
+48.00 494.99 5.00 80.00 re f
+0.720 0.120 0.120 rg
+BT /F2 11.00 Tf 1 0 0 1 64.00 554.99 Tm (Parecer técnico final) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 535.99 Tm (A aplicação pode continuar em uso controlado após contenção operacional, mas requer) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 523.99 Tm (correções críticas antes de exposição pública ou ativação de múltiplos tenants. Uma nova) Tj ET
+0.080 0.130 0.210 rg
+BT /F1 8.90 Tf 1 0 0 1 64.00 511.99 Tm (revisão deve ser realizada após o hotfix e antes da liberação em produção.) Tj ET
+0.035 0.095 0.200 rg
+BT /F2 14.00 Tf 1 0 0 1 48.00 450.99 Tm (Miguel Alameida) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 10.00 Tf 1 0 0 1 48.00 431.99 Tm (Desenvolvedor Nível 3) Tj ET
+0.340 0.400 0.480 rg
+BT /F1 9.00 Tf 1 0 0 1 48.00 414.99 Tm (6 de outubro de 2026) Tj ET
+0.830 0.870 0.920 RG 0.7 w 48.00 42 m 547.28 42 l S
+0.340 0.400 0.480 rg BT /F1 7.5 Tf 1 0 0 1 48.00 25 Tm (Miguel Alameida  |  Desenvolvedor Nível 3  |  Página 19 de 19) Tj ET
+endstream
+endobj
+41 0 obj
+<< /Type /Page /Parent 42 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 40 0 R >>
+endobj
+42 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R 31 0 R 33 0 R 35 0 R 37 0 R 39 0 R 41 0 R] /Count 19 >>
+endobj
+43 0 obj
+<< /Type /Catalog /Pages 42 0 R /PageMode /UseNone >>
+endobj
+44 0 obj
+<< /Title (Relatório Completo de Análise do Sistema HiperSales) /Author (Miguel Alameida - Desenvolvedor Nível 3) /Subject (Funcionalidade, segurança, arquitetura e plano de melhoria) /Creator (HiperSales Technical Review) >>
+endobj
+xref
+0 45
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000309 00000 n 
+0000001745 00000 n 
+0000001898 00000 n 
+0000005683 00000 n 
+0000005836 00000 n 
+0000010205 00000 n 
+0000010358 00000 n 
+0000013967 00000 n 
+0000014122 00000 n 
+0000017984 00000 n 
+0000018139 00000 n 
+0000021772 00000 n 
+0000021927 00000 n 
+0000026473 00000 n 
+0000026628 00000 n 
+0000030787 00000 n 
+0000030942 00000 n 
+0000034638 00000 n 
+0000034793 00000 n 
+0000038258 00000 n 
+0000038413 00000 n 
+0000042237 00000 n 
+0000042392 00000 n 
+0000046160 00000 n 
+0000046315 00000 n 
+0000049722 00000 n 
+0000049877 00000 n 
+0000053201 00000 n 
+0000053356 00000 n 
+0000056768 00000 n 
+0000056923 00000 n 
+0000060644 00000 n 
+0000060799 00000 n 
+0000064169 00000 n 
+0000064324 00000 n 
+0000068803 00000 n 
+0000068958 00000 n 
+0000072046 00000 n 
+0000072201 00000 n 
+0000072384 00000 n 
+0000072454 00000 n 
+trailer
+<< /Size 45 /Root 43 0 R /Info 44 0 R >>
+startxref
+72696
+%%EOF

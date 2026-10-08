@@ -1,0 +1,25 @@
+{
+  "name": "Hipersales Emissor de Pedidos",
+  "short_name": "Hipersales",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "background_color": "#eef4fb",
+  "theme_color": "#0b3d8f",
+  "icons": [
+    {
+      "src": "/assets/iconapp.png?v=20260608-logo-3",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/iconapp.png?v=20260608-logo-3",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
