@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Contratos iniciais espelhados das tabelas SQLite.
+// A migracao do esquema completo e das regras SQL ainda nao esta concluida.
+// Nao execute db push em producao antes da revisao integral.
+model Tenant {
+  id         Int     @id @default(autoincrement())
+  name       String
+  slug       String  @unique
+  status     String  @default("active")
+  ownerEmail String? @map("owner_email")
+  createdAt  String  @map("created_at")
+
+  @@map("tenants")
+}
+
+model User {
+  id                   Int     @id @default(autoincrement())
+  tenantId             Int?    @map("tenant_id")
+  name                 String
+  email                String  @unique
+  communicationEmail   String? @map("communication_email")
+  whatsappPhone        String? @map("whatsapp_phone")
+  passwordHash         String  @map("password_hash")
+  role                 String
+  isSuperAdmin         Int     @default(0) @map("is_super_admin")
+  active               Int     @default(1)
+  mustChangePassword   Int     @default(0) @map("must_change_password")
+  passwordUpdatedAt    String? @map("password_updated_at")
+  createdAt            String  @map("created_at")
+
+  @@map("users")
+}
+
+model Session {
+  token      String @id
+  userId     Int    @map("user_id")
+  expiresAt  Int    @map("expires_at")
+  createdAt  String @map("created_at")
+
+  @@map("sessions")
+}
+
+model Company {
+  id        Int     @id @default(autoincrement())
+  tenantId  Int     @default(1) @map("tenant_id")
+  name      String
+  legalName String? @map("legal_name")
+  active    Int     @default(1)
+
+  @@map("companies")
+}
+
+model Customer {
+  id                Int     @id @default(autoincrement())
+  tenantId          Int     @default(1) @map("tenant_id")
+  legalName         String  @map("legal_name")
+  tradeName         String? @map("trade_name")
+  cnpj              String  @unique
+  stateRegistration String? @map("state_registration")
+  address           String?
+  phone             String?
+  email             String?
+  formPayload       String? @map("form_payload")
+  active            Int     @default(1)
+  createdAt         String  @map("created_at")
+
+  @@map("customers")
+}
+
+model SystemSetting {
+  key       String @id
+  value     String
+  updatedAt String @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model TenantSetting {
+  tenantId  Int    @map("tenant_id")
+  key       String
+  value     String
+  updatedAt String @map("updated_at")
+
+  @@id([tenantId, key])
+  @@map("tenant_settings")
+}

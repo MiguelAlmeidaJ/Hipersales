@@ -1,0 +1,26 @@
+# Migracao SQLite → PostgreSQL com Prisma
+
+**Estado:** preparacao, sem cutover. O backend atual e Python, baseado em `sqlite3` e SQL SQLite direto. Prisma Client e Node.js/TypeScript; instalar Prisma e mudar uma URL nao migra essas consultas. O backend existente continua usando SQLite ate que os repositorios de dados sejam adaptados e testados.
+
+## Limites inegociaveis
+
+- Preservar IDs, tenants, senhas hash, permissoes, dados de pedidos, estados e timestamps.
+- Nao executar `prisma db push` contra dados reais. Criar migracoes versionadas e testar contra copia.
+- Conservar rotas JSON, sessao via cookie, jobs e contratos existentes.
+- Converter o esquema completo, incluindo tabelas acrescidas por `migrate_db()`, indices e FKs, antes do cutover.
+- Nao executar um backend SQLite e um backend PostgreSQL escrevendo em paralelo sem reconciliacao.
+
+## Etapas
+
+1. Congelar copia consistente do SQLite de producao e verificar `PRAGMA integrity_check`.
+2. Levantar esquema real e todas as consultas SQLite, inclusive `PRAGMA`, `INSERT OR IGNORE`, `?`, `lastrowid` e adaptacoes de `ON CONFLICT`.
+3. Completar `schema.prisma` para **todas** as tabelas; reconciliar constraints do banco existente.
+4. Implementar repositorios Prisma em um servico Node com contratos internos versionados, ou migrar o backend para Node/TypeScript. **Nao** fingir que Prisma Client roda diretamente no Python.
+5. Testar cada fluxo em homologacao; migrar dados na ordem das FKs, preservar IDs, alinhar sequences e comparar contagens/checksums.
+6. Fazer cutover atomico, apontando API para repositorios PostgreSQL e mantendo SQLite somente como backup.
+
+## Arquivos
+
+- `schema.prisma` contem mapeamentos iniciais de tabelas-base, **nao** o modelo completo.
+- PostgreSQL `hipersales-postgres` ja pode ser iniciado em Docker sem substituir a base atual.
+- Senhas de banco em `.env`, nunca no Git.

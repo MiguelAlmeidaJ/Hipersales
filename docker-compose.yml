@@ -18,6 +18,21 @@ services:
     depends_on:
       - evolution
 
+  hipersales-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hipersales
+      POSTGRES_USER: hipersales
+      POSTGRES_PASSWORD: ${HIPERSALES_DB_PASSWORD:?Configure_HIPERSALES_DB_PASSWORD}
+    volumes:
+      - hipersales_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hipersales -d hipersales"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   evolution:
     image: atendai/evolution-api:v2.2.3
     restart: unless-stopped
@@ -71,6 +86,7 @@ services:
       retries: 10
 
 volumes:
+  hipersales_postgres:
   hipersales_database:
   evolution_postgres:
   evolution_redis:
