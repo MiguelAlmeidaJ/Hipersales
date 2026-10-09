@@ -16,10 +16,10 @@ describe("Nest catalog read parity", () => {
   const db = new DatabaseSync(":memory:");
   db.exec(`
     CREATE TABLE companies (id INTEGER PRIMARY KEY, tenant_id INTEGER, name TEXT, legal_name TEXT, active INTEGER);
-    CREATE TABLE products (id INTEGER PRIMARY KEY, tenant_id INTEGER, company_id INTEGER, code TEXT, name TEXT, price REAL, active INTEGER);
+    CREATE TABLE products (id INTEGER PRIMARY KEY, tenant_id INTEGER, company_id INTEGER, code TEXT, name TEXT, unit TEXT, price REAL, active INTEGER, UNIQUE(company_id,code));
     CREATE TABLE company_sellers (company_id INTEGER, seller_id INTEGER);
     INSERT INTO companies VALUES (1,1,'Industria A','Razao A',1),(2,1,'Industria B','Razao B',0),(3,2,'Outra Empresa','Outra',1);
-    INSERT INTO products VALUES (1,1,1,'A01','Produto A',2,1),(2,1,2,'B01','Produto B',3,1),(3,2,3,'C01','Produto C',4,1);
+    INSERT INTO products (id,tenant_id,company_id,code,name,price,active) VALUES (1,1,1,'A01','Produto A',2,1),(2,1,2,'B01','Produto B',3,1),(3,2,3,'C01','Produto C',4,1);
     INSERT INTO company_sellers VALUES (1,10);
   `);
   const service = new CatalogService({ db } as DatabaseService);
