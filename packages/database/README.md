@@ -39,3 +39,16 @@ python3 packages/database/scripts/sqlite_to_postgres.py --backup-dir ./migration
 ```
 
 **Avisos:** use essa importação somente em ambiente isolado/homologação. `DATABASE_URL` nos argumentos do `psql` pode ficar visível na lista de processos; execute em servidor seguro. Não suba a API em PostgreSQL após importar: o backend Python ainda é SQLite. Falta implementação do adaptador PostgreSQL, reconciliação de constraints/índices e validação dos fluxos da aplicação. A ferramenta recusa um schema público com tabelas existentes e não altera o SQLite original.
+
+## Verificação adicional, somente leitura
+
+Após importar uma cópia em PostgreSQL, compare **tabelas, colunas e contagens** sem gravar nos bancos:
+
+```bash
+python3 -m pip install 'psycopg[binary]'
+DATABASE_URL='postgresql://...' python3 packages/database/scripts/compare_databases.py --sqlite migration-import-001/hipersales-migration-snapshot.sqlite3
+python3 -m unittest discover -s apps/api/tests -p test_postgres_adapter.py
+python3 apps/api/scripts/audit_sqlite_dialect.py
+```
+
+O último comando **deve permanecer bloqueante** enquanto as operações SQLite não forem totalmente adaptadas. A comparação não valida conteúdo linha a linha nem libera mudança para PostgreSQL em produção.
