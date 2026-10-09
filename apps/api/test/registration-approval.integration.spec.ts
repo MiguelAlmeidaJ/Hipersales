@@ -58,7 +58,7 @@ describe("registration approval integration", () => {
     expect(db.prepare("SELECT count(*) AS total FROM customers").get()).toMatchObject({total:0});
     expect(db.prepare("SELECT status FROM registration_requests WHERE id=1").get())
       .toMatchObject({status:"pendente"});
-    config("whatsapp", { enabled: false });
+    db.prepare("UPDATE tenant_settings SET value=? WHERE tenant_id=1 AND key='whatsapp'").run(JSON.stringify({enabled:false}));
     review.review(admin,1,{status:"aprovada"});
     review.review(admin,1,{status:"aprovada"});
     expect(db.prepare("SELECT count(*) AS total FROM customers").get()).toMatchObject({total:1});
