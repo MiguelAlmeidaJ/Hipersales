@@ -58,7 +58,8 @@ export class ProposalUpdateService {
       const oldStatus=String(previous.status||"");
       const status=normalizeProposalStatus(data.status,oldStatus);
       const patch:Data={status};
-      for(const key of columns) patch[key]=Object.prototype.hasOwnProperty.call(data,key)?data[key]:previous[key];
+      for(const key of columns) patch[key]=key==="status" ? status :
+        Object.prototype.hasOwnProperty.call(data,key)?data[key]:previous[key];
       patch.commission_percent=Object.prototype.hasOwnProperty.call(data,"commission_percent")
         ?parsePercentage(data.commission_percent):Number(previous.commission_percent||0);
       patch.discount_percent=Object.prototype.hasOwnProperty.call(data,"discount_percent")
