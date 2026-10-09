@@ -24,6 +24,24 @@ class TranslatorTests(unittest.TestCase):
     def test_percent_escape(self):
         self.assertEqual(module.translate_qmark("SELECT * FROM x WHERE name LIKE 'ab%' AND id=?"), "SELECT * FROM x WHERE name LIKE 'ab%%' AND id=%s")
 
+    def test_insert_ignore_translation(self):
+        self.assertEqual(
+            module.translate_simple_dml("INSERT OR IGNORE INTO users (id, name) VALUES (?, ?)"),
+            "INSERT INTO users (id, name) VALUES (%s, %s) ON CONFLICT DO NOTHING"
+        )
+        self.assertEqual(
+            module.translate_simple_dml("INSERT OR IGNORE INTO roles (id) VALUES (?);"),
+            "INSERT INTO roles (id) VALUES (%s) ON CONFLICT DO NOTHING;"
+        )
+
+    def test_reject_sqlite_catalog(self):
+        with self.assertRaises(ValueError):
+            module.translate_simple_dml("SELECT name FROM sqlite_master")
+
+    def test_reject_multistatement_ignore(self):
+        with self.assertRaises(ValueError):
+            module.translate_insert_or_ignore("INSERT OR IGNORE INTO a VALUES (1); DELETE FROM b;")
+
     def test_dsn_rejected(self):
         with self.assertRaises(ValueError):
             module.postgresql_connect("sqlite:///foo.db")
