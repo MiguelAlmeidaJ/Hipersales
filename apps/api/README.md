@@ -215,3 +215,9 @@ O Nest passa a implementar `GET /api/occurrences`, `PATCH /api/admin/occurrences
 O Nest agora implementa `POST /api/occurrences` com validacao de cliente e representante, anexos base64 ate 25 MB, evento inicial e gravacao da notificacao `occurrence_created` na outbox na mesma transacao. O download `GET /api/occurrences/:id/attachments/:attachmentId` consulta os bytes no banco, limita acesso ao tenant e ao vendedor da ocorrencia, e envia o arquivo como anexo. `HIPERSALES_NEST_OCCURRENCES=true` passa a incluir essas duas rotas, alem das rotas anteriores do modulo.
 
 **Diferenca ainda pendente:** o Python envia o email da ocorrencia com arquivos anexados via SMTP; a fila de notificacao Nest atualmente registra apenas o texto e preserva os arquivos no banco, mas nao os anexa ao email. O PDF de ocorrencia e a limpeza automatica dos anexos antigos ainda permanecem no Python. Em banco descartavel de desenvolvimento, testar com `npm run build:api && npm run test:api` antes de ativar a flag.
+
+## Ocorrencias: retencao e limpeza de dependencias
+
+O `OccurrencesService.list()` agora executa a mesma regra do legado: exclui anexos de ocorrencias solucionadas ha pelo menos 30 dias, somente no tenant corrente. A exclusao administrativa da ocorrencia tambem exclui anexos e eventos na mesma transacao, evitando registros orfaos sem depender de cascatas implícitas no SQLite. O corpo da notificacao de nova ocorrencia inclui dados completos de vendedor/cliente, motivo, relato e nomes dos anexos; testes de regressao foram adicionados.
+
+Os arquivos binarios ainda nao sao anexados ao email gerado pelo processador da outbox, e o PDF ainda e servido pelo Python. Mantenha estes endpoints no legado ate a migracao especifica. Validar com `npm run build:api && npm run test:api`.
