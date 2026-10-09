@@ -47,6 +47,25 @@ describe("occurrence administration",()=>{
   expect(db.prepare("SELECT COUNT(*) AS n FROM occurrences").get()).toMatchObject({n:2});
   db.close();
  });
+ it("expires old solved attachment rows without touching active or other tenant records",()=>{
+  const {db,service}=fixture();
+  db.prepare("UPDATE occurrences SET status='solucionada',resolved_at=? WHERE id=1").run("2020-01-01T00:00:00Z");
+  db.exec("INSERT INTO occurrence_attachments VALUES(1,1,1,'antigo.txt','text/plain','2020-01-01')");
+  db.exec("INSERT INTO occurrence_attachments VALUES(2,2,1,'ativo.txt','text/plain','2020-01-01')");
+  db.exec("INSERT INTO occurrence_attachments VALUES(3,3,2,'outro.txt','text/plain','2020-01-01')");
+  expect(service.cleanupExpiredAttachments(1)).toBe(1);
+  expect(db.prepare("SELECT id FROM occurrence_attachments ORDER BY id").all()).toEqual([{id:2},{id:3}]);
+  db.close();
+ });
+ it("deletes related attachment and timeline records with a case",()=>{
+  const {db,service}=fixture();
+  db.exec("INSERT INTO occurrence_attachments VALUES(1,1,1,'foto.txt','text/plain','2026-10-09')");
+  db.exec("INSERT INTO occurrence_events VALUES(1,1,1,'aberta','Aberta','Teste',10,'2026-10-09')");
+  service.delete(admin,1);
+  expect(db.prepare("SELECT COUNT(*) AS n FROM occurrence_attachments").get()).toMatchObject({n:0});
+  expect(db.prepare("SELECT COUNT(*) AS n FROM occurrence_events").get()).toMatchObject({n:0});
+  db.close();
+ });
  it("normalizes legacy status aliases",()=>{
   expect(occurrenceStatus("tratada")).toBe("solucionada");
   expect(occurrenceStatus("em_tratamento")).toBe("em_analise");
