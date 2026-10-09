@@ -179,3 +179,9 @@ Prioridade imediata para concluir, em vez de abrir novas migracoes em paralelo: 
 A rota `PATCH /api/admin/proposals/:id` foi criada no Nest, com service de atualizacao transacional. Inclui validacao de tenant, campos comerciais, bonificacao, forma de pagamento, itens ativos da industria, alteracao integral de itens na mesma transacao e validacao da progressao dos status. O service rejeita explicitamente qualquer mudanca de status, porque o legado envia notificacoes especificas em cada transicao e **ainda nao ha paridade**.
 
 O proxy **continua encaminhando todo PATCH de proposta ao Python**, sem flag de ativacao. Nao mudar isto antes de portar integralmente as notificacoes de aprovacao, recusa, producao, faturamento, entrega e WhatsApp. `test/proposal-update.spec.ts` verifica aliases e proibicao de regressao; faltam testes de integracao da edicao com banco real e entrega de mensagens.
+
+## Atualizacoes de status: transacoes e notificacoes (Nest)
+
+O `ProposalUpdateService` agora grava mudancas de status, insere `proposal_events` e invoca `ProposalStatusNotificationsService` dentro da mesma transacao. Foram migrados os formatos de e-mail e WhatsApp para recusa, producao, faturamento e entrega. A transicao para `pedido_aprovado` e explicitamente bloqueada por uma excecao transacional, porque o e-mail detalhado do backoffice (incluindo itens) ainda nao foi portado. Uma falha na notificacao interrompe a transacao e evita historico incompleto.
+
+**O proxy continua usando o Python para toda rota PATCH /api/admin/proposals/:id.** Nao direcionar ao Nest enquanto faltar aprovacao detalhada, verificacao de disparo da outbox e testes de integracao dos demais status. Testes unitarios da formatacao foram adicionados em `test/proposal-status-notifications.spec.ts`; executar `npm run build:api && npm run test:api` antes de homologar.
