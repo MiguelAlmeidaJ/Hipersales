@@ -19,6 +19,8 @@ export class DatabaseService implements OnModuleDestroy {
       this.db.prepare(`INSERT INTO tenants (id,name,slug,status,owner_email,created_at)
         VALUES (1,'HiperMix Representacoes','hipermix','active',NULL,?)`).run(new Date().toISOString());
     }
+    this.db.prepare("INSERT OR IGNORE INTO schema_migrations (version,applied_at) VALUES (1,?)")
+      .run(new Date().toISOString());
   }
 
   transaction<T>(callback: () => T): T {

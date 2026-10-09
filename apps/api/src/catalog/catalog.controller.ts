@@ -1,8 +1,11 @@
 import { Controller, Get, Query, Req, Post, Patch, Delete, Param, Body, ParseIntPipe } from "@nestjs/common";
+import { companyMutationSchema, productImportSchema, productMutationSchema,
+  type CompanyMutation, type ProductImport, type ProductMutation } from "@hipersales/contracts";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
 import { CatalogService } from "./catalog.service.js";
 import { CatalogTransferService } from "./catalog-transfer.service.js";
+import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 
 @Controller("api")
 export class CatalogController {
@@ -44,13 +47,14 @@ export class CatalogController {
   }
   @Roles("admin")
   @Post("admin/companies")
-  createCompany(@Req() request:AuthenticatedRequest,@Body() data:{name:string;legal_name?:string;active?:boolean}) {
+  createCompany(@Req() request:AuthenticatedRequest,@Body(new ZodValidationPipe(companyMutationSchema)) data:CompanyMutation) {
     return this.catalog.createCompany(request.user,data);
   }
 
   @Roles("admin")
   @Patch("admin/companies/:id")
-  updateCompany(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,@Body() data:{name:string;legal_name?:string;active?:boolean}) {
+  updateCompany(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,
+    @Body(new ZodValidationPipe(companyMutationSchema)) data:CompanyMutation) {
     return this.catalog.updateCompany(request.user,id,data);
   }
 
@@ -69,18 +73,21 @@ export class CatalogController {
 
   @Roles("admin")
   @Post("admin/products/import")
-  importProducts(@Req() request: AuthenticatedRequest, @Body() input: {rows?:unknown}) {
+  importProducts(@Req() request: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(productImportSchema)) input: ProductImport) {
     return this.transfers.importProducts(request.user,input);
   }
   @Roles("admin")
   @Post("admin/products")
-  createProduct(@Req() request:AuthenticatedRequest,@Body() data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
+  createProduct(@Req() request:AuthenticatedRequest,
+    @Body(new ZodValidationPipe(productMutationSchema)) data:ProductMutation) {
     return this.catalog.createProduct(request.user,data);
   }
 
   @Roles("admin")
   @Patch("admin/products/:id")
-  updateProduct(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,@Body() data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
+  updateProduct(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,
+    @Body(new ZodValidationPipe(productMutationSchema)) data:ProductMutation) {
     return this.catalog.updateProduct(request.user,id,data);
   }
 

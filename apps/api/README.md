@@ -16,6 +16,11 @@ npm run dev --workspace @hipersales/api
 A API usa SQLite em `database/hypersales.sqlite3` por padrao e cria o schema de forma
 idempotente. Configure `HYPERSALES_DB_PATH` para outro caminho.
 
+Em um banco novo, configure `HYPERSALES_BOOTSTRAP_ADMIN_EMAIL` e
+`HYPERSALES_BOOTSTRAP_ADMIN_PASSWORD` (minimo de 12 caracteres). O administrador inicial
+e criado uma unica vez e deve trocar a senha no primeiro acesso. Depois disso, as variaveis
+podem ser removidas do ambiente.
+
 ## Modulos
 
 - `auth`: sessoes, cookies e credenciais.

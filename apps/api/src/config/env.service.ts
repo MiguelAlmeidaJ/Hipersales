@@ -25,6 +25,9 @@ const environmentSchema = z
     HYPERSALES_WHATSAPP_TOKEN: z.string().default(""),
     EVOLUTION_API_URL: z.url().default("http://127.0.0.1:8081"),
     EVOLUTION_API_KEY: z.string().default(""),
+    HYPERSALES_BOOTSTRAP_ADMIN_NAME: z.string().default("Administrador"),
+    HYPERSALES_BOOTSTRAP_ADMIN_EMAIL: z.string().default(""),
+    HYPERSALES_BOOTSTRAP_ADMIN_PASSWORD: z.string().default(""),
   })
   .superRefine((value, context) => {
     if (value.HYPERSALES_COOKIE_SAMESITE === "None" && !value.HYPERSALES_COOKIE_SECURE) {
@@ -69,4 +72,7 @@ export class EnvService {
   readonly whatsappInternalToken = this.values.HYPERSALES_WHATSAPP_TOKEN;
   readonly evolutionApiUrl = new URL(this.values.EVOLUTION_API_URL);
   readonly evolutionApiKey = this.values.EVOLUTION_API_KEY;
+  readonly bootstrapAdminName = this.values.HYPERSALES_BOOTSTRAP_ADMIN_NAME;
+  readonly bootstrapAdminEmail = this.values.HYPERSALES_BOOTSTRAP_ADMIN_EMAIL;
+  readonly bootstrapAdminPassword = this.values.HYPERSALES_BOOTSTRAP_ADMIN_PASSWORD;
 }
