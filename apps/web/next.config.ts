@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
       { source: "/styles/:path*", destination: `${apiOrigin}/styles/:path*` },
       { source: "/assets/:path*", destination: `${apiOrigin}/assets/:path*` },
       { source: "/sw.js", destination: `${apiOrigin}/sw.js` },
-      { source: "/manifest.webmanifest", destination: `${apiOrigin}/manifest.webmanifest` },
       { source: "/legacy/:path*", destination: `${apiOrigin}/:path*` },
     ];
   },
