@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req } from "@nestjs/common";
+import { Controller, Get, Query, Req, Post, Patch, Delete, Param, Body, ParseIntPipe } from "@nestjs/common";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
 import { CatalogService } from "./catalog.service.js";
@@ -41,4 +41,34 @@ export class CatalogController {
   ) {
     return this.catalog.adminProducts(request.user, companyId, search, active);
   }
+  @Roles("admin")
+  @Post("admin/companies")
+  createCompany(@Req() request:AuthenticatedRequest,@Body() data:{name:string;legal_name?:string;active?:boolean}) {
+    return this.catalog.createCompany(request.user,data);
+  }
+
+  @Roles("admin")
+  @Patch("admin/companies/:id")
+  updateCompany(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,@Body() data:{name:string;legal_name?:string;active?:boolean}) {
+    return this.catalog.updateCompany(request.user,id,data);
+  }
+
+  @Roles("admin")
+  @Post("admin/products")
+  createProduct(@Req() request:AuthenticatedRequest,@Body() data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
+    return this.catalog.createProduct(request.user,data);
+  }
+
+  @Roles("admin")
+  @Patch("admin/products/:id")
+  updateProduct(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,@Body() data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
+    return this.catalog.updateProduct(request.user,id,data);
+  }
+
+  @Roles("admin")
+  @Delete("admin/products/:id")
+  deleteProduct(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number) {
+    return this.catalog.deleteProduct(request.user,id);
+  }
+
 }
