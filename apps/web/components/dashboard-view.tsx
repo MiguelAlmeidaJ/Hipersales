@@ -20,7 +20,7 @@ export default function DashboardView({user}:{user:SessionUser}){
  const [filters,setFilters]=useState({q:"",status:"",date_from:"",date_to:""});
  useEffect(()=>{let active=true;setLoading(true);setError("");
  const params=new URLSearchParams();Object.entries(filters).forEach(([key,value])=>{if(value)params.set(key,value)});
- const url=admin?`/api/admin/executive-dashboard${params.size?"?"+params.toString():""}`:"/api/dashboard";
+ const url: `/api/${string}`=admin?`/api/admin/executive-dashboard${params.size?"?"+params.toString():""}`:"/api/dashboard";
  if(admin){api<Executive>(url).then(v=>{if(active)setData(v)}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Falha ao carregar painel")}).finally(()=>{if(active)setLoading(false)})}
  else {api<SellerOverview>("/api/dashboard").then(v=>{if(active)setOverview(v)}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Falha ao carregar indicadores")}).finally(()=>{if(active)setLoading(false)})}
  return()=>{active=false};
