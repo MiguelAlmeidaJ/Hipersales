@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Req } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Post, Param, ParseIntPipe, Patch, Req } from "@nestjs/common";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
 import { OccurrencesService } from "./occurrences.service.js";
