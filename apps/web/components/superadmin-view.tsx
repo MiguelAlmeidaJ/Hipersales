@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
-import TenantPreview from "./tenant-preview";
+import TenantConsole from "./tenant-console";
 type Tenant={id:number;name?:string;slug?:string;status?:string;created_at?:string;owner_email?:string;users_count?:number;companies_count?:number;customers_count?:number;proposals_count?:number};
 type Payload={tenants:Tenant[]};
 export default function SuperAdminView(){
@@ -21,7 +21,7 @@ export default function SuperAdminView(){
  const metricColors=["bg-blue-100 text-blue-700","bg-emerald-100 text-emerald-700","bg-violet-100 text-violet-700","bg-amber-100 text-amber-700","bg-indigo-100 text-indigo-700"];
  const metricIcons=["▣","✓","♙","▤","✉"];
  const filtered=tenants.filter(t=>[t.name,t.slug,t.owner_email].join(" ").toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR")));
- if(selectedTenant!==null)return <TenantPreview tenantId={selectedTenant} onBack={()=>setSelectedTenant(null)}/>;
+ if(selectedTenant!==null)return <TenantConsole tenantId={selectedTenant} tenantName={tenants.find(t=>t.id===selectedTenant)?.name||"Tenant"} onBack={()=>setSelectedTenant(null)}/>;
  async function createTenant(e:FormEvent<HTMLFormElement>){e.preventDefault();setSaving(true);setError("");setNotice("");try{
   if(form.admin_password.length<8)throw new Error("Defina uma senha com pelo menos 8 caracteres.");
   const result=await api<{message?:string}>("/api/super-admin/tenants",{method:"POST",body:JSON.stringify(form)});
