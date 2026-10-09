@@ -239,6 +239,12 @@ class HttpHandlerMixin:
             if method == "GET" and path == "/api/super-admin/tenants":
                 self.require_super_admin(user)
                 return {"tenants": self.super_admin_tenants(conn)}
+            if method == "GET" and path.startswith("/api/super-admin/tenants/") and path.endswith("/dashboard"):
+                self.require_super_admin(user)
+                tenant_part = path.removeprefix("/api/super-admin/tenants/").removesuffix("/dashboard")
+                if not tenant_part.isdecimal():
+                    raise ApiError(HTTPStatus.BAD_REQUEST, "ID de tenant invalido.")
+                return self.super_admin_tenant_dashboard(conn, int(tenant_part), query)
             if method == "GET" and path.startswith("/api/super-admin/tenants/"):
                 self.require_super_admin(user)
                 tenant_part = path.removeprefix("/api/super-admin/tenants/")
