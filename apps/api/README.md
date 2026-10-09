@@ -68,3 +68,24 @@ Validar antes de implantar: `npm run build:api` e `npm run test:api`. Manter os 
 As rotas `GET /api/customers` e `GET /api/admin/customers` passaram para o `CustomersModule` no NestJS. Foram preservados filtros de busca, vínculo de representante, isolamento por `tenant_id`, campos adicionais de vendedores e enriquecimento dos dados básicos do formulário. Cadastro, edição, exclusão, validação de CNPJ com consulta externa, vínculos e notificações continuam no Python para evitar regressões. Esta etapa não altera o banco e não remove o processo legado.
 
 Executar `npm run build:api` e `npm run test:api` antes de implantar. Comparar os resultados com a API anterior em um banco de testes, especialmente os campos de endereço preenchidos via `form_payload`.
+
+## Escritas de clientes em homologacao
+
+O `CustomersWriteService` implementa criar, atualizar e excluir clientes, com transacoes, verificacao de CNPJ normalizado por empresa e bloqueio de exclusao quando existem pedidos. As rotas `POST /api/admin/customers`, `PATCH /api/admin/customers/:id` e `DELETE /api/admin/customers/:id` foram adicionadas ao Nest.
+
+**Compatibilidade incompleta:** o Python realiza consulta externa de CNPJ ao salvar e enriquece automaticamente campos de endereco, inscricao estadual e contato. A implementacao Nest atual nao consulta essa fonte externa, e a validacao dos digitos verificadores do CNPJ nao foi portada. Portanto, o proxy continua encaminhando escritas para Python por padrao.
+
+A variavel `HIPERSALES_NEST_CUSTOMER_WRITES=true` habilita as escritas Nest **somente para homologacao controlada**, em uma base de testes. Nao habilitar em producao ate que os testes de equivalencia, campos enriquecidos e regras de vinculos estejam completos.
+
+### Etapas restantes estimadas
+
+1. Equivalencia completa de clientes e CNPJ; aprovar escrita Nest.
+2. Vinculos de representantes e fluxos de aprovacao de cadastro.
+3. Pedidos/propostas, itens, estados, autorizacoes e arquivos PDF.
+4. Ocorrencias e historico de eventos.
+5. Dashboard, indicadores, metas e relatorios.
+6. Configuracoes, usuarios e permissoes remanescentes.
+7. Integracoes externas e workers (WhatsApp, e-mail, notificacoes, agendamentos).
+8. Homologacao final, migracao da persistencia PostgreSQL se desejada, desligamento do proxy/Python e limpeza do legado.
+
+Oito etapas representam uma estimativa tecnica e podem ser subdivididas apos a auditoria de cada dominio.
