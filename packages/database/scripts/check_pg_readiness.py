@@ -58,9 +58,7 @@ def main() -> int:
                     if sequence:
                         cur.execute(f"SELECT COALESCE(MAX(id), 0) FROM public.{ident(table)}")
                         max_id = cur.fetchone()[0]
-                        cur.execute("SELECT last_value, is_called FROM pg_sequences WHERE schemaname='public' AND sequencename=%s", (sequence.rsplit(".", 1)[-1].strip('"'),))
-                        # pg_sequences does not expose is_called; inspect last_value only.
-                        row = cur.fetchone() if False else None
+                        # Read sequence last_value from the catalog (read-only).
                         cur.execute("SELECT last_value FROM pg_sequences WHERE schemaname='public' AND sequencename=%s", (sequence.rsplit(".", 1)[-1].strip('"'),))
                         last = cur.fetchone()
                         if last is not None and last[0] is not None and last[0] < max_id:
