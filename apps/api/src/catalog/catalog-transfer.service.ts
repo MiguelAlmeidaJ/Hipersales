@@ -35,6 +35,7 @@ export class CatalogTransferService {
     if (input.rows.length > 10000)
       throw new BadRequestException("Limite de 10000 itens por importacao.");
 
+    const rows = input.rows as unknown[];
     return this.database.transaction(() => {
       const db = this.database.db;
       const company = db.prepare("SELECT id FROM companies WHERE id=? AND tenant_id=?");
@@ -45,7 +46,7 @@ export class CatalogTransferService {
         name=excluded.name,unit=excluded.unit,price=excluded.price,active=excluded.active`);
       let created = 0;
       let updated = 0;
-      for (const value of input.rows) {
+      for (const value of rows) {
         if (!value || typeof value !== "object" || Array.isArray(value)) continue;
         const row = value as Record<string, unknown>;
         const companyId = Number(row.company_id);
