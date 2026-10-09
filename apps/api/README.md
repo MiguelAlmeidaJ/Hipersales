@@ -147,3 +147,9 @@ Foi implementado `RegistrationReviewService` com `PATCH /api/admin/requests/:id`
 Foi implementado `ApprovalNotificationsService`, integrado ao `RegistrationReviewService`, para inserir eventos `customer_status_email` e, se habilitado, `customer_status_whatsapp` na `email_outbox` na mesma transacao de aprovacao do cliente. Faz interpolacao de variaveis do template por empresa e evita notificacoes duplicadas quando a solicitacao ja estava aprovada. Se os templates necessarios nao estiverem disponiveis, a transacao falha (sem aprovar silenciosamente sem mensagens).
 
 **Ainda NAO habilitar a rota PATCH /api/admin/requests/:id no Nest em producao.** O proxy continua encaminhando-a ao Python. A implementacao Nest ainda nao reproduz o `logo_email` do legado, os templates padrao completos nem a conversao de avisos HTML em todos os cenarios. Estes pontos precisam ser homologados em testes e comparacao de respostas reais antes do corte. Os testes automatizados incluem placeholders e deduplicacao de aviso.
+
+## Homologacao integrada das aprovacoes
+
+`test/registration-approval.integration.spec.ts` cobre o processamento completo de uma aprovacao com as implementacoes reais `RegistrationReviewService` e `ApprovalNotificationsService`, utilizando SQLite em memoria. Os cenarios incluem rollback se WhatsApp estiver ligado mas sem template, aprovacao subsequente com canal desabilitado, ausencia de duplicidade na outbox e enfileiramento simultaneo de email/WhatsApp. Esses testes nao executam os provedores externos e nao comprovam equivalencia dos templates padrao legados.
+
+A rota `PATCH /api/admin/requests/:id` continua no Python ate passar por compilacao, testes do projeto e homologacao dos emails e identidade visual. Nao usar o teste automatizado como autorizacao de deploy.
