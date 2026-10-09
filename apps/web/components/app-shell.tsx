@@ -14,7 +14,7 @@ export default function AppShell({children}:{children:ReactNode}){
  const [view,setView]=useState<"loading"|"login"|"home">("loading");
  const [user,setUser]=useState<SessionUser|null>(null);
  const [username,setUsername]=useState(""),[password,setPassword]=useState("");
- const [busy,setBusy]=useState(false),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false);
+ const [busy,setBusy]=useState(false),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false);
  useEffect(()=>{let active=true;api<{user:SessionUser}>("/api/me").then(result=>{if(active){setUser(result.user);setView("home")}}).catch(()=>{if(active)setView("login")});return()=>{active=false}},[]);
  useEffect(()=>{setMenuOpen(false)},[pathname]);
  async function login(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");
@@ -27,16 +27,26 @@ export default function AppShell({children}:{children:ReactNode}){
  const nav=visibleModules(user?.role||"seller");
  const allowed=module&&nav.some(item=>item.id===module.id);
  const selected=allowed?module:null;
- return <div className="workspace">
- <button type="button" className="fixed bottom-5 right-5 z-50 rounded-xl bg-violet-800 px-5 py-3 font-semibold text-white shadow-lg md:hidden" aria-controls="app-navigation" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}>{menuOpen?"Fechar":"☰ Menu"}</button>
- {menuOpen&&<button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-slate-950/50 md:hidden" onClick={()=>setMenuOpen(false)}/>}
- <aside id="app-navigation" className={`nav-side ${menuOpen?"":"max-md:hidden"}`}>
- <div className="nav-brand"><div className="flex items-center gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15 text-xl font-extrabold text-white">H</span><div><h2>Hipersales</h2><p>Console comercial</p></div></div></div>
- <div className="mt-5 rounded-xl border border-white/10 bg-white/5 px-3 py-3"><p className="text-[10px] font-bold uppercase tracking-widest text-violet-200">Ambiente</p><p className="mt-1 truncate text-sm font-semibold text-white">HiperMix Representações</p></div>
- <nav aria-label="Navegação principal">{nav.map((item,i)=><div key={item.id}>{(i===0||nav[i-1].group!==item.group)&&<p className="nav-group-label">{item.group}</p>}<Link href={modulePath(item)} aria-current={selected?.id===item.id?"page":undefined} className={`flex w-full items-center rounded-xl border px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 ${selected?.id===item.id?"border-white/25 bg-white/15 shadow-sm":"border-transparent"}`}><span aria-hidden className="mr-3 inline-flex w-5 justify-center text-lg text-violet-100">{item.icon}</span><span>{item.title}</span>{selected?.id===item.id&&<span className="ml-auto size-1.5 rounded-full bg-violet-200"/>}</Link></div>)}</nav>
- <div className="mt-auto border-t border-white/10 pt-4"><p className="truncate px-3 text-xs text-violet-200">{user?.name}</p></div>
+ return <div className="workspace app-frame">
+ <button type="button" className="app-mobile-toggle md:hidden" aria-label={menuOpen?"Fechar navegação":"Abrir navegação"} aria-expanded={menuOpen} aria-controls="app-navigation" onClick={()=>setMenuOpen(v=>!v)}>{menuOpen?"×":"☰"}</button>
+ {menuOpen&&<button type="button" aria-label="Fechar menu" className="fixed inset-0 z-30 bg-slate-950/60 md:hidden" onClick={()=>setMenuOpen(false)}/>}
+ <aside id="app-navigation" className={`nav-side app-sidebar ${menuOpen?"is-open":""}`}>
+  <Link href="/app/painel" className="app-brand" onClick={()=>setMenuOpen(false)}>
+   <span className="app-brand-mark" aria-hidden>H</span><span className="min-w-0"><strong className="block text-lg font-extrabold tracking-tight">Hipersales</strong><span className="block text-xs text-violet-200/80">Gestão comercial</span></span>
+  </Link>
+  <div className="app-company"><span className="text-[10px] font-bold uppercase tracking-[.15em] text-violet-200/70">Empresa</span><strong className="mt-1 block truncate text-sm text-white">HiperMix Representações</strong></div>
+  <nav className="app-menu" aria-label="Navegação principal">{nav.map((item,i)=><div key={item.id}>{(i===0||nav[i-1].group!==item.group)&&<p className="app-menu-heading">{item.group}</p>}<Link href={modulePath(item)} onClick={()=>setMenuOpen(false)} aria-current={selected?.id===item.id?"page":undefined} className={`app-menu-link ${selected?.id===item.id?"is-active":""}`}><span className="app-menu-icon" aria-hidden>{item.icon}</span><span className="truncate">{item.title}</span></Link></div>)}</nav>
+  <div className="app-sidebar-footer"><span className="app-user-avatar" aria-hidden>{(user?.name||"H").slice(0,1).toUpperCase()}</span><div className="min-w-0"><strong className="block truncate text-xs text-white">{user?.name}</strong><span className="text-[11px] text-violet-200/70">{user?.is_dev?"Desenvolvedor":user?.role==="admin"?"Administrador":"Representante"}</span></div></div>
  </aside>
- <div className="workspace-main"><header className="top"><div className="min-w-0"><span className="text-[10px] font-bold uppercase tracking-widest text-violet-700">HiperMix / Hipersales</span><strong className="block truncate text-base">{selected?.title||"Hipersales"}</strong></div><div className="flex items-center gap-3"><span className="hidden text-sm text-slate-500 sm:inline">{user?.name}</span>{user?.is_dev&&<span className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-violet-800">Dev</span>}<button type="button" className="secondary" disabled={busy} onClick={logout}>Sair</button></div></header>
- <main className="content"><div className="mb-5 flex justify-end"><PasswordChange onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user)}}/></div>{selected?<SessionContext.Provider value={user}>{children}</SessionContext.Provider>:<section className="tile"><h1>Acesso indisponível</h1><p className="mt-2 text-slate-600">Esta página não está disponível para o seu perfil.</p><Link href="/app/painel" className="mt-4 inline-block font-semibold text-violet-700">Ir para o painel</Link></section>}</main></div>
+ <div className="workspace-main app-main">
+  <header className="top app-header">
+   <div className="min-w-0"><p className="app-breadcrumb">HiperMix <span className="mx-1 text-slate-300">/</span> {selected?.title||"Sistema"}</p><h1 className="app-header-title">{selected?.title||"Hipersales"}</h1></div>
+   <div className="app-header-actions"><span className="hidden text-sm font-medium text-slate-600 lg:inline">{user?.name}</span>{user?.is_dev&&<span className="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-800">Dev</span>}<button type="button" className="app-account-button" aria-expanded={accountOpen} onClick={()=>setAccountOpen(v=>!v)}>Minha conta <span aria-hidden>{accountOpen?"⌃":"⌄"}</span></button><button type="button" className="app-logout-button" disabled={busy} onClick={logout}>Sair</button></div>
+  </header>
+  <main className="content app-content">
+   {accountOpen&&<div className="app-account-panel"><PasswordChange onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user);setAccountOpen(false)}}/></div>}
+   {selected?<SessionContext.Provider value={user}>{children}</SessionContext.Provider>:<section className="tile"><h1>Acesso indisponível</h1><p className="mt-2 text-slate-600">Esta página não está disponível para o seu perfil.</p><Link href="/app/painel" className="mt-4 inline-block font-semibold text-violet-700">Ir para o painel</Link></section>}
+  </main>
+ </div>
  </div>;
 }
