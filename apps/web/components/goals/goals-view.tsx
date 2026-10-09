@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api, type SessionUser } from "../lib/api";
+import { api, type SessionUser } from "@/lib/api";
 
 type Progress = {
   enabled: boolean;

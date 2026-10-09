@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { api } from "../lib/api";
+import { api } from "@/lib/api";
 export default function PasswordChange({
   required = false,
   onSuccess,

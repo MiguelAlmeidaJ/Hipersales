@@ -1,6 +1,6 @@
 "use client";
-import type { ModuleId } from "../lib/navigation";
-import { useAuthenticatedUser } from "./app-shell";
+import { useAuthenticatedUser } from "@/components/auth/session-context";
+import type { ModuleId } from "@/lib/navigation";
 import ModuleRenderer from "./module-renderer";
 export default function ModulePage({ module }: { module: ModuleId }) {
   const user = useAuthenticatedUser();

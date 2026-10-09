@@ -1,19 +1,19 @@
 "use client";
 
-import type { SessionUser } from "../lib/api";
-import type { ModuleId } from "../lib/navigation";
-import { CatalogEditor } from "./catalog-editor";
-import CustomerEditor from "./customer-editor";
-import CustomerRequest from "./customer-request";
-import DashboardView from "./dashboard-view";
-import GoalsView from "./goals-view";
-import OccurrenceEditor from "./occurrence-editor";
-import OrdersView from "./orders-view";
-import ReadOnlyCatalog from "./read-only-catalog";
-import RegistrationApprovals from "./registration-approvals";
-import ReportsView from "./reports-view";
-import SettingsEditor from "./settings-editor";
-import UsersEditor from "./users-editor";
+import { CatalogEditor } from "@/components/catalog/catalog-editor";
+import ReadOnlyCatalog from "@/components/catalog/read-only-catalog";
+import CustomerEditor from "@/components/customers/customer-editor";
+import CustomerRequest from "@/components/customers/customer-request";
+import RegistrationApprovals from "@/components/customers/registration-approvals";
+import DashboardView from "@/components/dashboard/dashboard-view";
+import GoalsView from "@/components/goals/goals-view";
+import OccurrenceEditor from "@/components/occurrences/occurrence-editor";
+import OrdersView from "@/components/orders/orders-view";
+import ReportsView from "@/components/reports/reports-view";
+import SettingsEditor from "@/components/settings/settings-editor";
+import UsersEditor from "@/components/users/users-editor";
+import type { SessionUser } from "@/lib/api";
+import type { ModuleId } from "@/lib/navigation";
 
 type ModuleRendererProps = {
   module: ModuleId;

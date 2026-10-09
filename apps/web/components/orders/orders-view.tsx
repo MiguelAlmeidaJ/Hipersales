@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { api, type SessionUser } from "../lib/api";
+import { api, type SessionUser } from "@/lib/api";
 import ProposalForm from "./proposal-form";
 import OrderAdmin from "./order-admin";
 

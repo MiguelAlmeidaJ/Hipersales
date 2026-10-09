@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { SessionUser } from "../lib/api";
-import { api } from "../lib/api";
-import PasswordChange from "./password-change";
+import PasswordChange from "@/components/auth/password-change";
+import { api, type SessionUser } from "@/lib/api";
 
 type HeaderProps = {
   title: string;

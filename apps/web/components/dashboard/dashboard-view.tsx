@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
-import { api, type SessionUser } from "../lib/api";
+import { api, type SessionUser } from "@/lib/api";
 type Rank = { name: string; orders: number; total: number };
 type Product = { name: string; company: string; quantity: number; total: number };
 type Order = {

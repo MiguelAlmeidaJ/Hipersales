@@ -8,12 +8,12 @@ const backend = ["auth/auth.controller.ts","proposals/proposals.controller.ts","
   "goals/goals.controller.ts","settings/settings.controller.ts","dashboard/dashboard.controller.ts","documents/documents.controller.ts"]
   .map(path=>read(`apps/api/src/${path}`)).join("\n");
 const statusSource = read("apps/api/src/settings/settings.constants.ts");
-const orders = read("apps/web/components/order-admin.tsx");
-const listing = read("apps/web/components/orders-view.tsx");
-const assignments = read("apps/web/components/seller-assignments.tsx");
-const reports = read("apps/web/components/reports-view.tsx");
+const orders = read("apps/web/components/orders/order-admin.tsx");
+const listing = read("apps/web/components/orders/orders-view.tsx");
+const assignments = read("apps/web/components/users/seller-assignments.tsx");
+const reports = read("apps/web/components/reports/reports-view.tsx");
 const navigation = read("apps/web/lib/navigation.ts");
-const shell = read("apps/web/components/app-shell.tsx");
+const shell = read("apps/web/components/layout/app-shell.tsx");
 const nestAuth = read("apps/api/src/auth/auth.controller.ts");
 const authContracts = read("packages/contracts/src/auth.ts");
 

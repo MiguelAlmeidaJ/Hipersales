@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api } from "@/lib/api";
 type Stage = { name: string; color: string };
 type Status = { key: string; name: string; color: string };
 type Template = { subject: string; body: string };

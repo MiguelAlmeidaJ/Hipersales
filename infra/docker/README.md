@@ -1,11 +1,17 @@
-# Operacao Docker
+# Operação Docker
 
-1. Copie `.env.example` para `.env` e configure chaves/senhas.
-2. Configure `HYPERSALES_PUBLIC_URL` com o dominio HTTPS de producao para o webhook da Evolution.
-3. Rode `docker compose config` e `docker compose up -d --build`.
-4. Acesse a aplicacao em :8000 e, se necessario, Evolution apenas via localhost:8081.
-5. Teste cadastro, autenticacao, CRUD, propostas, relatorios, criacao de instancia WhatsApp, QR, envio e webhook.
+O Docker Compose provisiona somente infraestrutura: PostgreSQL, Redis e Evolution API.
+A API NestJS e o frontend Next.js não possuem Dockerfile e são executados pelo PM2.
 
-**Dados existentes:** o Compose cria um volume SQLite novo. Se ja existe uma instalacao, realize backup consistente e restaure o SQLite no volume antes da ativacao. Nao use `docker compose down -v` em producao. Evolution mantem volumes proprios para banco e sessoes; o Baileys standalone anterior nao e migrado automaticamente (QR novo pode ser necessario).
+1. Copie `.env.example` para `.env` e configure chaves e senhas.
+2. Configure `HYPERSALES_PUBLIC_URL` com a URL HTTPS pública da API.
+3. Valide com `docker compose config`.
+4. Inicie a infraestrutura com `docker compose up -d`.
+5. Verifique com `docker compose ps` e `docker compose logs -f evolution postgres redis`.
 
-O backend preserva agendadores que rodam no mesmo processo: nao escale replicas sem tratar exclusao mutua dos jobs.
+A Evolution fica vinculada a `127.0.0.1:8081`. Os bancos e o Redis não publicam portas
+no Compose principal. O serviço `hipersales-postgres` está provisionado para a futura
+migração do banco comercial; a API ainda usa SQLite.
+
+Não execute `docker compose down -v` quando houver dados que precisem ser preservados.
+Os volumes da Evolution guardam banco, cache e sessões do WhatsApp.

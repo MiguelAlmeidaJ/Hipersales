@@ -4,15 +4,12 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { api, type SessionUser } from "../lib/api";
-import { getModuleFromPath, visibleModules } from "../lib/navigation";
+import PasswordChange from "@/components/auth/password-change";
+import { SessionContext } from "@/components/auth/session-context";
+import { api, type SessionUser } from "@/lib/api";
+import { getModuleFromPath, visibleModules } from "@/lib/navigation";
 import AppHeader from "./app-header";
 import AppSidebar from "./app-sidebar";
-import PasswordChange from "./password-change";
-import { SessionContext } from "./session-context";
-
-// Keep the existing hook API available to feature modules.
-export { useAuthenticatedUser } from "./session-context";
 
 type SessionStatus = "loading" | "login" | "home";
 

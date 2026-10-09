@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { api } from "../lib/api";
+import { api } from "@/lib/api";
 
 type Customer = {
   id: number;

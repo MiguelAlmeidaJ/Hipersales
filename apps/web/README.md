@@ -1,42 +1,40 @@
-# Hipersales — frontend Next.js
+# HiperSales — frontend Next.js
 
-O frontend principal utiliza Next.js, TypeScript e Tailwind CSS. Os arquivos antigos `app.js`, `index.html`, `modules/`, `styles.css` e `styles/` foram removidos da branch `main`. A branch `old` mantém o histórico original.
+Frontend em Next.js, React e TypeScript. A API de negócio é NestJS/TypeScript; o legado
+Python já foi removido.
 
-A API de negócio permanece em Python com SQLite neste estágio. O banco PostgreSQL/Prisma ainda exige uma migração de backend separada. A Evolution API funciona via Docker.
+## Executar
 
-## Executar com PM2 (sem Docker para API/Web)
-
-A configuração oficial para API e Web separados está na raiz em `ecosystem.config.cjs`. Consulte [o guia PM2](../../../docs/pm2-deploy.md) para instalação, build, inicialização e reinício dos dois processos.
-
-## Alternativa com Docker
-
-No diretório raiz do repositório, configure o `.env` com as variáveis exigidas no `docker-compose.yml` e execute:
+API e Web são executados pelo PM2, nunca pelo Docker Compose. Na raiz do repositório:
 
 ```bash
-docker compose up --build -d
-docker compose ps
-docker compose logs -f web hipersales
+npm ci
+npm ci --prefix apps/web
+npm run build:api
+npm run build --prefix apps/web
+pm2 startOrReload ecosystem.config.cjs
 ```
 
-Abra http://localhost:3000. O backend usa a porta 8000 e é consumido pelo frontend através das rotas `/api/*`. Em instalações sem Docker, execute `npm run dev --workspace @hipersales/api` e, em outro terminal, `npm run dev --prefix apps/web`.
+Para desenvolvimento, execute a API e o frontend em terminais separados:
+
+```bash
+npm run dev --workspace @hipersales/api
+npm run dev --prefix apps/web
+```
+
+Abra `http://localhost:3000`. O frontend consome a API pelas rotas `/api/*`.
 
 ## Verificações
 
 ```bash
-cd apps/web
-npm install
-npm run check:contracts
-npm run audit:legacy
-npm run typecheck
-npm run build
+npm run check:contracts --prefix apps/web
+npm run audit:legacy --prefix apps/web
+npm run typecheck --prefix apps/web
+npm run build --prefix apps/web
 ```
 
-O script de auditoria confere dependências e arquivos antigos; isso não garante paridade funcional. A validação manual deve seguir `docs/frontend-parity-checklist.md`, com contas dos perfis representante, administrador e superadmin.
+Os componentes ficam agrupados por responsabilidade em `components/`: infraestrutura
+visual em `layout`, autenticação em `auth`, composição em `modules` e uma pasta para cada
+domínio funcional. Imports internos usam o alias `@/`.
 
-## Arquivos compartilhados
-
-`apps/web/assets/` permanece porque o backend usa as imagens em templates de e-mail, além de fornecê-las ao Next pela rota `/assets/*`. Não remover sem migrar o mecanismo de imagens do backend.
-
-## Critérios de aceite
-
-Antes de usar em produção, validar login e recuperação de sessão, permissões, emissão/edição de pedidos, gestão de clientes e empresas, propostas, geração de PDFs, metas, relatórios e Evolution API. O PWA tem manifesto Next.js, mas o funcionamento offline e o service worker ainda necessitam homologação.
+Consulte `ARCHITECTURE.md` para a árvore e as regras de manutenção.

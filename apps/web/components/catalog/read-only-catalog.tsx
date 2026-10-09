@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { api } from "@/lib/api";
 type Section = "customers" | "companies" | "products";
 type RecordData = Record<string, unknown>;
 const endpoints: Record<Section, `/api/${string}`> = {

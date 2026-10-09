@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
-import { api } from "../lib/api";
+import { api } from "@/lib/api";
 import WorkflowSettings from "./workflow-settings";
 type Settings = { smtp?: Record<string, unknown>; whatsapp?: Record<string, unknown> };
 type Response = { settings: Settings };

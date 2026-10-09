@@ -1,37 +1,4 @@
 services:
-  web:
-    build:
-      context: .
-      dockerfile: infra/docker/Dockerfile.web
-    restart: unless-stopped
-    environment:
-      HIPERSALES_API_ORIGIN: http://hipersales:8000
-    ports:
-      - "3000:3000"
-    depends_on:
-      - hipersales
-
-  hipersales:
-    build:
-      context: .
-      dockerfile: infra/docker/Dockerfile.api
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      HOST: 0.0.0.0
-      PORT: "8000"
-      NODE_ENV: production
-      HYPERSALES_DB_PATH: /app/database/hypersales.sqlite3
-    volumes:
-      - hipersales_database:/app/database
-    ports:
-      - "8000:8000"
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   hipersales-postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -101,7 +68,6 @@ services:
 
 volumes:
   hipersales_postgres:
-  hipersales_database:
   evolution_postgres:
   evolution_redis:
   evolution_instances:

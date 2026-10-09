@@ -1,82 +1,53 @@
-# Frontend Hipersales: organização Next.js App Router
+# Frontend HiperSales: organização Next.js App Router
 
-A aplicação utiliza **rotas de verdade**, um único layout autenticado, navegação por links Next e módulos independentes.
+A aplicação usa rotas do App Router, um layout autenticado persistente e componentes
+agrupados pela responsabilidade que exercem.
 
 ```text
 apps/web/
 ├── app/
-│   ├── layout.tsx              # Layout HTML global
-│   ├── page.tsx                # / -> /app/painel
-│   └── (workspace)/            # Route group (fora da URL)
-│       └── app/
-│       ├── layout.tsx          # Shell persistente autenticado
-│       ├── page.tsx            # /app -> /app/painel
-│       ├── painel/page.tsx
-│       ├── pedidos/page.tsx
-│       ├── ocorrencias/page.tsx
-│       ├── clientes/page.tsx
-│       ├── empresas/page.tsx
-│       ├── produtos/page.tsx
-│       ├── relatorios/page.tsx
-│       ├── metas/page.tsx
-│       ├── usuarios/page.tsx
-│       ├── configuracoes/page.tsx
-│       ├── aprovacoes/page.tsx
-│       └── solicitar-cliente/page.tsx
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── (workspace)/app/
+│       ├── layout.tsx
+│       └── <módulo>/page.tsx
 ├── components/
-│   ├── app-shell.tsx           # Sessão, autenticação e sidebar persistentes
-│   ├── module-page.tsx         # Contexto de sessão -> renderizador
-│   ├── module-renderer.tsx     # Composição e autorização das telas
-│   ├── read-only-catalog.tsx   # Listagem para representantes
-│   └── ...                    # Funcionalidades existentes preservadas
+│   ├── auth/          # sessão e troca de senha
+│   ├── layout/        # shell, cabeçalho e navegação lateral
+│   ├── modules/       # ligação entre rota, sessão e módulo funcional
+│   ├── catalog/
+│   ├── customers/
+│   ├── dashboard/
+│   ├── goals/
+│   ├── occurrences/
+│   ├── orders/
+│   ├── reports/
+│   ├── settings/
+│   └── users/
 └── lib/
-    ├── navigation.ts           # Mapa tipado: rotas, grupos, ícones, visibilidade
-    └── api.ts
+    ├── api.ts
+    └── navigation.ts
 ```
 
-## Recomendações para novas telas
+## Regras de manutenção
 
-1. Criar `app/(workspace)/app/<rota>/page.tsx` com `<ModulePage module="..." />`.
-2. Registrar rota e permissões em `lib/navigation.ts`.
-3. Reutilizar o layout e a sessão em `components/app-shell.tsx`.
-4. Concentrar operações específicas em seus componentes; não duplicar sidebar, login e acesso a dados.
-5. Validar permissões no **backend** também (o filtro de navegação é apenas UX).
+1. Coloque cada componente na pasta do domínio que o utiliza.
+2. Mantenha shell e navegação em `components/layout` e autenticação em `components/auth`.
+3. Use imports diretos com o alias `@/`; não crie arquivos de barril (`index.ts`).
+4. Registre novas rotas e permissões em `lib/navigation.ts`.
+5. Trate o filtro de navegação apenas como UX; a autorização obrigatória fica na API.
+6. Extraia componentes quando houver uma responsabilidade reutilizável, evitando divisão
+   artificial de JSX curto.
 
-## Homologação local
+Para uma nova tela, crie `app/(workspace)/app/<rota>/page.tsx`, registre o módulo em
+`lib/navigation.ts` e implemente a interface na pasta funcional correspondente.
+
+## Validação
 
 ```bash
-git pull origin main
-cd apps/web
-npm run typecheck
-npm run check:contracts
-npm run build
-cd ../..
+npm run format:check --prefix apps/web
+npm run typecheck --prefix apps/web
+npm run check:contracts --prefix apps/web
+npm run build --prefix apps/web
 pm2 restart hipersales-web
 ```
-
-Abrir `http://localhost:3000/app/painel`; navegar pelo menu e verificar que a URL muda. Testar login, logout, perfil admin e representante, inclusive acesso direto digitando uma URL não permitida. O backend e o banco não precisam ser migrados para esta mudança de navegação.
-
-**Nota:** o layout Next é persistente entre rotas do grupo `/app`. O provedor da sessão preserva login durante a navegação, enquanto cada `page.tsx` renderiza apenas seu módulo.
-
-## Padrão de manutenção do frontend
-
-- `components/app-shell.tsx`: somente ciclo de autenticação, estados de sessão e composição da tela.
-- `components/app-sidebar.tsx`: menu lateral e grupos de navegação.
-- `components/app-header.tsx`: cabeçalho, menu de conta e saída.
-- `components/session-context.tsx`: sessão React compartilhada.
-- `components/module-renderer.tsx`: seleção de módulos e perfis.
-- `lib/navigation.ts`: declaração centralizada de URLs e visibilidade.
-- Novos componentes devem usar TypeScript e responsabilidades pequenas; evite JSX inteiro em uma linha.
-
-O repositório inclui `.editorconfig`, `.prettierrc.json` e configurações do VS Code. O formatador está fixado em Prettier 3.6.2; não exige mudanças no `package-lock.json`.
-
-```bash
-cd apps/web
-npm run format       # normaliza arquivos TS, TSX e CSS do frontend
-npm run format:check # verifica inicialmente os arquivos principais refatorados
-npm run typecheck
-npm run check:contracts
-npm run build
-```
-
-O formatador está disponível, mas **a formatação global de todos os componentes antigos é uma etapa separada**. O script `format:check` usa um conjunto incremental de arquivos para não introduzir uma alteração massiva e não revisada no mesmo commit da refatoração.

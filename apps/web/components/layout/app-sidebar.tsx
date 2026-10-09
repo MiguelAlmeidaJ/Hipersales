@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { SessionUser } from "../lib/api";
-import { modulePath, type ModuleDefinition } from "../lib/navigation";
+import type { SessionUser } from "@/lib/api";
+import { modulePath, type ModuleDefinition } from "@/lib/navigation";
 
 type SidebarProps = {
   user: SessionUser;

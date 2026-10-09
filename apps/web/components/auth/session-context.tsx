@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { SessionUser } from "../lib/api";
+import type { SessionUser } from "@/lib/api";
 
 export const SessionContext = createContext<SessionUser | null>(null);
 

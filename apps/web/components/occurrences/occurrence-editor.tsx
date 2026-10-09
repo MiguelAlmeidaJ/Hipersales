@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
-import { api, type SessionUser } from "../lib/api";
+import { api, type SessionUser } from "@/lib/api";
 
 type Customer = { id: number; legal_name: string; active?: number | boolean };
 type Seller = { id: number; name: string; role: string; active?: number | boolean };
