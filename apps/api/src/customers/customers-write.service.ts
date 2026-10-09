@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseService } from "../database/database.service.js";
+import { customerContact } from "./customer-fields.js";
 
 export type CustomerInput = {
   legal_name: string;
@@ -43,8 +44,7 @@ export class CustomersWriteService {
     const { name, cnpj, digits } = this.validate(input);
     return this.database.transaction(() => {
       this.assertUnique(user.tenant_id, digits);
-      const phone = String(input.phone || input.phone_1 || input.buyer_phone_1 || "").trim();
-      const email = String(input.email || input.purchase_email || input.buyer_email || "").trim();
+      const { phone, email, address, state_registration } = customerContact(input);
       const payload = JSON.stringify({ ...input, phone, email, _lookup: {} });
       try {
         const result = this.database.db.prepare(`INSERT INTO customers
@@ -52,7 +52,7 @@ export class CustomersWriteService {
            form_payload, active, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
           user.tenant_id, name, input.trade_name ?? null, cnpj,
-          input.state_registration ?? null, input.address ?? null, phone, email,
+          state_registration, address, phone, email,
           payload, input.active === false ? 0 : 1, new Date().toISOString(),
         );
         return { id: Number(result.lastInsertRowid), message: "Cliente cadastrado." };
@@ -77,15 +77,14 @@ export class CustomersWriteService {
           previous = parsed as Record<string, unknown>;
         }
       } catch { /* Legacy malformed JSON must not break editing. */ }
-      const phone = String(input.phone || input.phone_1 || input.buyer_phone_1 || "").trim();
-      const email = String(input.email || input.purchase_email || input.buyer_email || "").trim();
+      const { phone, email, address, state_registration } = customerContact(input);
       const payload = JSON.stringify({ ...previous, ...input, phone, email });
       try {
         this.database.db.prepare(`UPDATE customers SET legal_name=?, trade_name=?, cnpj=?,
           state_registration=?, address=?, phone=?, email=?, form_payload=?, active=?
           WHERE id=? AND tenant_id=?`).run(
-          name, input.trade_name ?? null, cnpj, input.state_registration ?? null,
-          input.address ?? null, phone, email, payload, input.active === false ? 0 : 1,
+          name, input.trade_name ?? null, cnpj, state_registration,
+          address, phone, email, payload, input.active === false ? 0 : 1,
           customerId, user.tenant_id,
         );
       } catch {
