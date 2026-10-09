@@ -15,6 +15,6 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund
-      - run: python3 -m unittest discover -s apps/api/tests -p test_postgres_adapter.py\n        working-directory: .\n      - run: npm run check:contracts
+      - run: python3 -m unittest discover -s apps/api/tests -p 'test_*id.py' && python3 -m unittest discover -s apps/api/tests -p test_postgres_adapter.py\n        working-directory: .\n      - run: npm run check:contracts
       - run: npm run typecheck
       - run: npm run build
