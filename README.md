@@ -1,12 +1,10 @@
 # Hipersales — monorepo
 
-Aplicacao em migracao incremental do backend Python para NestJS, preservando
-rotas, payloads e esquema SQLite durante o cutover por dominio.
+Aplicacao com backend NestJS/TypeScript, frontend Next.js e integracao Evolution API.
 
 ## Estrutura
 
-- `apps/api/src/`: nova API publica NestJS/TypeScript.
-- `apps/api/*.py`: implementacao interna temporaria dos dominios ainda nao migrados.
+- `apps/api/src/`: API publica NestJS/TypeScript, documentos e jobs.
 - `apps/web/`: frontend Next.js.
 - `packages/contracts/`: schemas Zod e tipos TypeScript compartilhados.
 - `infra/docker/`: PostgreSQL/Redis/Evolution API v2 e a API Hipersales.
@@ -14,7 +12,7 @@ rotas, payloads e esquema SQLite durante o cutover por dominio.
 
 ## Desenvolvimento local
 
-Consulte `apps/api/README.md` para iniciar o processo legado interno e o NestJS.
+Consulte `apps/api/README.md` para iniciar o NestJS.
 Abra http://localhost:3000. O banco local padrao fica em
 `database/hypersales.sqlite3` (ignorado pelo Git). Antes de atualizar uma
 instalacao existente, preserve o arquivo SQLite e a configuracao `.env`.
@@ -33,8 +31,7 @@ A aplicacao escuta na porta 8000 e o Evolution na porta 8081 vinculada ao localh
 
 ## Compatibilidade
 
-Preservados: endpoints `/api/*`, formato de sessao, frontend e tabelas. NestJS e
-a borda publica; jobs e dominios ainda nao portados executam no servico legado
-interno, sem porta publicada. Nao ha migracao de dados automatica.
+Preservados: endpoints `/api/*`, formato de sessao, frontend e tabelas. O schema
+SQLite e criado de forma idempotente pela API Nest; preserve backups antes de atualizacoes.
 
 Consulte `packages/contracts/README.md` e `infra/docker/README.md`. Execute testes de regressao e validacao em ambiente de homologacao antes de substituir a implantacao atual.

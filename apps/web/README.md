@@ -18,7 +18,7 @@ docker compose ps
 docker compose logs -f web hipersales
 ```
 
-Abra http://localhost:3000. O backend usa a porta 8000 e é consumido pelo frontend através das rotas `/api/*`. Em instalações sem Docker, execute `python apps/api/app.py` e, em outro terminal, `cd apps/web && npm install && npm run dev`.
+Abra http://localhost:3000. O backend usa a porta 8000 e é consumido pelo frontend através das rotas `/api/*`. Em instalações sem Docker, execute `npm run dev --workspace @hipersales/api` e, em outro terminal, `npm run dev --prefix apps/web`.
 
 ## Verificações
 

@@ -1,19 +1,24 @@
 import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import { existsSync } from "node:fs";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { EnvService } from "../config/env.service.js";
+import { SQLITE_SCHEMA } from "./schema.js";
 
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
   readonly db: DatabaseSync;
 
   constructor(env: EnvService) {
-    if (!existsSync(env.databasePath)) {
-      throw new Error(`SQLite database not found: ${env.databasePath}. Refusing to initialize an empty production database.`);
-    }
+    mkdirSync(dirname(env.databasePath), { recursive: true });
     this.db = new DatabaseSync(env.databasePath);
     this.db.exec("PRAGMA busy_timeout = 5000");
     this.db.exec("PRAGMA foreign_keys = ON");
+    this.db.exec(SQLITE_SCHEMA);
+    if (!this.db.prepare("SELECT id FROM tenants WHERE id=1").get()) {
+      this.db.prepare(`INSERT INTO tenants (id,name,slug,status,owner_email,created_at)
+        VALUES (1,'HiperMix Representacoes','hipermix','active',NULL,?)`).run(new Date().toISOString());
+    }
   }
 
   transaction<T>(callback: () => T): T {

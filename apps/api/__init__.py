@@ -1,1 +1,0 @@
-"""Backend do HiperSales."""

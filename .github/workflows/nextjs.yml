@@ -1,26 +1,19 @@
-name: Next.js TypeScript CI
+name: TypeScript CI
 on:
   push:
     branches: [main]
   pull_request:
 jobs:
-  web:
+  build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: npm install --no-audit --no-fund
-      - run: python3 -m unittest discover -s apps/api/tests -p 'test_*id.py' && python3 -m unittest discover -s apps/api/tests -p test_postgres_adapter.py\n        working-directory: .\n      - run: python3 -m unittest discover -s apps/api/tests -p test_sqlite_snapshot.py
-        working-directory: .
-      - run: python3 -m unittest discover -s apps/api/tests -p test_import_snapshot_pg.py
-        working-directory: .
-      - run: python3 -m unittest discover -s apps/api/tests -p test_superadmin_tenant_dashboard.py
-        working-directory: .
-      - run: npm run check:contracts
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix apps/web
+      - run: npm run test:api
       - run: npm run typecheck
-      - run: npm run build
+      - run: npm run build --prefix apps/web

@@ -9,12 +9,14 @@ import { OccurrencesModule } from "./occurrences/occurrences.module.js";
 import { UsersModule } from "./users/users.module.js";
 import { GoalsModule } from "./goals/goals.module.js";
 import { DashboardModule } from "./dashboard/dashboard.module.js";
+import { SettingsModule } from "./settings/settings.module.js";
+import { DocumentsModule } from "./documents/documents.module.js";
+import { JobsModule } from "./jobs/jobs.module.js";
 import { CsrfMiddleware } from "./common/middleware/csrf.middleware.js";
 import { RolesGuard } from "./common/guards/roles.guard.js";
 import { SessionGuard } from "./common/guards/session.guard.js";
 import { DatabaseModule } from "./database/database.module.js";
 import { HealthController } from "./health/health.controller.js";
-import { LegacyProxyMiddleware } from "./legacy/legacy-proxy.middleware.js";
 
 @Module({
   imports: [
@@ -28,10 +30,12 @@ import { LegacyProxyMiddleware } from "./legacy/legacy-proxy.middleware.js";
     UsersModule,
     GoalsModule,
     DashboardModule,
+    SettingsModule,
+    DocumentsModule,
+    JobsModule,
   ],
   controllers: [HealthController],
   providers: [
-    LegacyProxyMiddleware,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: SessionGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
@@ -39,6 +43,6 @@ import { LegacyProxyMiddleware } from "./legacy/legacy-proxy.middleware.js";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(CsrfMiddleware, LegacyProxyMiddleware).forRoutes("*path");
+    consumer.apply(CsrfMiddleware).forRoutes("*path");
   }
 }

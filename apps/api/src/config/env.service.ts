@@ -20,9 +20,11 @@ const environmentSchema = z
     HYPERSALES_COOKIE_SAMESITE: z.enum(["Lax", "Strict", "None"]).default("Lax"),
     HYPERSALES_PUBLIC_URL: z.url().default("http://localhost:8000"),
     HYPERSALES_ALLOWED_ORIGINS: z.string().default(""),
-    LEGACY_API_ORIGIN: z.url().default("http://127.0.0.1:8001"),
     TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(1),
     HYPERSALES_REPORT_TIMEZONE: z.string().min(1).default("America/Sao_Paulo"),
+    HYPERSALES_WHATSAPP_TOKEN: z.string().default(""),
+    EVOLUTION_API_URL: z.url().default("http://127.0.0.1:8081"),
+    EVOLUTION_API_KEY: z.string().default(""),
   })
   .superRefine((value, context) => {
     if (value.HYPERSALES_COOKIE_SAMESITE === "None" && !value.HYPERSALES_COOKIE_SECURE) {
@@ -62,7 +64,9 @@ export class EnvService {
       .map((origin) => origin.trim())
       .filter(Boolean),
   );
-  readonly legacyApiOrigin = this.values.LEGACY_API_ORIGIN;
   readonly trustProxy = this.values.TRUST_PROXY;
   readonly reportTimezone = this.values.HYPERSALES_REPORT_TIMEZONE;
+  readonly whatsappInternalToken = this.values.HYPERSALES_WHATSAPP_TOKEN;
+  readonly evolutionApiUrl = new URL(this.values.EVOLUTION_API_URL);
+  readonly evolutionApiKey = this.values.EVOLUTION_API_KEY;
 }

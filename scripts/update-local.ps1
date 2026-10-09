@@ -10,6 +10,6 @@ git switch main
 if ($LASTEXITCODE -ne 0) { throw "Falha ao trocar para main." }
 git pull --ff-only origin main
 if ($LASTEXITCODE -ne 0) { throw "Falha no pull --ff-only." }
-Write-Host "Codigo atualizado. Banco SQLite local NAO foi migrado." -ForegroundColor Green
-Write-Host "Para executar o backend Python existente: python apps/api/app.py"
+Write-Host "Codigo atualizado. O schema SQLite sera atualizado pela API Nest ao iniciar." -ForegroundColor Green
+Write-Host "Para executar a API: npm run dev --workspace @hipersales/api"
 Write-Host "Antes de iniciar Docker, configure .env e faça backup de dados."

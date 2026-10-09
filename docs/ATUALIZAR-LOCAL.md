@@ -25,10 +25,11 @@ cd Hipersales
 Para iniciar a versao atual da API:
 
 ```powershell
-python apps/api/app.py
+npm ci
+npm run dev --workspace @hipersales/api
 ```
 
-Nao execute o comando antigo `python backend/app.py`: o codigo foi movido.
+O backend Python foi removido; use somente a API NestJS.
 
 ## Banco de dados
 
