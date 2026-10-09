@@ -113,3 +113,9 @@ npm ci
 npm run build:api
 npm run test:api
 ```
+
+## Vinculos de representantes (NestJS)
+
+Os endpoints `GET /api/admin/users/:id/customers`, `GET /api/admin/users/:id/companies`, `PATCH /api/admin/customer-assignments` e `PATCH /api/admin/company-assignments` estao implementados no `AssignmentsController` e `AssignmentsService`. Aplicam isolamento por empresa e validam o perfil seller antes de criar/remover relacionamentos. A alteracao usa transacao; insercoes sao idempotentes.
+
+A opcao `HIPERSALES_NEST_ASSIGNMENTS=true` redireciona esses quatro endpoints ao Nest em homologacao. Sem essa variavel, o Python continua respondendo. Validar com `npm run build:api` e `npm run test:api` e comparar os resultados com o legado antes de habilitar em producao. Solicitacoes de cadastro e aprovacoes permanecem no Python.
