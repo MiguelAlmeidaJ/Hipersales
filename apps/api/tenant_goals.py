@@ -71,6 +71,87 @@ class TenantGoalsMixin:
         ]
         return {"tenant": dict(tenant), "summary": dict(counts), "statuses": statuses, "recent_orders": recent}
 
+    def super_admin_tenant_dashboard(self, conn: sqlite3.Connection, tenant_id: int, query: dict[str, list[str]]) -> dict[str, Any]:
+        """Read-only, tenant-isolated executive dashboard for superadmins."""
+        tenant = conn.execute("SELECT * FROM tenants WHERE id = ?", (tenant_id,)).fetchone()
+        if tenant is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, "Tenant nao encontrado.")
+        search = str(query.get("q", [""])[0] or "").strip()[:120]
+        status = str(query.get("status", [""])[0] or "").strip()[:60]
+        date_from = str(query.get("date_from", [""])[0] or "").strip()
+        date_to = str(query.get("date_to", [""])[0] or "").strip()
+        for value in (date_from, date_to):
+            if value:
+                try:
+                    datetime.strptime(value, "%Y-%m-%d")
+                except ValueError as exc:
+                    raise ApiError(HTTPStatus.BAD_REQUEST, "Data invalida (AAAA-MM-DD).") from exc
+        if date_from and date_to and date_from > date_to:
+            raise ApiError(HTTPStatus.BAD_REQUEST, "Data inicial posterior a data final.")
+        where = ["p.tenant_id = ?"]
+        args: list[Any] = [tenant_id]
+        if status:
+            where.append("p.status = ?")
+            args.append(status)
+        if date_from:
+            where.append("substr(p.created_at,1,10) >= ?")
+            args.append(date_from)
+        if date_to:
+            where.append("substr(p.created_at,1,10) <= ?")
+            args.append(date_to)
+        if search:
+            where.append("""(c.legal_name LIKE ? OR co.name LIKE ? OR
+                CAST(p.order_number AS TEXT) LIKE ? OR EXISTS
+                (SELECT 1 FROM proposal_items pi JOIN products pr ON pr.id = pi.product_id
+                 WHERE pi.proposal_id = p.id AND pr.name LIKE ?))""")
+            args.extend([f"%{search}%"] * 4)
+        predicate = " AND ".join(where)
+        base = f"""FROM proposals p
+             JOIN customers c ON c.id = p.customer_id AND c.tenant_id = p.tenant_id
+             JOIN companies co ON co.id = p.company_id AND co.tenant_id = p.tenant_id
+             WHERE {predicate}"""
+        totals = dict(conn.execute(f"""SELECT COUNT(*) AS orders, COALESCE(SUM(
+            (SELECT SUM(pi.quantity * pi.negotiated_price) FROM proposal_items pi WHERE pi.proposal_id=p.id)
+            ),0) AS revenue {base}""", args).fetchone())
+        count = int(totals["orders"])
+        revenue = float(totals["revenue"] or 0)
+        summary = dict(conn.execute("""SELECT
+            (SELECT COUNT(*) FROM customers WHERE tenant_id=? AND active=1) AS customers,
+            (SELECT COUNT(*) FROM products WHERE tenant_id=? AND active=1) AS products,
+            (SELECT COUNT(*) FROM companies WHERE tenant_id=? AND active=1) AS companies,
+            (SELECT COUNT(*) FROM users WHERE tenant_id=? AND role='seller' AND active=1) AS sellers,
+            (SELECT COUNT(*) FROM registration_requests WHERE tenant_id=? AND status='pendente') AS pending_requests
+            """, (tenant_id,)*5).fetchone())
+        summary.update({"orders": count, "revenue": revenue, "average_ticket": revenue / count if count else 0})
+        statuses = [dict(row) for row in conn.execute(
+            f"SELECT p.status AS status, COUNT(*) AS total {base} GROUP BY p.status ORDER BY total DESC", args)]
+        company_ranking = [dict(row) for row in conn.execute(
+            f"""SELECT co.name AS name, COUNT(*) AS orders,
+            COALESCE(SUM((SELECT SUM(pi.quantity*pi.negotiated_price) FROM proposal_items pi WHERE pi.proposal_id=p.id)),0) AS total
+            {base} GROUP BY co.id, co.name ORDER BY total DESC LIMIT 5""", args)]
+        seller_ranking = [dict(row) for row in conn.execute(
+            f"""SELECT u.name AS name, COUNT(*) AS orders,
+            COALESCE(SUM((SELECT SUM(pi.quantity*pi.negotiated_price) FROM proposal_items pi WHERE pi.proposal_id=p.id)),0) AS total
+            {base} JOIN users u ON u.id=p.seller_id AND u.tenant_id=p.tenant_id
+            GROUP BY u.id, u.name ORDER BY total DESC LIMIT 5""", args)]
+        top_products = [dict(row) for row in conn.execute(
+            f"""SELECT pr.name AS name, co.name AS company, SUM(pi.quantity) AS quantity,
+            SUM(pi.quantity*pi.negotiated_price) AS total
+            {base} JOIN proposal_items pi ON pi.proposal_id=p.id
+            JOIN products pr ON pr.id=pi.product_id AND pr.tenant_id=p.tenant_id
+            GROUP BY pr.id, pr.name, co.name ORDER BY total DESC LIMIT 5""", args)]
+        recent_orders = [dict(row) for row in conn.execute(
+            f"""SELECT p.id, p.order_number, c.legal_name AS customer_name, co.name AS company_name,
+            p.status, p.created_at, COALESCE((SELECT SUM(pi.quantity*pi.negotiated_price)
+            FROM proposal_items pi WHERE pi.proposal_id=p.id),0) AS total
+            {base} ORDER BY p.created_at DESC,p.id DESC LIMIT 7""", args)]
+        return {
+            "tenant": dict(tenant), "summary": summary, "statuses": statuses,
+            "company_ranking": company_ranking, "seller_ranking": seller_ranking,
+            "top_products": top_products, "recent_orders": recent_orders,
+            "filters": {"q": search, "status": status, "date_from": date_from, "date_to": date_to},
+        }
+
     def create_tenant(self, conn: sqlite3.Connection, data: dict[str, Any]) -> dict[str, Any]:
         required(data, ["name", "admin_name", "admin_email", "admin_password"])
         name = str(data["name"]).strip()
