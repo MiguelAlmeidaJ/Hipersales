@@ -78,8 +78,7 @@ describe("registration approval integration", () => {
     });
     config("whatsapp",{enabled:true});
     review.review(admin,1,{status:"aprovada"});
-    const rows = db.prepare("SELECT kind,recipients FROM email_outbox ORDER BY id").all()
-      as {kind:string;recipients:string}[];
+    const rows = db.prepare("SELECT kind,recipients FROM email_outbox ORDER BY id").all() as {kind:string;recipients:string}[];
     expect(rows).toHaveLength(2);
     expect(rows[0]?.kind).toBe("customer_status_email");
     expect(rows[1]).toMatchObject({kind:"customer_status_whatsapp",recipients:"whatsapp:31999999999"});
