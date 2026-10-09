@@ -16,7 +16,7 @@ export default function AppShell({children}:{children:ReactNode}){
  const [username,setUsername]=useState(""),[password,setPassword]=useState("");
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[menuOpen,setMenuOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false);
  useEffect(()=>{let active=true;api<{user:SessionUser}>("/api/me").then(result=>{if(active){setUser(result.user);setView("home")}}).catch(()=>{if(active)setView("login")});return()=>{active=false}},[]);
- useEffect(()=>{setMenuOpen(false)},[pathname]);
+ useEffect(()=>{setMenuOpen(false);setAccountOpen(false)},[pathname]);
  async function login(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");
  try{await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});const result=await api<{user:SessionUser}>("/api/me");setUser(result.user);setView("home");setPassword("")}catch(e){setError(e instanceof Error?e.message:"Falha no login")}finally{setBusy(false)}}
  async function logout(){setBusy(true);try{await api("/api/logout",{method:"POST"});setView("login");setUser(null);router.replace("/app/painel")}catch(e){setError(e instanceof Error?e.message:"Falha ao sair")}finally{setBusy(false)}}
@@ -40,10 +40,10 @@ export default function AppShell({children}:{children:ReactNode}){
  <div className="workspace-main app-main">
   <header className="top app-header">
    <div className="min-w-0"><p className="app-breadcrumb">HiperMix <span className="mx-1 text-slate-300">/</span> {selected?.title||"Sistema"}</p><h1 className="app-header-title">{selected?.title||"Hipersales"}</h1></div>
-   <div className="app-header-actions"><span className="hidden text-sm font-medium text-slate-600 lg:inline">{user?.name}</span>{user?.is_dev&&<span className="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-800">Dev</span>}<button type="button" className="app-account-button" aria-expanded={accountOpen} onClick={()=>setAccountOpen(v=>!v)}>Minha conta <span aria-hidden>{accountOpen?"⌃":"⌄"}</span></button><button type="button" className="app-logout-button" disabled={busy} onClick={logout}>Sair</button></div>
+   <div className="app-header-actions"><span className="hidden text-sm font-medium text-slate-600 lg:inline">{user?.name}</span>{user?.is_dev&&<span className="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-800">Dev</span>}<div className="relative"><button type="button" className="app-account-button" aria-haspopup="dialog" aria-expanded={accountOpen} onClick={()=>setAccountOpen(v=>!v)}>Minha conta <span aria-hidden>{accountOpen?"⌃":"⌄"}</span></button>{accountOpen&&<div role="dialog" aria-label="Configurações da conta" className="app-account-popover"><div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-bold text-slate-900">{user?.name}</p><p className="text-xs text-slate-500">Segurança da conta</p></div><button type="button" onClick={()=>setAccountOpen(false)} aria-label="Fechar" className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100">×</button></div><PasswordChange onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user);setAccountOpen(false)}}/></div>}</div><button type="button" className="app-logout-button" disabled={busy} onClick={logout}>Sair</button></div>
   </header>
   <main className="content app-content">
-   {accountOpen&&<div className="app-account-panel"><PasswordChange onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user);setAccountOpen(false)}}/></div>}
+   
    {selected?<SessionContext.Provider value={user}>{children}</SessionContext.Provider>:<section className="tile"><h1>Acesso indisponível</h1><p className="mt-2 text-slate-600">Esta página não está disponível para o seu perfil.</p><Link href="/app/painel" className="mt-4 inline-block font-semibold text-violet-700">Ir para o painel</Link></section>}
   </main>
  </div>
