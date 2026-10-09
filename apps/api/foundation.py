@@ -324,6 +324,23 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+def inserted_id(cursor: Any) -> int:
+    """Read the identifier of a newly inserted row.
+
+    SQLite currently exposes lastrowid. PostgreSQL call sites must use
+    INSERT ... RETURNING id; psycopg cursors do not expose lastrowid.
+    """
+    value = getattr(cursor, "lastrowid", None)
+    if value is not None:
+        return int(value)
+    row = cursor.fetchone()
+    if row is None:
+        raise RuntimeError("INSERT ... RETURNING id did not return a row")
+    if isinstance(row, dict):
+        return int(row["id"])
+    return int(row[0])
+
+
 def dict_row(row: sqlite3.Row | None) -> dict[str, Any] | None:
     return dict(row) if row else None
 
@@ -658,7 +675,7 @@ def seed(conn: sqlite3.Connection) -> None:
             """,
             (*customer, now_iso()),
         )
-        conn.execute("INSERT INTO customer_sellers (customer_id, seller_id) VALUES (?, ?)", (cur.lastrowid, seller_id))
+        conn.execute("INSERT INTO customer_sellers (customer_id, seller_id) VALUES (?, ?)", (inserted_id(cur), seller_id))
 
     products = [
         ("001", "Produto Alimento 1kg", "CX", 120.0),
@@ -1096,11 +1113,11 @@ def queue_outbox(conn: sqlite3.Connection, kind: str, recipients: str, subject: 
     if recipients.startswith("whatsapp:"):
         sent, error = send_evolution_whatsapp(conn, recipients.replace("whatsapp:", "", 1), body)
         if sent:
-            conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), cur.lastrowid))
+            conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), inserted_id(cur)))
         else:
             conn.execute(
                 "UPDATE email_outbox SET attempts = attempts + 1, error = ? WHERE id = ?",
-                (error, cur.lastrowid),
+                (error, inserted_id(cur)),
             )
         return
     smtp = normalize_smtp_settings(read_setting(conn, "smtp", DEFAULT_SETTINGS["smtp"]))
@@ -1125,11 +1142,11 @@ def queue_outbox(conn: sqlite3.Connection, kind: str, recipients: str, subject: 
         if smtp["username"]:
             client.login(smtp["username"], smtp["password"])
         client.send_message(message)
-        conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), cur.lastrowid))
+        conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), inserted_id(cur)))
     except Exception as exc:
         conn.execute(
             "UPDATE email_outbox SET attempts = attempts + 1, error = ? WHERE id = ?",
-            (str(exc), cur.lastrowid),
+            (str(exc), inserted_id(cur)),
         )
         print(f"Falha ao enviar mensagem SMTP: {exc}")
     finally:
@@ -1155,11 +1172,11 @@ def send_email_message(
     if recipients.startswith("whatsapp:"):
         sent, error = send_evolution_whatsapp(conn, recipients.replace("whatsapp:", "", 1), body)
         if sent:
-            conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), cur.lastrowid))
+            conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), inserted_id(cur)))
         else:
             conn.execute(
                 "UPDATE email_outbox SET attempts = attempts + 1, error = ? WHERE id = ?",
-                (error, cur.lastrowid),
+                (error, inserted_id(cur)),
             )
         return
     smtp = normalize_smtp_settings(read_setting(conn, "smtp", DEFAULT_SETTINGS["smtp"]))
@@ -1195,11 +1212,11 @@ def send_email_message(
         if smtp["username"]:
             client.login(smtp["username"], smtp["password"])
         client.send_message(message)
-        conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), cur.lastrowid))
+        conn.execute("UPDATE email_outbox SET sent_at = ?, error = NULL WHERE id = ?", (now_iso(), inserted_id(cur)))
     except Exception as exc:
         conn.execute(
             "UPDATE email_outbox SET attempts = attempts + 1, error = ? WHERE id = ?",
-            (str(exc), cur.lastrowid),
+            (str(exc), inserted_id(cur)),
         )
         print(f"Falha ao enviar mensagem SMTP: {exc}")
     finally:
