@@ -61,6 +61,18 @@ class TenantDashboardTests(unittest.TestCase):
         result=self.dashboard.super_admin_tenant_dashboard(self.conn,1,{"q":["Cliente A"],"date_from":["2026-10-01"],"date_to":["2026-10-09"]})
         self.assertEqual(result["summary"]["orders"],1)
 
+    def test_tenant_record_sections_are_scoped(self):
+        for section in ("orders", "customers", "companies", "products", "users"):
+            response=self.dashboard.super_admin_tenant_records(self.conn,1,section,{})
+            self.assertEqual(response["total"],1,section)
+            self.assertEqual(len(response["records"]),1,section)
+        response=self.dashboard.super_admin_tenant_records(self.conn,1,"orders",{"q":["Cliente B"]})
+        self.assertEqual(response["total"],0)
+
+    def test_records_reject_unlisted_section(self):
+        with self.assertRaises(Exception):
+            self.dashboard.super_admin_tenant_records(self.conn,1,"sessions",{})
+
     def test_invalid_tenant(self):
         with self.assertRaises(Exception):
             self.dashboard.super_admin_tenant_dashboard(self.conn,999,{})
