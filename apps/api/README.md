@@ -205,3 +205,7 @@ Com `ProposalDeletionService` e `DELETE /api/admin/proposals/:id`, a API Nest ag
 Para acelerar testes de ponta a ponta **sem ativar quatro flags separadas**, `HIPERSALES_NEST_PROPOSALS=true` direciona GET/POST `/api/proposals` e PATCH/DELETE `/api/admin/proposals/:id` ao Nest. A flag e desativada por padrao. Recomendada somente em banco descartavel de desenvolvimento: ainda e necessario validar trabalhador da fila de notificacoes, formatos finais e eventuais referencias de pedidos antes de usar dados importantes. As flags individuais existentes continuam funcionando.
 
 Executar `npm run build:api && npm run test:api` apos `git pull origin main`.
+
+## Ocorrencias: primeiro bloco de migracao
+
+O Nest passa a implementar `GET /api/occurrences`, `PATCH /api/admin/occurrences/:id` e `DELETE /api/admin/occurrences/:id`. A consulta inclui cliente, vendedor, anexos e timeline; representantes veem apenas suas ocorrencias. Alteracoes de status e exclusoes usam transacao e isolamento por tenant. `HIPERSALES_NEST_OCCURRENCES=true` migra essas tres rotas em ambiente de desenvolvimento, desativada por padrao. A criacao `POST /api/occurrences`, download de anexos e PDFs permanecem no Python, assim como a rotina de expurgo de anexos antigos; nao ative a flag antes de executar build e testes do modulo.
