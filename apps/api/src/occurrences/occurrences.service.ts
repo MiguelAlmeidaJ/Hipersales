@@ -34,7 +34,7 @@ export class OccurrencesService {
       try{ names=JSON.parse(str(row.attachment_names||"[]")); }catch{names=[];}
       const attachmentNames=Array.isArray(names)?names:[];
       const attached=attachments.all(Number(row.id),user.tenant_id);
-      const timeline=events.all(Number(row.id),user.tenant_id);
+      const timeline=events.all(Number(row.id),user.tenant_id) as Row[];
       const current=occurrenceStatus(row.status);
       if(!timeline.length){
         timeline.push({id:0,occurrence_id:row.id,status:"aberta",title:"Ocorrencia aberta",
