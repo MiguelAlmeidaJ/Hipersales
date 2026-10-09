@@ -31,12 +31,12 @@
   .tile h2 { @apply mb-4; }
   .workspace { @apply min-h-screen md:flex; }
   .workspace-main { @apply min-w-0 flex-1; }
-  .nav-side { @apply flex flex-col bg-gradient-to-b from-[#1d1635] via-[#2b0a3d] to-[#3a0a4d] px-4 py-5 text-white md:sticky md:top-0 md:h-screen md:w-[264px] md:shrink-0 md:overflow-y-auto; }
+  .nav-side { @apply flex flex-col bg-gradient-to-b from-[#1b1233] via-[#2b0d41] to-[#3d0c53] px-4 py-5 text-white md:sticky md:top-0 md:h-screen md:w-[272px] md:shrink-0 md:overflow-y-auto; }
   .nav-side h2 { @apply text-lg font-semibold; }
   .nav-side p { @apply mt-2 text-xs text-slate-300; }
   .nav-side nav { @apply my-4 flex flex-col gap-1; }
-  .nav-side nav button { @apply w-full whitespace-nowrap rounded-xl border border-transparent px-3 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-white/10; }
-  .nav-side nav button.selected { @apply border-white/30 bg-white/20 shadow-sm; }
+  .nav-side nav button { @apply flex w-full items-center whitespace-nowrap rounded-xl border border-transparent px-3 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-white/10; }
+  .nav-side nav button.selected { @apply border-white/25 bg-white/15 shadow-sm; }
   .nav-side a { @apply text-blue-200; }
   .table-wrap { @apply w-full overflow-x-auto; }
   .table-wrap table { @apply w-full border-collapse text-left text-sm; }
@@ -65,11 +65,19 @@
 }
 
 @layer components {
- .nav-brand { @apply rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm; }
+ .nav-brand { @apply rounded-2xl border border-white/10 bg-white/5 p-3.5 shadow-sm; }
  .nav-brand h2 { @apply text-xl font-bold tracking-tight text-white; }
  .nav-brand p { @apply mt-1 text-xs text-violet-200; }
  .nav-group-label { @apply mb-2 mt-5 px-3 text-[10px] font-extrabold uppercase tracking-[.15em] text-violet-200; }
  .workspace-main { @apply min-h-screen bg-[#f5f6fb]; }
  .workspace-main .content > section { @apply min-w-0; }
  .workspace-main input:focus-visible, .workspace-main select:focus-visible, .workspace-main textarea:focus-visible { @apply outline-2 outline-offset-1 outline-violet-400; }
+}
+
+@layer components {
+  .top { @apply shadow-[0_1px_0_rgba(15,23,42,0.025)]; }
+  .workspace-main { @apply bg-[#f5f7fb]; }
+  .nav-side nav button:focus-visible { @apply outline-2 outline-offset-2 outline-violet-300; }
+  .workspace-main .tile { @apply rounded-2xl border-slate-200 shadow-[0_8px_28px_rgba(30,18,65,0.045)]; }
+  .workspace-main .table-wrap tbody tr { @apply transition-colors hover:bg-violet-50/40; }
 }
