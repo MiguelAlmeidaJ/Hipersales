@@ -30,7 +30,7 @@ describe("proposal deletion", () => {
   it("deletes only selected tenant order and its dependencies", () => {
     const {db,service}=fixture();
     expect(service.delete(admin,10)).toEqual({message:"Pedido excluido definitivamente."});
-    expect(db.prepare("SELECT id FROM proposals").all()).toEqual([{id:20,tenant_id:2}].map(({id})=>({id,tenant_id:2})));
+    expect(db.prepare("SELECT id FROM proposals").all()).toEqual([{id:20}]);
     expect(db.prepare("SELECT COUNT(*) AS n FROM proposal_items").get()).toMatchObject({n:1});
     expect(db.prepare("SELECT COUNT(*) AS n FROM proposal_events").get()).toMatchObject({n:1});
     db.close();
