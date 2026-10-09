@@ -39,6 +39,38 @@ class TenantGoalsMixin:
             )
         ]
 
+    def super_admin_tenant_detail(self, conn: sqlite3.Connection, tenant_id: int) -> dict[str, Any]:
+        """Read-only tenant preview; authorization must be enforced by router."""
+        tenant = conn.execute("SELECT * FROM tenants WHERE id = ?", (tenant_id,)).fetchone()
+        if not tenant:
+            raise ApiError(HTTPStatus.NOT_FOUND, "Tenant nao encontrado.")
+        counts = conn.execute(
+            """
+            SELECT
+                (SELECT COUNT(*) FROM proposals WHERE tenant_id = ?) AS proposals,
+                (SELECT COUNT(*) FROM customers WHERE tenant_id = ?) AS customers,
+                (SELECT COUNT(*) FROM products WHERE tenant_id = ?) AS products,
+                (SELECT COUNT(*) FROM companies WHERE tenant_id = ?) AS companies,
+                (SELECT COUNT(*) FROM users WHERE tenant_id = ? AND role = 'seller') AS sellers
+            """, (tenant_id,)*5,
+        ).fetchone()
+        statuses = [
+            dict(row) for row in conn.execute(
+                "SELECT status, COUNT(*) AS total FROM proposals WHERE tenant_id = ? GROUP BY status ORDER BY total DESC",
+                (tenant_id,),
+            )
+        ]
+        recent = [
+            dict(row) for row in conn.execute(
+                """SELECT p.id, p.order_number, p.status, p.created_at, c.legal_name AS customer_name,
+                   COALESCE((SELECT SUM(i.quantity * i.negotiated_price) FROM proposal_items i WHERE i.proposal_id = p.id), 0) AS total
+                   FROM proposals p JOIN customers c ON c.id = p.customer_id AND c.tenant_id = p.tenant_id
+                   WHERE p.tenant_id = ? ORDER BY p.created_at DESC, p.id DESC LIMIT 8""",
+                (tenant_id,),
+            )
+        ]
+        return {"tenant": dict(tenant), "summary": dict(counts), "statuses": statuses, "recent_orders": recent}
+
     def create_tenant(self, conn: sqlite3.Connection, data: dict[str, Any]) -> dict[str, Any]:
         required(data, ["name", "admin_name", "admin_email", "admin_password"])
         name = str(data["name"]).strip()
