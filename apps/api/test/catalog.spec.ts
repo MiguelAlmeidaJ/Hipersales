@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { PublicUser } from "@hipersales/contracts";
 import type { DatabaseService } from "../src/database/database.service.js";
 import { CatalogService } from "../src/catalog/catalog.service.js";
@@ -24,7 +24,7 @@ describe("Nest catalog read parity", () => {
   `);
   const service = new CatalogService({ db } as DatabaseService);
 
-  afterEach(() => { /* shared immutable test fixture */ });
+
 
   it("lists only active companies in the authenticated company", () => {
     const result = service.companies(user("admin"));
@@ -45,6 +45,23 @@ describe("Nest catalog read parity", () => {
     const result = service.adminCompanies(user("admin"), "", "inactive");
     expect(result.companies).toHaveLength(1);
     expect(result.companies[0]?.product_count).toBe(1);
+  });
+
+  it("creates and updates companies without changing another tenant", () => {
+    const created=service.createCompany(user("admin"),{name:"Nova Industria",active:true});
+    expect(created.id).toBeGreaterThan(0);
+    expect(service.updateCompany(user("admin"),created.id,{name:"Industria Atualizada"}).message).toBe("Empresa atualizada.");
+    expect(()=>service.updateCompany({...user("admin"),tenant_id:2},created.id,{name:"Invadida"})).toThrow();
+  });
+
+  it("upserts products and blocks deletion once linked to a proposal", () => {
+    const first=service.createProduct(user("admin"),{company_id:1,code:"NEW",name:"Primeiro"});
+    const next=service.createProduct(user("admin"),{company_id:1,code:"NEW",name:"Atualizado"});
+    expect(next.id).toBe(first.id);
+    expect(service.updateProduct(user("admin"),first.id,{company_id:1,code:"NEW",name:"Final"}).id).toBe(first.id);
+    db.exec("CREATE TABLE IF NOT EXISTS proposal_items (proposal_id INTEGER,product_id INTEGER)");
+    db.prepare("INSERT INTO proposal_items VALUES (?,?)").run(1,first.id);
+    expect(()=>service.deleteProduct(user("admin"),first.id)).toThrow();
   });
 
   it("filters products by tenant, company, active flag and name", () => {
