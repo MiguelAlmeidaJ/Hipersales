@@ -57,7 +57,7 @@ export default function OrderAdmin({order,onSaved}:{order:Order;onSaved:()=>void
  return <form onSubmit={submit} className="mt-6 space-y-5 rounded-xl border border-blue-200 bg-blue-50/30 p-5">
  <h3 className="text-lg font-semibold">Editar pedido e itens</h3>
  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
- <label className="grid gap-1 text-sm">Status<select className={textfield} value={values.status} onChange={e=>update("status",e.target.value)} required>{Array.from(new Set([order.status,"em_analise","aprovado","recusado","faturado","entregue"])).map(s=><option key={s} value={s}>{s}</option>)}</select></label>
+ <label className="grid gap-1 text-sm">Status<select className={textfield} value={values.status} onChange={e=>update("status",e.target.value)} required>{Array.from(new Set([order.status,"em_analise","pedido_aprovado","recusado","em_producao","faturado","entregue"])).map(s=><option key={s} value={s}>{s}</option>)}</select></label>
  <label className="grid gap-1 text-sm">Tipo de pedido<input className={textfield} value={values.order_type} onChange={e=>update("order_type",e.target.value)}/></label>
  {fields.filter(([key])=>!isBonus||key!=="payment_terms").map(([key,title])=><label key={key} className="grid gap-1 text-sm">{title}<input className={textfield} type={key==="scheduled_delivery_date"?"date":"text"} value={values[key]} onChange={e=>update(key,e.target.value)}/></label>)}
  {!isBonus&&<><label className="grid gap-1 text-sm">Comissão (%)<input className={textfield} type="number" min="0" step="0.01" value={values.commission_percent} onChange={e=>update("commission_percent",e.target.value)}/></label>
