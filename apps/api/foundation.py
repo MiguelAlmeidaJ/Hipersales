@@ -374,6 +374,7 @@ def public_user_payload(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
         "tenant_id": data.get("tenant_id") or 1,
         "tenant_name": data.get("tenant_name"),
         "is_super_admin": False,
+        "is_dev": bool(data.get("is_dev", 0)),
         "active": bool(data.get("active", 1)),
         "must_change_password": bool(data.get("must_change_password", 0)),
         "password_updated_at": data.get("password_updated_at"),
@@ -423,6 +424,7 @@ def init_db() -> None:
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL CHECK(role IN ('admin', 'seller')),
                 is_super_admin INTEGER NOT NULL DEFAULT 0,
+                is_dev INTEGER NOT NULL DEFAULT 0,
                 active INTEGER NOT NULL DEFAULT 1,
                 must_change_password INTEGER NOT NULL DEFAULT 0,
                 password_updated_at TEXT,
@@ -896,6 +898,8 @@ def migrate_db(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE users ADD COLUMN tenant_id INTEGER")
     if "is_super_admin" not in columns:
         conn.execute("ALTER TABLE users ADD COLUMN is_super_admin INTEGER NOT NULL DEFAULT 0")
+    if "is_dev" not in columns:
+        conn.execute("ALTER TABLE users ADD COLUMN is_dev INTEGER NOT NULL DEFAULT 0")
     if "must_change_password" not in columns:
         conn.execute("ALTER TABLE users ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0")
     if "password_updated_at" not in columns:
