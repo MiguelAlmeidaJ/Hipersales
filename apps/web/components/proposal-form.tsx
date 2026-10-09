@@ -26,15 +26,15 @@ export default function ProposalForm({user,onCreated}:{user:SessionUser;onCreate
  const [success,setSuccess]=useState("");
  useEffect(()=>{let active=true;async function load(){
  try{
- const [c,u]=await Promise.all([api<{companies:Company[]}>("/api/companies"),api<{customers:Customer[]}>("/api/customers")]);
+ const [c,u]=await Promise.all([api<{companies:Company[]}>(isAdmin?"/api/admin/companies":"/api/companies"),api<{customers:Customer[]}>(isAdmin?"/api/admin/customers":"/api/customers")]);
  if(!active)return;setCompanies(c.companies||[]);setCustomers(u.customers||[]);
  if(isAdmin){const s=await api<{users:Seller[]}>("/api/admin/users");if(active)setSellers((s.users||[]).filter(v=>v.role==="seller"&&Boolean(v.active)));}
  }catch(e){if(active)setError(e instanceof Error?e.message:"Falha ao carregar dados comerciais");}finally{if(active)setLoading(false);}
  }void load();return()=>{active=false};},[isAdmin]);
  useEffect(()=>{let active=true;setProducts([]);setLines([]);setProductId("");
  if(!form.company_id)return()=>{active=false};
- api<{products:Product[]}>(`/api/products?company_id=${encodeURIComponent(form.company_id)}`).then(r=>{if(active)setProducts((r.products||[]).filter(p=>Boolean(p.active)))}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Falha ao carregar produtos")});
- return()=>{active=false};},[form.company_id]);
+ api<{products:Product[]}>((isAdmin?`/api/admin/products?company_id=${encodeURIComponent(form.company_id)}`:`/api/products?company_id=${encodeURIComponent(form.company_id)}`) as `/api/${string}`).then(r=>{if(active)setProducts((r.products||[]).filter(p=>Boolean(p.active)))}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Falha ao carregar produtos")});
+ return()=>{active=false};},[form.company_id,isAdmin]);
  const bonus=/bonific/i.test(form.order_type);
  const total=useMemo(()=>lines.reduce((sum,l)=>sum+Number(l.quantity||0)*Number(l.negotiated_price||0),0),[lines]);
  function update<K extends keyof typeof initial>(name:K,value:(typeof initial)[K]){setForm(v=>({...v,[name]:value}));}
