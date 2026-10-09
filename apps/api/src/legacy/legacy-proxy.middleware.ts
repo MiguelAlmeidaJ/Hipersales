@@ -37,6 +37,7 @@ export class LegacyProxyMiddleware implements NestMiddleware {
 
     if (this.migrateOccurrenceCrud && (
       (["GET","POST"].includes(request.method) && path === "/api/occurrences") ||
+      (request.method === "GET" && /^\/api\/occurrences\/\d+\/attachments\/\d+$/.test(path)) ||
       (["PATCH","DELETE"].includes(request.method) && /^\/api\/admin\/occurrences\/\d+$/.test(path))
     )) return next();
 
