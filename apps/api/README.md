@@ -167,3 +167,9 @@ Foi implementado `ProposalCreationService` com a rota `POST /api/proposals`: val
 A rota permanece no Python por padrao. A variavel `HIPERSALES_NEST_PROPOSAL_WRITES=true` e **exclusiva de homologacao**: falta integrar o template HTML real `format_new_proposal_email` e `queue_outbox`, conferir todas as classificacoes de bonificacao e comparar campos do banco original antes do uso real. O Nest nesta fase ainda NAO enfileira o aviso de nova proposta, portanto ativar a variavel em producao geraria perda de notificacao. `test/proposal-creation.spec.ts` verifica criacao, numeracao, limites entre empresas, permissoes e rollback.
 
 Prioridade imediata para concluir, em vez de abrir novas migracoes em paralelo: concluir paridade de e-mail e homologar essa rota; concluir as rotas de cadastro ja implementadas; entao migrar atualizacoes de proposta.
+
+## Notificacao de novas propostas no Nest
+
+`ProposalNotificationService` agora reproduz exatamente o assunto e o texto do e-mail `format_new_proposal_email`/`format_proposal_subject` de `documents.py` e insere o registro `new_proposal_admin` na `email_outbox` na mesma transacao que grava pedido, itens e evento. A identificacao de bonificacao tambem trata cedilha/acentos. Os testes `proposal-notification.spec.ts` e `proposal-creation.spec.ts` cobrem formato de mensagem e registros da outbox.
+
+**Aviso de implantacao:** a outbox agora e enfileirada mas nao houve homologacao do processamento/entrega de mensagens pelo worker Python. Manter `HIPERSALES_NEST_PROPOSAL_WRITES` desativada em producao ate validacao local dos testes, compatibilidade com o banco real e da entrega; outras rotas de pedidos seguem no Python.
