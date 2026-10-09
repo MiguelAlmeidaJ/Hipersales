@@ -141,3 +141,9 @@ Rodar `npm ci`, `npm run build:api` e `npm run test:api` antes de qualquer deplo
 Foi implementado `RegistrationReviewService` com `PATCH /api/admin/requests/:id`, validacao de status, edicao dos dados da solicitacao, transacao SQLite, criacao/atualizacao do cliente por CNPJ normalizado, associacao idempotente com o representante e escopo obrigatorio de empresa. Testes: `test/registration-review.spec.ts`.
 
 **A rota segue atendida apenas pelo Python no proxy de producao.** O Nest ainda nao cria as notificacoes baseadas nos templates configuraveis de email e WhatsApp, que o legado gera na transicao para `aprovada`. Habilitar o Nest nesse ponto pode omitir notificacoes; somente fazer a migracao da rota quando os templates e a outbox estiverem homologados. A implementacao ainda precisa passar por compilacao e testes na infraestrutura do projeto.
+
+## Fila de notificacoes na aprovacao (Nest)
+
+Foi implementado `ApprovalNotificationsService`, integrado ao `RegistrationReviewService`, para inserir eventos `customer_status_email` e, se habilitado, `customer_status_whatsapp` na `email_outbox` na mesma transacao de aprovacao do cliente. Faz interpolacao de variaveis do template por empresa e evita notificacoes duplicadas quando a solicitacao ja estava aprovada. Se os templates necessarios nao estiverem disponiveis, a transacao falha (sem aprovar silenciosamente sem mensagens).
+
+**Ainda NAO habilitar a rota PATCH /api/admin/requests/:id no Nest em producao.** O proxy continua encaminhando-a ao Python. A implementacao Nest ainda nao reproduz o `logo_email` do legado, os templates padrao completos nem a conversao de avisos HTML em todos os cenarios. Estes pontos precisam ser homologados em testes e comparacao de respostas reais antes do corte. Os testes automatizados incluem placeholders e deduplicacao de aviso.
