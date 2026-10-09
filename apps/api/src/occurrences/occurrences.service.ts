@@ -14,6 +14,7 @@ export function occurrenceStatus(value:unknown):string{
 export class OccurrencesService {
   constructor(private readonly database:DatabaseService){}
   list(user:PublicUser){
+    this.cleanupExpiredAttachments(user.tenant_id);
     const db=this.database.db;
     const rows=db.prepare(`SELECT o.*,u.name AS seller_name,
       COALESCE(NULLIF(u.communication_email,''),u.email) AS seller_email,
@@ -49,6 +50,15 @@ export class OccurrencesService {
       return {...row,attachment_names:attachmentNames,attachments:attached,
         attachments_expired:Boolean(attachmentNames.length&&!attached.length&&current==="solucionada"),timeline};
     })};
+  }
+  cleanupExpiredAttachments(tenantId:number):number {
+    const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+    return this.database.db.prepare(`DELETE FROM occurrence_attachments
+      WHERE tenant_id=? AND occurrence_id IN (
+        SELECT id FROM occurrences WHERE tenant_id=?
+          AND status IN ('solucionada','solucionado','tratada','encerrada')
+          AND resolved_at IS NOT NULL AND resolved_at<=?
+      )`).run(tenantId,tenantId,cutoff).changes;
   }
   update(user:PublicUser,id:number,input:Row){
     if(!Number.isSafeInteger(id)||id<=0||!input||typeof input!=="object"||Array.isArray(input))
@@ -89,6 +99,10 @@ export class OccurrencesService {
     if(!Number.isSafeInteger(id)||id<=0) throw new BadRequestException("Ocorrencia invalida.");
     return this.database.transaction(()=>{
       const db=this.database.db;
+      const found=db.prepare("SELECT 1 FROM occurrences WHERE id=? AND tenant_id=?").get(id,user.tenant_id);
+      if(!found) throw new NotFoundException("Ocorrencia nao encontrada.");
+      db.prepare("DELETE FROM occurrence_attachments WHERE occurrence_id=? AND tenant_id=?").run(id,user.tenant_id);
+      db.prepare("DELETE FROM occurrence_events WHERE occurrence_id=? AND tenant_id=?").run(id,user.tenant_id);
       const result=db.prepare("DELETE FROM occurrences WHERE id=? AND tenant_id=?").run(id,user.tenant_id);
       if(!result.changes) throw new NotFoundException("Ocorrencia nao encontrada.");
       return {message:"Ocorrencia excluida definitivamente."};
