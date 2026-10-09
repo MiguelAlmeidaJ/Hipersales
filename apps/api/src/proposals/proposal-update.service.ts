@@ -85,7 +85,7 @@ export class ProposalUpdateService {
           if(!Number.isSafeInteger(productId)||productId<1||!Number.isFinite(quantity)||quantity<=0||!Number.isFinite(price)||price<0)
             throw new BadRequestException("Quantidade e preco dos itens devem ser validos.");
           if(!db.prepare("SELECT id FROM products WHERE id=? AND tenant_id=? AND company_id=? AND active=1")
-            .get(productId,user.tenant_id,previous.company_id))
+            .get(productId,user.tenant_id,Number(previous.company_id)))
             throw new BadRequestException("Produto invalido para a empresa do pedido.");
           normalizedItems.push({productId,quantity,price});
         }
