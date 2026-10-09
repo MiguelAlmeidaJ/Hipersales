@@ -19,6 +19,8 @@ jobs:
         working-directory: .
       - run: python3 -m unittest discover -s apps/api/tests -p test_import_snapshot_pg.py
         working-directory: .
+      - run: python3 -m unittest discover -s apps/api/tests -p test_superadmin_tenant_dashboard.py
+        working-directory: .
       - run: npm run check:contracts
       - run: npm run typecheck
       - run: npm run build
