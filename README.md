@@ -1,22 +1,23 @@
 # Hipersales — monorepo
 
-Aplicacao existente reorganizada sem mudar regras de negocio, rotas, payloads ou esquema SQLite.
+Aplicacao em migracao incremental do backend Python para NestJS, preservando
+rotas, payloads e esquema SQLite durante o cutover por dominio.
 
 ## Estrutura
 
-- `apps/api/`: backend Python HTTP nativo, SQLite e integracao Evolution API existente.
-- `apps/web/`: frontend HTML, JS e PWA sem novo framework.
-- `packages/contracts/`: contratos de integracao e regras de compatibilidade.
+- `apps/api/src/`: nova API publica NestJS/TypeScript.
+- `apps/api/*.py`: implementacao interna temporaria dos dominios ainda nao migrados.
+- `apps/web/`: frontend Next.js.
+- `packages/contracts/`: schemas Zod e tipos TypeScript compartilhados.
 - `infra/docker/`: PostgreSQL/Redis/Evolution API v2 e a API Hipersales.
 - `scripts/`: utilitarios de importacao e relatorios (validar caminhos antes da execucao).
 
 ## Desenvolvimento local
 
-```bash
-python apps/api/app.py
-```
-
-Abra http://localhost:8000. O banco local padrao fica em `database/hypersales.sqlite3` (ignorado pelo Git). Antes de atualizar uma instalacao existente, preserve o arquivo SQLite e a configuracao .env.
+Consulte `apps/api/README.md` para iniciar o processo legado interno e o NestJS.
+Abra http://localhost:3000. O banco local padrao fica em
+`database/hypersales.sqlite3` (ignorado pelo Git). Antes de atualizar uma
+instalacao existente, preserve o arquivo SQLite e a configuracao `.env`.
 
 ## Docker
 
@@ -32,6 +33,8 @@ A aplicacao escuta na porta 8000 e o Evolution na porta 8081 vinculada ao localh
 
 ## Compatibilidade
 
-Preservados: endpoints /api/*, formato de sessao, frontend, tabelas e jobs Python. O unico ajuste funcional de infraestrutura e o caminho de frontend agora em `apps/web`. A integracao Evolution ja existia no backend antes desta reorganizacao. Nao ha migracao de dados automatica.
+Preservados: endpoints `/api/*`, formato de sessao, frontend e tabelas. NestJS e
+a borda publica; jobs e dominios ainda nao portados executam no servico legado
+interno, sem porta publicada. Nao ha migracao de dados automatica.
 
 Consulte `packages/contracts/README.md` e `infra/docker/README.md`. Execute testes de regressao e validacao em ambiente de homologacao antes de substituir a implantacao atual.

@@ -19,8 +19,8 @@ export default function PasswordChange({
     e.preventDefault();
     setError("");
     setNotice("");
-    if (next.length < 8) {
-      setError("A senha deve ter ao menos 8 caracteres.");
+    if (next.length < 12) {
+      setError("A senha deve ter ao menos 12 caracteres.");
       return;
     }
     if (next !== again) {
@@ -81,7 +81,7 @@ export default function PasswordChange({
               type="password"
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={12}
               value={next}
               onChange={(e) => setNext(e.target.value)}
             />
@@ -93,7 +93,7 @@ export default function PasswordChange({
               type="password"
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={12}
               value={again}
               onChange={(e) => setAgain(e.target.value)}
             />

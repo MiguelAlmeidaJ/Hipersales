@@ -1,0 +1,13 @@
+.git
+.github
+.node_modules.corrupt
+**/node_modules
+**/.next
+**/dist
+**/__pycache__
+database
+backups
+*.sqlite3
+*.sqlite3-*
+*.log
+.env

@@ -1,7 +1,21 @@
-FROM python:3.12-slim
+FROM node:24-slim AS build
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-COPY apps/api/ /app/apps/api/
-COPY apps/web/ /app/apps/web/
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+RUN npm ci --workspace @hipersales/api --workspace @hipersales/contracts --include-workspace-root
+COPY apps/api/ apps/api/
+COPY packages/contracts/ packages/contracts/
+RUN npm run build:api
+
+FROM node:24-slim
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+RUN npm ci --omit=dev --workspace @hipersales/api --workspace @hipersales/contracts --include-workspace-root
+COPY --from=build /app/apps/api/dist/ apps/api/dist/
+COPY --from=build /app/packages/contracts/dist/ packages/contracts/dist/
 EXPOSE 8000
-CMD ["python", "apps/api/app.py"]
+CMD ["node", "apps/api/dist/main.js"]

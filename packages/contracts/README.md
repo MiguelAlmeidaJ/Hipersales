@@ -1,6 +1,8 @@
 # Contratos e limites de mudanca
 
-Este diretorio documenta o contrato atual, **nao adiciona nova camada em runtime**.
+Este diretorio agora e o pacote `@hipersales/contracts`. Ele concentra schemas
+Zod e tipos TypeScript independentes de framework para que API, web e testes
+validem os mesmos payloads durante a migracao para NestJS.
 
 | Fronteira | Contrato preservado |
 | --- | --- |
@@ -12,4 +14,6 @@ Este diretorio documenta o contrato atual, **nao adiciona nova camada em runtime
 
 Nao alterar os contratos sem testes de caracterizacao, migracao versionada e revisao explicita. Os nomes das instancias WhatsApp seguem `hipersales-tenant-{id}` para preservar o isolamento atual por tenant.
 
-A API e o frontend continuam implementados na tecnologia original. Tipos OpenAPI/TypeScript podem ser introduzidos a partir de capturas de respostas verificadas, sem supor novos formatos.
+A migracao e incremental: as rotas de sessao ja usam os contratos executaveis em
+`src/auth.ts`; os demais payloads devem ser adicionados aqui somente depois de
+testes de caracterizacao do comportamento Python.

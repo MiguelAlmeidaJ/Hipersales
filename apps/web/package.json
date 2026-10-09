@@ -13,6 +13,7 @@
     "format:check": "npx --yes prettier@3.6.2 --check \"components/app-shell.tsx\" \"components/app-header.tsx\" \"components/app-sidebar.tsx\" \"components/session-context.tsx\""
   },
   "dependencies": {
+    "@hipersales/contracts": "file:../../packages/contracts",
     "next": "^16.1.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

@@ -20,15 +20,43 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "8000"
-      EVOLUTION_API_URL: http://evolution:8080
-      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:?Configure_EVOLUTION_API_KEY}
+      NODE_ENV: production
+      LEGACY_API_ORIGIN: http://hipersales-legacy:8001
       HYPERSALES_DB_PATH: /app/database/hypersales.sqlite3
     volumes:
       - hipersales_database:/app/database
     ports:
       - "8000:8000"
     depends_on:
+      hipersales-legacy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  hipersales-legacy:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api-legacy
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8001"
+      EVOLUTION_API_URL: http://evolution:8080
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:?Configure_EVOLUTION_API_KEY}
+      HYPERSALES_DB_PATH: /app/database/hypersales.sqlite3
+    volumes:
+      - hipersales_database:/app/database
+    depends_on:
       - evolution
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('127.0.0.1',8001),2); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   hipersales-postgres:
     image: postgres:16-alpine

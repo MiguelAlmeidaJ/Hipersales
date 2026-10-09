@@ -8,6 +8,8 @@ __pycache__/
 venv/
 node_modules/
 **/node_modules/
+.node_modules.corrupt/
+**/dist/
 database/
 data/
 *.sqlite3

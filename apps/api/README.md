@@ -1,42 +1,45 @@
-# Backend HiperSales
+# API HiperSales
 
-O backend continua usando a biblioteca HTTP nativa do Python e SQLite. A
-refatoracao separa responsabilidades sem alterar rotas, regras de negocio,
-schema, formato de respostas ou o comando de inicializacao.
+O ponto de entrada publico e agora NestJS/TypeScript. A primeira fatia migrada
+inclui login, logout, sessao, troca de senha e health check. Os demais dominios
+continuam no processo Python interno e sao encaminhados pelo Nest sem alterar as
+rotas `/api/*`; esse proxy e uma ponte temporaria, nao uma arquitetura final.
 
-## Ponto de entrada
+## Desenvolvimento
 
-Execute como antes:
+Na raiz do repositorio:
 
 ```bash
-python backend/app.py
+npm install
+npm run build:api
 ```
 
-O arquivo `app.py` agora apenas compoe o handler HTTP, inicia os agendadores e
-abre o servidor. Ele deve permanecer pequeno.
+Inicie o legado na porta interna e depois o Nest:
 
-## Modulos
+```powershell
+$env:PORT=8001; python apps/api/app.py
+$env:LEGACY_API_ORIGIN="http://127.0.0.1:8001"; npm run dev --workspace @hipersales/api
+```
 
-- `foundation.py`: configuracao, banco de dados, autenticacao, settings e
-  integracoes compartilhadas.
-- `documents.py`: formatacao de dados, mensagens, pedidos e documentos PDF.
-- `shared.py`: superficie de compatibilidade usada pelos modulos de dominio.
-- `http_handler.py`: transporte HTTP, sessao e roteamento da API.
-- `tenant_goals.py`: superadministracao, dashboard e metas.
-- `sales.py`: clientes, empresas, produtos, propostas e ocorrencias.
-- `admin_dashboard.py`: visao administrativa, configuracoes e WhatsApp.
-- `catalog_admin.py`: catalogo, vinculos e usuarios.
-- `order_admin.py`: cadastros, pedidos, clientes e consulta de CNPJ.
-- `report_data.py`: consultas e consolidacao de dados de relatorios.
-- `report_pdf.py`: renderizacao dos relatorios em PDF.
-- `background_jobs.py`: relatorios recorrentes, lembretes e rotinas legadas.
+O frontend continua chamando somente a porta publica `8000`.
 
-## Regra para novas alteracoes
+## Estrutura nova
 
-Adicione cada regra ao modulo do seu dominio. O `HypersalesHandler`, em
-`app.py`, combina os mixins e preserva a mesma interface usada pelo servidor.
-Funcoes compartilhadas de infraestrutura ficam em `foundation.py`; funcoes de
-documentos ficam em `documents.py`.
+- `src/auth`: sessao e credenciais, preservando o hash PBKDF2 e o cookie legado.
+- `src/common/guards`: autenticacao fechada por padrao e autorizacao por papel.
+- `src/common/middleware`: verificacao de origem para requisicoes mutaveis.
+- `src/database`: acesso SQLite encapsulado para a fase de compatibilidade.
+- `src/legacy`: proxy isolado que desaparecera conforme cada dominio for portado.
+- `packages/contracts`: schemas Zod e tipos compartilhados com o frontend.
 
-Imports relativos suportam o uso como pacote (`import backend.app`) e os
-fallbacks absolutos preservam a execucao direta em producao.
+Novos controllers devem declarar `@Public()` apenas quando realmente publicos;
+o `SessionGuard` global exige sessao em todos os outros. Rotas administrativas
+devem declarar `@Roles("admin")`.
+
+## Ordem recomendada da migracao
+
+1. Catalogo (empresas e produtos).
+2. Clientes, usuarios e vinculos.
+3. Propostas e ocorrencias.
+4. Dashboard, metas e relatorios.
+5. Integracoes, webhooks e jobs; entao remover `LegacyProxyMiddleware` e Python.

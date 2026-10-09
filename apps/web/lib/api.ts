@@ -1,12 +1,6 @@
-export interface SessionUser {
-  id: number;
-  name: string;
-  email: string;
-  role: "admin" | "seller" | string;
-  is_super_admin?: number | boolean;
-  is_dev?: number | boolean;
-  must_change_password?: number | boolean;
-}
+import type { PublicUser } from "@hipersales/contracts";
+
+export type SessionUser = PublicUser;
 
 export class ApiError extends Error {
   constructor(
