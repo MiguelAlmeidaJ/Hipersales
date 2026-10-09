@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseService } from "../database/database.service.js";
+import { ProposalNotificationService } from "./proposal-notification.service.js";
 
 type Item = {product_id:number;quantity:number;negotiated_price:number};
 type Input = {company_id:number;customer_id:number;seller_id?:number;order_type:string;purchase_order?:string;commission_percent?:unknown;invoice_type?:string;tax_operator_invoice?:boolean;freight_type:string;delivery_type:string;scheduled_delivery_date?:string;discount_percent?:unknown;discount_on?:string;payment_terms?:string;notes?:string;items:Item[]};
@@ -23,7 +24,7 @@ function discountOn(value:string|undefined) {
 }
 @Injectable()
 export class ProposalCreationService {
-  constructor(private readonly database:DatabaseService){}
+  constructor(private readonly database:DatabaseService, private readonly notifications:ProposalNotificationService){}
 
   create(user:PublicUser,data:Input) {
     if(!["admin","seller"].includes(user.role)) throw new ForbiddenException("Envio de proposta indisponivel para este usuario.");
@@ -35,7 +36,7 @@ export class ProposalCreationService {
     if(!Number.isSafeInteger(companyId)||!Number.isSafeInteger(customerId)||!Number.isSafeInteger(sellerId)||!orderType||!freight||!delivery) {
       throw new BadRequestException("Informe empresa, cliente, tipo de pedido, frete e entrega.");
     }
-    const bonus = /bonifica/i.test(orderType);
+    const bonus = orderType.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().includes("bonificacao");
     const payment=bonus?"":String(data?.payment_terms||"").trim();
     if(!bonus&&!payment) throw new BadRequestException("Informe a forma de pagamento.");
     if(!Array.isArray(data?.items)||data.items.length===0) throw new BadRequestException("Inclua ao menos um produto na proposta.");
@@ -81,7 +82,7 @@ export class ProposalCreationService {
       db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
         .run(proposalId,"em_analise","Em analise","Proposta enviada para analise.",sellerId,now);
       if(user.role==="admin") db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)").run(customerId,sellerId);
-      // Full legacy notification rendering is pending; this route stays opt-in until parity.
+      this.notifications.queueNewProposal(user.tenant_id,proposalId);
       return {id:proposalId,order_number:orderNumber,status:"em_analise",company_id:companyId,
         customer_id:customerId,message:user.role==="admin"?"Pedido criado pelo admin.":"Proposta enviada para analise."};
     });
