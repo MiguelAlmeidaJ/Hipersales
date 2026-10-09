@@ -3,11 +3,12 @@ import type { AuthenticatedRequest } from "../common/http/authenticated-request.
 import { Roles } from "../common/decorators/roles.decorator.js";
 import { CustomersService } from "./customers.service.js";
 import { CnpjLookupService } from "./cnpj-lookup.service.js";
+import { CustomerRegistrationService } from "./customer-registration.service.js";
 import { CustomersWriteService, type CustomerInput } from "./customers-write.service.js";
 
 @Controller("api")
 export class CustomersController {
-  constructor(private readonly customers: CustomersService, private readonly writes: CustomersWriteService, private readonly cnpjLookup: CnpjLookupService) {}
+  constructor(private readonly customers: CustomersService, private readonly writes: CustomersWriteService, private readonly cnpjLookup: CnpjLookupService, private readonly registration: CustomerRegistrationService) {}
 
   @Get("integrations/cnpj")
   lookupCnpj(
@@ -36,7 +37,7 @@ export class CustomersController {
   @Roles("admin")
   @Post("admin/customers")
   create(@Req() request: AuthenticatedRequest, @Body() input: CustomerInput) {
-    return this.writes.create(request.user, input);
+    return this.registration.create(request.user, input);
   }
 
   @Roles("admin")
@@ -46,7 +47,7 @@ export class CustomersController {
     @Param("id", ParseIntPipe) id: number,
     @Body() input: CustomerInput,
   ) {
-    return this.writes.update(request.user, id, input);
+    return this.registration.update(request.user, id, input);
   }
 
   @Roles("admin")
