@@ -4,12 +4,14 @@ import { api, type SessionUser } from "../lib/api";
 import ProposalForm from "./proposal-form";
 import OrderAdmin from "./order-admin";
 
-type Item = {id:number;name:string;code:string;quantity:number;negotiated_price:number};
+type Item = {id:number;product_id:number;name:string;code:string;quantity:number;negotiated_price:number};
 type Timeline = {id:number;title:string;notes?:string;status:string;created_at:string;created_by_name?:string};
 type Order = {
- id:number;order_number?:number;status:string;company_name:string;customer_name:string;
+ id:number;company_id:number;order_number?:number;status:string;company_name:string;customer_name:string;
  seller_name:string;order_type:string;created_at:string;updated_at:string;items:Item[];
  timeline:Timeline[];payment_terms?:string;freight_type?:string;delivery_type?:string;
+ admin_notes?:string;delivery_forecast?:string;industry_order_number?:string;invoice_number?:string;notes?:string;purchase_order?:string;
+ commission_percent?:number;discount_percent?:number;discount_on?:string;invoice_type?:string;tax_operator_invoice?:number|boolean;scheduled_delivery_date?:string;
 };
 const cash=(x:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(x);
 export default function OrdersView({user}:{user:SessionUser}){
