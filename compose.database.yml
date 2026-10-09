@@ -1,0 +1,22 @@
+# PostgreSQL comercial local para teste. API e Web permanecem no PM2.
+# Execute: docker compose -f compose.database.yml up -d
+services:
+  hipersales-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hipersales
+      POSTGRES_USER: hipersales
+      POSTGRES_PASSWORD: ${HIPERSALES_DB_PASSWORD:?Defina_HIPERSALES_DB_PASSWORD_no_env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - hipersales_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hipersales -d hipersales"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  hipersales_pgdata:
