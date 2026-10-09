@@ -89,3 +89,9 @@ A variavel `HIPERSALES_NEST_CUSTOMER_WRITES=true` habilita as escritas Nest **so
 8. Homologacao final, migracao da persistencia PostgreSQL se desejada, desligamento do proxy/Python e limpeza do legado.
 
 Oito etapas representam uma estimativa tecnica e podem ser subdivididas apos a auditoria de cada dominio.
+
+## Compatibilidade de campos cadastrais
+
+O arquivo `src/customers/customer-fields.ts` centraliza as regras de composição de endereço e contatos antes implementadas em `foundation.py`. As consultas e escritas Nest compartilham agora esses auxiliares, inclusive para formulários legados com campos em `row`. Os cenários mínimos são exercitados em `test/customer-fields.spec.ts`.
+
+**Ainda pendente:** consulta externa de CNPJ (CNPJ.ws e BrasilAPI), normalização integral do retorno, equivalência dos enriquecimentos remotos e homologação contra amostras reais. Por isso, `HIPERSALES_NEST_CUSTOMER_WRITES` deve permanecer desativado em produção. Nenhuma remoção do Python foi realizada nesta etapa.
