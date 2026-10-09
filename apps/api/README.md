@@ -101,3 +101,15 @@ O arquivo `src/customers/customer-fields.ts` centraliza as regras de composiçã
 Adicionado `CnpjLookupService` com consulta primaria em CNPJ.ws e fallback para BrasilAPI, tratamento de falhas e campos no formato da resposta historica `GET /api/integrations/cnpj`. O endpoint exige sessao e valida CNPJ duplicado dentro da empresa. Testes isolados cobrem timeout, fallback e retorno invalido.
 
 O proxy continua utilizando Python por padrao. Para verificar o novo endpoint em ambiente de homologacao, configurar `HIPERSALES_NEST_CNPJ_LOOKUP=true` no processo Nest e reinicia-lo. **Nao ativar em producao sem conferir os retornos com CNPJs reais e a equivalencia integral dos provedores.** `HIPERSALES_NEST_CUSTOMER_WRITES` tambem permanece desativado. A escrita de clientes no Nest ainda nao consome o resultado remoto da consulta.
+
+## Cadastro de clientes: enriquecimento no Nest
+
+O novo `CustomerRegistrationService` combina a consulta externa com o `CustomersWriteService`, sem executar requisições HTTP dentro de transações SQLite. Dados informados pelo operador têm prioridade sobre o retorno dos provedores; informações ausentes são preenchidas com o resultado de CNPJ.ws/BrasilAPI e o retorno é mantido em `form_payload._lookup`. Se ambos os provedores estiverem fora do ar, o cadastro continua com os dados enviados; conflitos de CNPJ e campos obrigatórios continuam bloqueados.
+
+A rota de consulta `HIPERSALES_NEST_CNPJ_LOOKUP` e as escritas `HIPERSALES_NEST_CUSTOMER_WRITES` continuam opt-in. Não habilitar em produção sem comparar resultados reais com Python e executar build/testes. Ainda existem diferenças em validação e modelos de integrações do legado a homologar.
+
+```bash
+npm ci
+npm run build:api
+npm run test:api
+```
