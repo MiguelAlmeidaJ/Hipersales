@@ -18,7 +18,7 @@ class HttpHandlerMixin:
     def end_headers(self) -> None:
         self.send_header("X-Content-Type-Options", "nosniff")
         parsed = urlparse(self.path)
-        if parsed.path in {"/", "/index.html", "/app.js", "/styles.css", "/sw.js", "/manifest.webmanifest"}:
+        if parsed.path.startswith("/assets/"):
             self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
             self.send_header("Pragma", "no-cache")
             self.send_header("Expires", "0")
@@ -52,16 +52,18 @@ class HttpHandlerMixin:
             self.path = "/assets/logoapp.png"
             super().do_GET()
             return
-        if parsed.path != "/" and not (FRONTEND_DIR / parsed.path.lstrip("/")).exists():
-            self.path = "/index.html"
-        super().do_GET()
+        if parsed.path.startswith("/assets/") and (FRONTEND_DIR / parsed.path.lstrip("/")).is_file():
+            super().do_GET()
+            return
+        self.send_error(HTTPStatus.NOT_FOUND, "Recurso nao encontrado. Use o frontend Next.js.")
 
     def do_HEAD(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path == "/favicon.ico":
             self.path = "/assets/logoapp.png"
-        elif parsed.path != "/" and not (FRONTEND_DIR / parsed.path.lstrip("/")).exists():
-            self.path = "/index.html"
+        elif not (parsed.path.startswith("/assets/") and (FRONTEND_DIR / parsed.path.lstrip("/")).is_file()):
+            self.send_error(HTTPStatus.NOT_FOUND, "Recurso nao encontrado.")
+            return
         super().do_HEAD()
 
     def do_POST(self) -> None:
