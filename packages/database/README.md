@@ -76,3 +76,17 @@ DATABASE_URL='postgresql://...' python3 apps/api/scripts/test_pg_connection.py
 ```
 
 **Não altere o PM2 para PostgreSQL ainda**, pois o servidor principal continua SQLite.
+
+## Primeiro passo local liberado: snapshot verificável no Windows
+
+Com PostgreSQL conectado, você já pode preparar um **snapshot de ensaio**, sem migrar ainda a API nem apagar o SQLite. No Git Bash, na raiz:
+
+```bash
+git pull origin main
+python -m unittest discover -s apps/api/tests -p test_sqlite_snapshot.py
+python packages/database/scripts/prepare_sqlite_snapshot.py --output backups/hipersales-ensaio-01.sqlite3
+```
+
+O utilitário lê `HYPERSALES_DB_PATH` do `.env` (padrão: `database/hypersales.sqlite3`), usa a API nativa de backup do SQLite e grava arquivo `.manifest.json` com SHA-256, contagem por tabela e verificações de integridade/FKs. O arquivo de saída **não pode existir previamente**, para impedir sobrescrita acidental. Se detectar falha de integridade/FK, recusa o snapshot.
+
+Não execute importação definitiva ainda. O procedimento antigo de importação com `pgloader` depende de ferramentas externas e não faz o cutover Python. A conclusão requer adaptar os comandos específicos do SQLite na API e homologar PostgreSQL antes de alternar o PM2.
