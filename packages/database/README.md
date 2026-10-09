@@ -52,3 +52,13 @@ python3 apps/api/scripts/audit_sqlite_dialect.py
 ```
 
 O último comando **deve permanecer bloqueante** enquanto as operações SQLite não forem totalmente adaptadas. A comparação não valida conteúdo linha a linha nem libera mudança para PostgreSQL em produção.
+
+## Auditoria de preparação PostgreSQL (sem alterar dados)
+
+Após importar o snapshot para um banco de teste, execute:
+
+```bash
+DATABASE_URL='postgresql://...' python3 packages/database/scripts/check_pg_readiness.py --sqlite migration-import-001/hipersales-migration-snapshot.sqlite3
+```
+
+A auditoria consulta a integridade SQLite, tabelas, colunas, quantidades e sequências ligadas aos IDs. Ela apenas lê dados; não corrige ou altera sequences, nem instala o adaptador PostgreSQL na API. Mesmo quando passa, ainda é obrigatório converter os comandos específicos de SQLite e homologar os fluxos completos antes de liberar a migração.
