@@ -1,7 +1,6 @@
 # API HiperSales
 
-O ponto de entrada publico e agora NestJS/TypeScript. A primeira fatia migrada
-inclui login, logout, sessao, troca de senha e health check. Os demais dominios
+O ponto de entrada publico e agora NestJS/TypeScript. As fatias migradas incluem autenticacao, health check e consultas de empresas e produtos (administrador e representante). Os demais dominios
 continuam no processo Python interno e sao encaminhados pelo Nest sem alterar as
 rotas `/api/*`; esse proxy e uma ponte temporaria, nao uma arquitetura final.
 
@@ -38,8 +37,22 @@ devem declarar `@Roles("admin")`.
 
 ## Ordem recomendada da migracao
 
-1. Catalogo (empresas e produtos).
+1. Concluir escritas de catalogo (criar/editar/excluir/importar e exportar), com testes de regras e integridade.
 2. Clientes, usuarios e vinculos.
 3. Propostas e ocorrencias.
 4. Dashboard, metas e relatorios.
 5. Integracoes, webhooks e jobs; entao remover `LegacyProxyMiddleware` e Python.
+
+## Fase de transicao do catalogo
+
+As consultas `GET /api/companies`, `GET /api/products`, `GET /api/admin/companies` e `GET /api/admin/products` agora sao atendidas pelo Nest, com respostas e filtros compativeis com Python. O Nest aplica sessao e controle de perfil nas rotas administrativas. Criacao, edicao, exclusao, importacao e exportacao continuam no legado, via proxy, para nao alterar regras de dependencia de pedidos.
+
+Validacao antes de reiniciar a API:
+
+```bash
+npm ci
+npm run build:api
+npm run test:api
+```
+
+Somente depois de os comandos passarem, garanta que `hipersales-api-legacy` esta online na porta 8001 e reinicie `hipersales-api` via PM2. Nao desligue o Python nem troque o banco nesta fase.
