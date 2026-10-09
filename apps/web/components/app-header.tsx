@@ -13,13 +13,7 @@ type HeaderProps = {
   onUserChange: (user: SessionUser) => void;
 };
 
-export default function AppHeader({
-  title,
-  user,
-  busy,
-  onLogout,
-  onUserChange,
-}: HeaderProps) {
+export default function AppHeader({ title, user, busy, onLogout, onUserChange }: HeaderProps) {
   const [accountOpen, setAccountOpen] = useState(false);
 
   async function onPasswordChanged() {
@@ -38,9 +32,7 @@ export default function AppHeader({
       </div>
 
       <div className="app-header-actions">
-        <span className="hidden text-sm font-medium text-slate-600 lg:inline">
-          {user.name}
-        </span>
+        <span className="hidden text-sm font-medium text-slate-600 lg:inline">{user.name}</span>
         {user.is_dev && (
           <span className="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-800">
             Dev
@@ -57,11 +49,7 @@ export default function AppHeader({
             Minha conta <span aria-hidden="true">{accountOpen ? "⌃" : "⌄"}</span>
           </button>
           {accountOpen && (
-            <div
-              role="dialog"
-              aria-label="Configurações da conta"
-              className="app-account-popover"
-            >
+            <div role="dialog" aria-label="Configurações da conta" className="app-account-popover">
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-slate-900">{user.name}</p>
@@ -80,12 +68,7 @@ export default function AppHeader({
             </div>
           )}
         </div>
-        <button
-          type="button"
-          className="app-logout-button"
-          disabled={busy}
-          onClick={onLogout}
-        >
+        <button type="button" className="app-logout-button" disabled={busy} onClick={onLogout}>
           Sair
         </button>
       </div>

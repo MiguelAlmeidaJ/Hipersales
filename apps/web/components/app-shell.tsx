@@ -124,7 +124,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
-          {error && <p role="alert" className="error">{error}</p>}
+          {error && (
+            <p role="alert" className="error">
+              {error}
+            </p>
+          )}
           <button disabled={busy} className="primary">
             {busy ? "Entrando…" : "Entrar"}
           </button>
@@ -143,9 +147,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const navigation = visibleModules(user?.role ?? "seller");
   const requestedModule = getModuleFromPath(pathname);
-  const selectedModule = navigation.find(
-    (item) => item.id === requestedModule?.id,
-  );
+  const selectedModule = navigation.find((item) => item.id === requestedModule?.id);
 
   return (
     <div className="workspace app-frame">
@@ -179,19 +181,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         <main className="content app-content">
           {selectedModule ? (
-            <SessionContext.Provider value={user}>
-              {children}
-            </SessionContext.Provider>
+            <SessionContext.Provider value={user}>{children}</SessionContext.Provider>
           ) : (
             <section className="tile">
               <h1>Acesso indisponível</h1>
               <p className="mt-2 text-slate-600">
                 Esta página não está disponível para o seu perfil.
               </p>
-              <Link
-                href="/app/painel"
-                className="mt-4 inline-block font-semibold text-violet-700"
-              >
+              <Link href="/app/painel" className="mt-4 inline-block font-semibold text-violet-700">
                 Ir para o painel
               </Link>
             </section>

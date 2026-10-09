@@ -1,2 +1,4 @@
-import {redirect} from "next/navigation";
-export default function AppIndex(){redirect("/app/painel")}
+import { redirect } from "next/navigation";
+export default function AppIndex() {
+  redirect("/app/painel");
+}

@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import type { SessionUser } from "../lib/api";
-import {
-  modulePath,
-  type ModuleDefinition,
-} from "../lib/navigation";
+import { modulePath, type ModuleDefinition } from "../lib/navigation";
 
 type SidebarProps = {
   user: SessionUser;
@@ -15,13 +12,7 @@ type SidebarProps = {
   onClose: () => void;
 };
 
-export default function AppSidebar({
-  user,
-  items,
-  activeId,
-  open,
-  onClose,
-}: SidebarProps) {
+export default function AppSidebar({ user, items, activeId, open, onClose }: SidebarProps) {
   const roleLabel = user.is_dev
     ? "Desenvolvedor"
     : user.role === "admin"
@@ -39,35 +30,25 @@ export default function AppSidebar({
         />
       )}
 
-      <aside
-        id="app-navigation"
-        className={`nav-side app-sidebar ${open ? "is-open" : ""}`}
-      >
+      <aside id="app-navigation" className={`nav-side app-sidebar ${open ? "is-open" : ""}`}>
         <Link href="/app/painel" className="app-brand" onClick={onClose}>
           <span className="app-brand-mark" aria-hidden="true">
             H
           </span>
           <span className="min-w-0">
-            <strong className="block text-lg font-extrabold tracking-tight">
-              Hipersales
-            </strong>
-            <span className="block text-xs text-violet-200/80">
-              Gestão comercial
-            </span>
+            <strong className="block text-lg font-extrabold tracking-tight">Hipersales</strong>
+            <span className="block text-xs text-violet-200/80">Gestão comercial</span>
           </span>
         </Link>
 
         <nav className="app-menu" aria-label="Navegação principal">
           {items.map((item, index) => {
-            const firstInGroup =
-              index === 0 || items[index - 1].group !== item.group;
+            const firstInGroup = index === 0 || items[index - 1].group !== item.group;
             const active = item.id === activeId;
 
             return (
               <div key={item.id}>
-                {firstInGroup && (
-                  <p className="app-menu-heading">{item.group}</p>
-                )}
+                {firstInGroup && <p className="app-menu-heading">{item.group}</p>}
                 <Link
                   href={modulePath(item)}
                   onClick={onClose}
@@ -89,12 +70,8 @@ export default function AppSidebar({
             {(user.name || "H").slice(0, 1).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <strong className="block truncate text-xs text-white">
-              {user.name}
-            </strong>
-            <span className="text-[11px] text-violet-200/70">
-              {roleLabel}
-            </span>
+            <strong className="block truncate text-xs text-white">{user.name}</strong>
+            <span className="text-[11px] text-violet-200/70">{roleLabel}</span>
           </div>
         </div>
       </aside>

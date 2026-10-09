@@ -9,7 +9,12 @@ export interface SessionUser {
 }
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number) { super(message); }
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
 }
 
 export async function api<T>(path: `/api/${string}`, options: RequestInit = {}): Promise<T> {
@@ -21,8 +26,10 @@ export async function api<T>(path: `/api/${string}`, options: RequestInit = {}):
   });
   const data: unknown = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const message = typeof data === "object" && data !== null && "error" in data
-      ? String(data.error) : "Erro na requisição";
+    const message =
+      typeof data === "object" && data !== null && "error" in data
+        ? String(data.error)
+        : "Erro na requisição";
     throw new ApiError(message, response.status);
   }
   return data as T;
