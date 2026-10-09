@@ -80,11 +80,11 @@ def translate_insert_or_ignore(sql: str) -> str:
     Only standalone INSERT statements are accepted. Complex SQL and scripts
     must be ported explicitly rather than guessed.
     """
-    if not re.match(r"^\\s*INSERT\\s+OR\\s+IGNORE\\s+INTO\\s+", sql, re.IGNORECASE):
+    if not re.match(r"^\s*INSERT\s+OR\s+IGNORE\s+INTO\s+", sql, re.IGNORECASE):
         return sql
-    if ";" in sql.rstrip().rstrip(";") or re.search(r"\\bON\\s+CONFLICT\\b", sql, re.IGNORECASE):
+    if ";" in sql.rstrip().rstrip(";") or re.search(r"\bON\s+CONFLICT\b", sql, re.IGNORECASE):
         raise ValueError("Review complex INSERT OR IGNORE manually before PostgreSQL migration")
-    translated = re.sub(r"\\bINSERT\\s+OR\\s+IGNORE\\s+INTO\\b", "INSERT INTO", sql, count=1, flags=re.IGNORECASE)
+    translated = re.sub(r"\bINSERT\s+OR\s+IGNORE\s+INTO\b", "INSERT INTO", sql, count=1, flags=re.IGNORECASE)
     stripped = translated.rstrip()
     if stripped.endswith(";"):
         return stripped[:-1] + " ON CONFLICT DO NOTHING;"
@@ -93,7 +93,7 @@ def translate_insert_or_ignore(sql: str) -> str:
 
 def translate_simple_dml(sql: str) -> str:
     """Convert limited SQLite DML; refuse constructs needing semantic review."""
-    if re.search(r"\\b(?:PRAGMA|sqlite_master|INSERT\\s+OR\\s+REPLACE)\\b", sql, re.IGNORECASE):
+    if re.search(r"\b(?:PRAGMA|sqlite_master|INSERT\s+OR\s+REPLACE)\b", sql, re.IGNORECASE):
         raise ValueError("SQLite-specific query needs explicit PostgreSQL implementation")
     return translate_qmark(translate_insert_or_ignore(sql))
 
