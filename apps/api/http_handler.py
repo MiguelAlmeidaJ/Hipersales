@@ -140,7 +140,7 @@ class HttpHandlerMixin:
         row = conn.execute(
             """
             SELECT u.id, u.tenant_id, t.name AS tenant_name, u.name, u.email, u.communication_email, u.whatsapp_phone,
-                   u.role, u.is_super_admin, u.active, u.must_change_password, u.password_updated_at
+                   u.role, u.is_super_admin, u.is_dev, u.active, u.must_change_password, u.password_updated_at
             FROM sessions s
             JOIN users u ON u.id = s.user_id
             LEFT JOIN tenants t ON t.id = u.tenant_id
@@ -158,6 +158,7 @@ class HttpHandlerMixin:
             user["tenant_id"] = 1
             user["tenant_name"] = "HiperMix Representacoes"
             user["is_super_admin"] = 0
+        user["is_dev"] = bool(user.get("is_dev", 0))
         return user
 
     def require_admin(self, user: dict[str, Any]) -> None:
@@ -285,6 +286,9 @@ class HttpHandlerMixin:
             if method == "GET" and path == "/api/admin/summary":
                 self.require_admin(user)
                 return self.admin_summary(conn)
+            if method == "GET" and path == "/api/admin/executive-dashboard":
+                self.require_admin(user)
+                return self.super_admin_tenant_dashboard(conn, current_tenant_id(conn), query)
             if method == "GET" and path == "/api/admin/overview":
                 self.require_admin(user)
                 return self.admin_overview(conn)
