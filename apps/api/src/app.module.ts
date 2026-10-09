@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AuthModule } from "./auth/auth.module.js";
 import { CatalogModule } from "./catalog/catalog.module.js";
 import { CustomersModule } from "./customers/customers.module.js";
+import { ProposalsModule } from "./proposals/proposals.module.js";
 import { CsrfMiddleware } from "./common/middleware/csrf.middleware.js";
 import { RolesGuard } from "./common/guards/roles.guard.js";
 import { SessionGuard } from "./common/guards/session.guard.js";
@@ -18,6 +19,7 @@ import { LegacyProxyMiddleware } from "./legacy/legacy-proxy.middleware.js";
     AuthModule,
     CatalogModule,
     CustomersModule,
+    ProposalsModule,
   ],
   controllers: [HealthController],
   providers: [
