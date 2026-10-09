@@ -40,6 +40,7 @@ export default function OrderAdmin({order,onSaved}:{order:Order;onSaved:()=>void
  useEffect(()=>{let alive=true;api<{products:Product[]}>(`/api/admin/products?company_id=${order.company_id}`).then(v=>{if(alive)setProducts((v.products||[]).filter(p=>p.company_id===order.company_id))}).catch(e=>{if(alive)setError(e instanceof Error?e.message:"Falha ao consultar catálogo")});return()=>{alive=false}},[order.company_id]);
  const gross=useMemo(()=>rows.reduce((sum,l)=>sum+(Number(l.quantity)||0)*(Number(l.negotiated_price)||0),0),[rows]);
  const isBonus=/bonific/i.test(values.order_type);
+ const supportedStatuses=[["em_analise","Em análise"],["pedido_aprovado","Pedido aprovado"],["recusado","Recusado"],["em_producao","Em produção"],["faturado","Faturado"],["entregue","Entregue"]] as const;
  function update(key:keyof typeof values,value:string|boolean){setValues(v=>({...v,[key]:value}))}
  function addItem(){const p=products.find(p=>String(p.id)===pick);if(!p||rows.some(r=>r.product_id===p.id))return;setRows(v=>[...v,{product_id:p.id,quantity:"1",negotiated_price:String(p.price??0)}]);setPick("")}
  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");setNotice("");
@@ -57,7 +58,7 @@ export default function OrderAdmin({order,onSaved}:{order:Order;onSaved:()=>void
  return <form onSubmit={submit} className="mt-6 space-y-5 rounded-xl border border-blue-200 bg-blue-50/30 p-5">
  <h3 className="text-lg font-semibold">Editar pedido e itens</h3>
  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
- <label className="grid gap-1 text-sm">Status<select className={textfield} value={values.status} onChange={e=>update("status",e.target.value)} required>{Array.from(new Set([order.status,"em_analise","pedido_aprovado","recusado","em_producao","faturado","entregue"])).map(s=><option key={s} value={s}>{s}</option>)}</select></label>
+ <label className="grid gap-1 text-sm">Status<select className={textfield} value={values.status} onChange={e=>update("status",e.target.value)} required>{supportedStatuses.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>
  <label className="grid gap-1 text-sm">Tipo de pedido<input className={textfield} value={values.order_type} onChange={e=>update("order_type",e.target.value)}/></label>
  {fields.filter(([key])=>!isBonus||key!=="payment_terms").map(([key,title])=><label key={key} className="grid gap-1 text-sm">{title}<input className={textfield} type={key==="scheduled_delivery_date"?"date":"text"} value={values[key]} onChange={e=>update(key,e.target.value)}/></label>)}
  {!isBonus&&<><label className="grid gap-1 text-sm">Comissão (%)<input className={textfield} type="number" min="0" step="0.01" value={values.commission_percent} onChange={e=>update("commission_percent",e.target.value)}/></label>
