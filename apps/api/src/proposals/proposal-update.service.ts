@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseService } from "../database/database.service.js";
+import { ProposalStatusNotificationsService } from "./proposal-status-notifications.service.js";
 
 type Data = Record<string, unknown>;
 const labels: Record<string,string> = {
@@ -9,7 +10,7 @@ const labels: Record<string,string> = {
 };
 const rank:Record<string,number>={em_analise:0,pedido_aprovado:1,recusado:1,em_producao:2,faturado:3,entregue:4};
 const alias:Record<string,string>={proposta_enviada:"em_analise",proposta_recusada:"recusado"};
-const columns=["admin_notes","delivery_forecast","industry_order_number","invoice_number","order_type",
+const columns=["status","admin_notes","delivery_forecast","industry_order_number","invoice_number","order_type",
   "purchase_order","commission_percent","invoice_type","tax_operator_invoice","freight_type",
   "delivery_type","scheduled_delivery_date","discount_percent","discount_on","payment_terms","notes"] as const;
 function parsePercentage(value:unknown):number {
@@ -45,7 +46,7 @@ export function normalizeProposalStatus(status:unknown,previous:string) {
  */
 @Injectable()
 export class ProposalUpdateService {
-  constructor(private readonly database:DatabaseService) {}
+  constructor(private readonly database:DatabaseService, private readonly notifications:ProposalStatusNotificationsService) {}
   update(user:PublicUser,id:number,data:Data) {
     if(!Number.isSafeInteger(id)||id<1||!data||typeof data!=="object"||Array.isArray(data))
       throw new BadRequestException("Pedido invalido.");
@@ -56,10 +57,7 @@ export class ProposalUpdateService {
       if(!previous) throw new NotFoundException("Proposta nao encontrada.");
       const oldStatus=String(previous.status||"");
       const status=normalizeProposalStatus(data.status,oldStatus);
-      if(status!==oldStatus) {
-        throw new BadRequestException("Alteracao de status ainda requer notificacoes do servico legado.");
-      }
-      const patch:Data={};
+      const patch:Data={status};
       for(const key of columns) patch[key]=Object.prototype.hasOwnProperty.call(data,key)?data[key]:previous[key];
       patch.commission_percent=Object.prototype.hasOwnProperty.call(data,"commission_percent")
         ?parsePercentage(data.commission_percent):Number(previous.commission_percent||0);
@@ -97,7 +95,12 @@ export class ProposalUpdateService {
         const insert=db.prepare("INSERT INTO proposal_items (proposal_id,product_id,quantity,negotiated_price) VALUES (?,?,?,?)");
         for(const item of normalizedItems) insert.run(id,item.productId,item.quantity,item.price);
       }
-      return {message:"Pedido atualizado."};
+      if(status!==oldStatus) {
+        db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
+          .run(id,status,labels[status],String(data.admin_notes||""),user.id,new Date().toISOString());
+        this.notifications.queue(user.tenant_id,id,status);
+      }
+      return {message:status!==oldStatus?"Status atualizado.":"Pedido atualizado."};
     });
   }
 }
