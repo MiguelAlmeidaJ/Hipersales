@@ -15,6 +15,7 @@ const NEST_ROUTES = new Set([
 @Injectable()
 export class LegacyProxyMiddleware implements NestMiddleware {
   private readonly target: URL;
+  private readonly migrateOutboxReads = process.env.HIPERSALES_NEST_OUTBOX_READS === "true";
   private readonly migrateOccurrenceCrud = process.env.HIPERSALES_NEST_OCCURRENCES === "true";
   private readonly migrateAllProposals = process.env.HIPERSALES_NEST_PROPOSALS === "true";
   private readonly migrateProposalDelete = process.env.HIPERSALES_NEST_PROPOSAL_DELETE === "true";
@@ -34,6 +35,8 @@ export class LegacyProxyMiddleware implements NestMiddleware {
   use(request: Request, response: Response, next: NextFunction): void {
     const path = request.originalUrl.split("?", 1)[0] ?? request.path;
     if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/customers", "/api/admin/customers", "/api/admin/companies", "/api/admin/products", "/api/admin/products/export"].includes(path)) || (request.method === "POST" && ["/api/admin/companies", "/api/admin/products", "/api/admin/products/import"].includes(path)) || (request.method === "PATCH" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path)) || (request.method === "DELETE" && /^\/api\/admin\/products\/\d+$/.test(path))) return next();
+
+    if (this.migrateOutboxReads && request.method === "GET" && path === "/api/admin/outbox") return next();
 
     if (this.migrateOccurrenceCrud && (
       (["GET","POST"].includes(request.method) && path === "/api/occurrences") ||
