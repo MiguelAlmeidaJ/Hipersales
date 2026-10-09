@@ -82,7 +82,7 @@ export default function Home(){
  <div className="mt-auto border-t border-white/10 pt-4"><p className="truncate px-3 text-xs text-violet-200">{user?.name}</p></div>
  </aside>
  <div className="workspace-main">
- <header className="top"><div className="min-w-0"><span className="text-[10px] font-bold uppercase tracking-widest text-violet-700">{"HiperMix / Hipersales"}</span><strong className="block truncate text-base">{title}</strong></div><div className="flex items-center gap-3"><span className="hidden text-sm text-slate-500 sm:inline">{user?.name}</span><button className="secondary" disabled={busy} onClick={logout}>Sair</button></div></header>
+ <header className="top"><div className="min-w-0"><span className="text-[10px] font-bold uppercase tracking-widest text-violet-700">{"HiperMix / Hipersales"}</span><strong className="block truncate text-base">{title}</strong></div><div className="flex items-center gap-3"><span className="hidden text-sm text-slate-500 sm:inline">{user?.name}</span>{user?.is_dev&&<span className="rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-violet-800">Dev</span>}<button className="secondary" disabled={busy} onClick={logout}>Sair</button></div></header>
  <main className="content"><div className="mb-5 flex justify-end"><PasswordChange onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user)}}/></div>
  {selected.id==="dashboard"&&user?<DashboardView user={user}/>:
  selected.id==="admin"&&user?.role==="admin"?<SettingsEditor/>:
