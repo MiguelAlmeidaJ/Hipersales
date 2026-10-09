@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseService } from "../database/database.service.js";
 import { customerAddress, customerText } from "./customer-fields.js";
+import { ApprovalNotificationsService } from "./approval-notifications.service.js";
 
 type Data = Record<string, unknown>;
 
@@ -13,7 +14,7 @@ const cnpjDigits = (v: unknown) => String(v ?? "").replace(/\D/g, "");
 
 @Injectable()
 export class RegistrationReviewService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseService, private readonly notifications: ApprovalNotificationsService) {}
 
   review(user: PublicUser, id: number, data: Data) {
     if (!Number.isSafeInteger(id) || id <= 0 || !data || typeof data !== "object" || Array.isArray(data))
@@ -93,8 +94,7 @@ export class RegistrationReviewService {
         }
         db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)")
           .run(customerId,Number(original.seller_id));
-        // Notification template and WhatsApp parity is not yet validated:
-        // the proxy must not route approvals here until this is implemented.
+        if (original.status !== "aprovada") this.notifications.queue(user.tenant_id,id,status);
       }
       return {message:"Solicitacao atualizada."};
     });
