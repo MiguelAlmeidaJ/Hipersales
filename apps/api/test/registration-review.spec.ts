@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { PublicUser } from "@hipersales/contracts";
 import type { DatabaseService } from "../src/database/database.service.js";
 import { RegistrationReviewService } from "../src/customers/registration-review.service.js";
+import type { ApprovalNotificationsService } from "../src/customers/approval-notifications.service.js";
 
 const admin={id:1,role:"admin",tenant_id:1} as PublicUser;
 function fixture(){
@@ -23,7 +24,8 @@ function fixture(){
     try{const v=fn();db.exec("COMMIT");return v}
     catch(e){db.exec("ROLLBACK");throw e}
   }} as DatabaseService;
-  return {db,review:new RegistrationReviewService(database)};
+  const notifications = {queue: () => undefined} as unknown as ApprovalNotificationsService;
+  return {db,review:new RegistrationReviewService(database,notifications)};
 }
 describe("registration review",()=>{
   it("rejects cross-tenant modifications without data changes",()=>{
