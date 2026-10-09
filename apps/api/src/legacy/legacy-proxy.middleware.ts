@@ -10,8 +10,6 @@ const NEST_ROUTES = new Set([
   "/api/logout",
   "/api/me",
   "/api/me/password",
-  "/api/companies",
-  "/api/products",
 ]);
 
 @Injectable()
@@ -24,7 +22,7 @@ export class LegacyProxyMiddleware implements NestMiddleware {
 
   use(request: Request, response: Response, next: NextFunction): void {
     const path = request.originalUrl.split("?", 1)[0] ?? request.path;
-    if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && (path === "/api/admin/companies" || path === "/api/admin/products"))) return next();
+    if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/admin/companies", "/api/admin/products"].includes(path))) return next();
 
     // Preserve non-JSON payloads (such as multipart uploads) instead of serializing them as JSON.
     const contentType = request.get("content-type") ?? "";
