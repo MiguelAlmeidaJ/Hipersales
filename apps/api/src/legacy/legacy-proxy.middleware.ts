@@ -15,6 +15,7 @@ const NEST_ROUTES = new Set([
 @Injectable()
 export class LegacyProxyMiddleware implements NestMiddleware {
   private readonly target: URL;
+  private readonly migrateCustomerWrites = process.env.HIPERSALES_NEST_CUSTOMER_WRITES === "true";
 
   constructor(env: EnvService) {
     this.target = new URL(env.legacyApiOrigin);
@@ -23,6 +24,12 @@ export class LegacyProxyMiddleware implements NestMiddleware {
   use(request: Request, response: Response, next: NextFunction): void {
     const path = request.originalUrl.split("?", 1)[0] ?? request.path;
     if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/customers", "/api/admin/customers", "/api/admin/companies", "/api/admin/products", "/api/admin/products/export"].includes(path)) || (request.method === "POST" && ["/api/admin/companies", "/api/admin/products", "/api/admin/products/import"].includes(path)) || (request.method === "PATCH" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path)) || (request.method === "DELETE" && /^\/api\/admin\/products\/\d+$/.test(path))) return next();
+
+    // Gradual rollout: legacy enrichment and external CNPJ lookup still need parity validation.
+    if (this.migrateCustomerWrites && (
+      (request.method === "POST" && path === "/api/admin/customers") ||
+      (["PATCH", "DELETE"].includes(request.method) && /^\/api\/admin\/customers\/\d+$/.test(path))
+    )) return next();
 
     // Preserve non-JSON payloads (such as multipart uploads) instead of serializing them as JSON.
     const contentType = request.get("content-type") ?? "";
