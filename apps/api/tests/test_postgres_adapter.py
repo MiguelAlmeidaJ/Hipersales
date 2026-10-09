@@ -24,6 +24,10 @@ class TranslatorTests(unittest.TestCase):
     def test_percent_escape(self):
         self.assertEqual(module.translate_qmark("SELECT * FROM x WHERE name LIKE 'ab%' AND id=?"), "SELECT * FROM x WHERE name LIKE 'ab%%' AND id=%s")
 
+    def test_percent_in_sql_comment(self):
+        sql = "SELECT ? -- progress 50%\\nWHERE id=?"
+        self.assertEqual(module.translate_qmark(sql), "SELECT %s -- progress 50%%\\nWHERE id=%s")
+
     def test_insert_ignore_translation(self):
         self.assertEqual(
             module.translate_simple_dml("INSERT OR IGNORE INTO users (id, name) VALUES (?, ?)"),
