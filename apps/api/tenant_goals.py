@@ -55,7 +55,7 @@ class TenantGoalsMixin:
             "INSERT INTO tenants (name, slug, status, owner_email, created_at) VALUES (?, ?, ?, ?, ?)",
             (name, slug, "active", str(data.get("owner_email") or data["admin_email"]).strip().lower(), now_iso()),
         )
-        tenant_id = cur.lastrowid
+        tenant_id = inserted_id(cur)
         conn.execute(
             """
             INSERT INTO users (tenant_id, name, email, password_hash, role, is_super_admin, active, must_change_password, password_updated_at, created_at)
