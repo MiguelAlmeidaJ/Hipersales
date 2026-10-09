@@ -32,6 +32,10 @@ describe("occurrence creation",()=>{
   expect(db.prepare("SELECT COUNT(*) AS total FROM occurrence_events").get()).toMatchObject({total:1});
   expect(db.prepare("SELECT COUNT(*) AS total FROM occurrence_attachments").get()).toMatchObject({total:1});
   expect(db.prepare("SELECT kind FROM email_outbox").get()).toMatchObject({kind:"occurrence_created"});
+  const message=db.prepare("SELECT body FROM email_outbox").get() as {body:string};
+  expect(message.body).toContain("Ocorrencia: #");
+  expect(message.body).toContain("Cliente: Cliente A");
+  expect(message.body).toContain("Anexos: foto.txt");
   const file=occurrences.attachment(seller,result.id,1);
   expect(file.content.toString()).toBe("teste");
   expect(()=>occurrences.attachment({...seller,id:20},result.id,1)).toThrow();
