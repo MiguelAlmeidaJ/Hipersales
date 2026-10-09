@@ -13,6 +13,7 @@ from pathlib import Path
 import sqlite3
 import sys
 from datetime import datetime, timezone
+from contextlib import closing
 from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -33,9 +34,9 @@ def snapshot(source: Path, destination: Path) -> dict:
         pass
     try:
         src_uri = "file:" + quote(str(source).replace("\\", "/"), safe="/:") + "?mode=ro"
-        with sqlite3.connect(src_uri, uri=True) as src, sqlite3.connect(destination) as dst:
+        with closing(sqlite3.connect(src_uri, uri=True)) as src, closing(sqlite3.connect(destination)) as dst:
             src.backup(dst)
-        with sqlite3.connect(destination) as db:
+        with closing(sqlite3.connect(destination)) as db:
             integrity = db.execute("PRAGMA integrity_check").fetchone()[0]
             fk_errors = db.execute("PRAGMA foreign_key_check").fetchall()
             if integrity != "ok" or fk_errors:
