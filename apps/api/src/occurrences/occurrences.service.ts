@@ -72,6 +72,19 @@ export class OccurrencesService {
       return {message:"Ocorrencia atualizada."};
     });
   }
+  attachment(user:PublicUser,occurrenceId:number,attachmentId:number){
+    if(!Number.isSafeInteger(occurrenceId)||occurrenceId<1||!Number.isSafeInteger(attachmentId)||attachmentId<1)
+      throw new BadRequestException("Anexo invalido.");
+    const record=this.database.db.prepare(`SELECT oa.filename,oa.mimetype,oa.content,o.seller_id
+      FROM occurrence_attachments oa JOIN occurrences o ON o.id=oa.occurrence_id
+      WHERE oa.id=? AND oa.occurrence_id=? AND oa.tenant_id=? AND o.tenant_id=?`)
+      .get(attachmentId,occurrenceId,user.tenant_id,user.tenant_id) as
+      {filename:string;mimetype:string;content:Uint8Array;seller_id:number}|undefined;
+    if(!record) throw new NotFoundException("Anexo nao encontrado.");
+    if(user.role!=="admin"&&Number(record.seller_id)!==user.id)
+      throw new ForbiddenException("Voce nao tem acesso a este anexo.");
+    return {filename:record.filename,mimetype:record.mimetype,content:Buffer.from(record.content)};
+  }
   delete(user:PublicUser,id:number){
     if(!Number.isSafeInteger(id)||id<=0) throw new BadRequestException("Ocorrencia invalida.");
     return this.database.transaction(()=>{
