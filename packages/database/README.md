@@ -62,3 +62,17 @@ DATABASE_URL='postgresql://...' python3 packages/database/scripts/check_pg_readi
 ```
 
 A auditoria consulta a integridade SQLite, tabelas, colunas, quantidades e sequências ligadas aos IDs. Ela apenas lê dados; não corrige ou altera sequences, nem instala o adaptador PostgreSQL na API. Mesmo quando passa, ainda é obrigatório converter os comandos específicos de SQLite e homologar os fluxos completos antes de liberar a migração.
+
+## Adaptador transacional PostgreSQL (somente opt-in)
+
+A API recebeu `PostgreSQLConnection` em `apps/api/postgres_adapter.py`, com `execute`, `executemany`, `commit`, `rollback` e gestão de transação via `with`. **Ainda não substitui `foundation.connect()`**; comandos DDL, funções SQL e fluxos com `RETURNING id` dependem de implementação posterior. Ele rejeita operações com padrões incompatíveis conhecidos, mas não é um tradutor SQL completo.
+
+Teste apenas a conectividade, sem alterar tabelas:
+
+```bash
+python3 -m pip install 'psycopg[binary]'
+python3 -m unittest discover -s apps/api/tests -p test_postgres_adapter.py
+DATABASE_URL='postgresql://...' python3 apps/api/scripts/test_pg_connection.py
+```
+
+**Não altere o PM2 para PostgreSQL ainda**, pois o servidor principal continua SQLite.
