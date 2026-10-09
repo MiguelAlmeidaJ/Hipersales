@@ -11,7 +11,7 @@ module.exports = {
       name: "hipersales-api",
       cwd: root,
       script: path.join(root, "apps/api/app.py"),
-      interpreter: process.env.HIPERSALES_PYTHON || "python3",
+      interpreter: process.env.HIPERSALES_PYTHON || (process.platform === "win32" ? "python" : "python3"),
       exec_mode: "fork",
       instances: 1, // In-process schedulers: do not duplicate background jobs.
       autorestart: true,
