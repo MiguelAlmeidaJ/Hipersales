@@ -1,8 +1,8 @@
 @import "tailwindcss";
 @theme {
-  --color-brand: #0b3d8f;
+  --color-brand: #6d28d9;
   --color-ink: #15263c;
-  --color-canvas: #f2f6fc;
+  --color-canvas: #f5f6fb;
 }
 @layer base {
   body { @apply m-0 min-h-screen bg-canvas text-ink antialiased; }
@@ -24,19 +24,19 @@
   .error { @apply my-3 text-red-700; }
   .muted { @apply text-slate-500; }
   .status { @apply text-sm; }
-  .top { @apply flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4; }
-  .content { @apply mx-auto max-w-7xl px-5 py-8; }
+  .top { @apply sticky top-0 z-20 flex min-h-[76px] items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-6 py-4 backdrop-blur-xl; }
+  .content { @apply mx-auto w-full max-w-[1480px] px-5 py-8 lg:px-8; }
   .data-grid { @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3; }
   .tile { @apply min-w-0 rounded-xl border border-slate-200 bg-white p-5; }
   .tile h2 { @apply mb-4; }
   .workspace { @apply min-h-screen md:flex; }
   .workspace-main { @apply min-w-0 flex-1; }
-  .nav-side { @apply bg-gradient-to-b from-[#1c123a] to-[#340044] px-4 py-5 text-white md:w-60 md:shrink-0; }
+  .nav-side { @apply flex flex-col bg-gradient-to-b from-[#1d1635] via-[#2b0a3d] to-[#3a0a4d] px-4 py-5 text-white md:sticky md:top-0 md:h-screen md:w-[264px] md:shrink-0 md:overflow-y-auto; }
   .nav-side h2 { @apply text-lg font-semibold; }
   .nav-side p { @apply mt-2 text-xs text-slate-300; }
-  .nav-side nav { @apply my-5 flex gap-1 overflow-auto md:flex-col; }
-  .nav-side nav button { @apply whitespace-nowrap rounded-xl px-3 py-3 text-left text-sm font-semibold text-white hover:bg-white/15; }
-  .nav-side nav button.selected { @apply border-l-4 border-white bg-white/20 shadow-sm; }
+  .nav-side nav { @apply my-4 flex flex-col gap-1; }
+  .nav-side nav button { @apply w-full whitespace-nowrap rounded-xl border border-transparent px-3 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-white/10; }
+  .nav-side nav button.selected { @apply border-white/30 bg-white/20 shadow-sm; }
   .nav-side a { @apply text-blue-200; }
   .table-wrap { @apply w-full overflow-x-auto; }
   .table-wrap table { @apply w-full border-collapse text-left text-sm; }
@@ -62,4 +62,14 @@
   .content { @apply max-sm:px-3 max-sm:py-4; }
   .top { @apply max-sm:px-4 max-sm:pr-24; }
   input, select, textarea { @apply max-w-full; }
+}
+
+@layer components {
+ .nav-brand { @apply rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm; }
+ .nav-brand h2 { @apply text-xl font-bold tracking-tight text-white; }
+ .nav-brand p { @apply mt-1 text-xs text-violet-200; }
+ .nav-group-label { @apply mb-2 mt-5 px-3 text-[10px] font-extrabold uppercase tracking-[.15em] text-violet-200; }
+ .workspace-main { @apply min-h-screen bg-[#f5f6fb]; }
+ .workspace-main .content > section { @apply min-w-0; }
+ .workspace-main input:focus-visible, .workspace-main select:focus-visible, .workspace-main textarea:focus-visible { @apply outline-2 outline-offset-1 outline-violet-400; }
 }
