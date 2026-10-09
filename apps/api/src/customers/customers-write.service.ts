@@ -45,7 +45,7 @@ export class CustomersWriteService {
     return this.database.transaction(() => {
       this.assertUnique(user.tenant_id, digits);
       const { phone, email, address, state_registration } = customerContact(input);
-      const payload = JSON.stringify({ ...input, phone, email, _lookup: {} });
+      const payload = JSON.stringify({ ...input, phone, email, _lookup: input._lookup ?? {} });
       try {
         const result = this.database.db.prepare(`INSERT INTO customers
           (tenant_id, legal_name, trade_name, cnpj, state_registration, address, phone, email,
