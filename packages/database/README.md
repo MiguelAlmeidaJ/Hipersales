@@ -24,3 +24,18 @@
 - `schema.prisma` contem mapeamentos iniciais de tabelas-base, **nao** o modelo completo.
 - PostgreSQL `hipersales-postgres` ja pode ser iniciado em Docker sem substituir a base atual.
 - Senhas de banco em `.env`, nunca no Git.
+
+## Ferramenta de transferência inicial (sem cutover)
+
+Foi adicionado `packages/database/scripts/sqlite_to_postgres.py`, que faz um backup online consistente do SQLite, verifica integridade, exige PostgreSQL com schema `public` vazio e importa usando `pgloader`. Compara a quantidade de linhas por tabela antes de considerar a transferência concluída.
+
+Pré-requisitos: `python3`, `postgresql-client` (`psql`), `pgloader` e `DATABASE_URL` configurada para um banco PostgreSQL dedicado **vazio**. Faça a primeira execução com o backend parado/congelado para não acumular alterações após o snapshot.
+
+```bash
+# Na raiz do projeto, depois de configurar DATABASE_URL
+python3 packages/database/scripts/sqlite_to_postgres.py --backup-dir ./migration-check-001
+# Execução real (usa outro diretório para preservar o backup anterior)
+python3 packages/database/scripts/sqlite_to_postgres.py --backup-dir ./migration-import-001 --execute
+```
+
+**Avisos:** use essa importação somente em ambiente isolado/homologação. `DATABASE_URL` nos argumentos do `psql` pode ficar visível na lista de processos; execute em servidor seguro. Não suba a API em PostgreSQL após importar: o backend Python ainda é SQLite. Falta implementação do adaptador PostgreSQL, reconciliação de constraints/índices e validação dos fluxos da aplicação. A ferramenta recusa um schema público com tabelas existentes e não altera o SQLite original.
