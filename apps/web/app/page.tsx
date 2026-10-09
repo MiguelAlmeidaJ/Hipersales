@@ -61,7 +61,7 @@ export default function Home(){
  const [menuOpen,setMenuOpen]=useState(false);
  useEffect(()=>{let active=true;api<{user:SessionUser}>("/api/me").then(r=>{if(!active)return;setUser(r.user);setRoute("dashboard");setView("home")}).catch(()=>{if(active)setView("login")});return()=>{active=false}},[]);
  async function login(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");
- try{await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});const r=await api<{user:SessionUser}>("/api/me");setUser(r.user);setRoute(r.user.is_super_admin?"superAdmin":"dashboard");setView("home");setPassword("")}
+ try{await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});const r=await api<{user:SessionUser}>("/api/me");setUser(r.user);setRoute("dashboard");setView("home");setPassword("")}
  catch(e){setError(e instanceof Error?e.message:"Falha no login")}finally{setBusy(false)}}
  async function logout(){setBusy(true);try{await api("/api/logout",{method:"POST"});setView("login");setUser(null)}catch(e){setError(e instanceof Error?e.message:"Falha ao sair")}finally{setBusy(false)}}
  if(view==="home"&&user?.must_change_password)return <PasswordChange required onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user)}}/>;
