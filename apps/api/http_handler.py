@@ -151,8 +151,13 @@ class HttpHandlerMixin:
         if not row:
             raise ApiError(HTTPStatus.UNAUTHORIZED, "Sessao expirada. Faca login novamente.")
         user = dict(row)
+        # Single-company deployment: legacy superadmin remains a HiperMix admin.
+        # Keep database flags for compatibility, but do not expose SaaS privileges.
         if coerce_bool(user.get("is_super_admin")):
-            user["role"] = "super_admin"
+            user["role"] = "admin"
+            user["tenant_id"] = 1
+            user["tenant_name"] = "HiperMix Representacoes"
+            user["is_super_admin"] = 0
         return user
 
     def require_admin(self, user: dict[str, Any]) -> None:
