@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
+import SellerAssignments from "./seller-assignments";
 type User = {id:number;name:string;email:string;communication_email?:string;whatsapp_phone?:string;role:"admin"|"seller";active:boolean|number;is_super_admin?:boolean|number};
 const initial={name:"",email:"",communication_email:"",whatsapp_phone:"",role:"seller",active:true,temporary_password:""};
 export default function UsersEditor(){
@@ -10,6 +11,7 @@ export default function UsersEditor(){
  const [error,setError]=useState("");
  const [saving,setSaving]=useState(false);
  const [notice,setNotice]=useState("");
+ const [assignmentSeller,setAssignmentSeller]=useState<User|null>(null);
  async function refresh(){const r=await api<{users:User[]}>("/api/admin/users");setItems(r.users||[])}
  useEffect(()=>{let alive=true;api<{users:User[]}>("/api/admin/users").then(r=>{if(alive)setItems(r.users||[])}).catch(e=>{if(alive)setError(String(e))});return()=>{alive=false}},[]);
  async function submit(e:FormEvent){e.preventDefault();setSaving(true);setError("");setNotice("");
@@ -26,5 +28,5 @@ export default function UsersEditor(){
  <label className="flex items-center gap-2"><input type="checkbox" checked={form.active} onChange={e=>setForm(v=>({...v,active:e.target.checked}))}/> Ativo</label>
  </div><button disabled={saving} className="rounded-lg bg-brand px-4 py-2 text-white">Salvar usuário</button>{editing!==null&&<button type="button" className="ml-3 rounded-lg border px-4 py-2" onClick={()=>{setEditing(null);setForm(initial)}}>Cancelar</button>}
  {error&&<p className="text-red-700" role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}</form>
- <div className="overflow-x-auto rounded-xl border bg-white p-5"><table className="w-full text-left text-sm"><thead><tr><th className="p-2">Nome</th><th className="p-2">Login</th><th className="p-2">Perfil</th><th className="p-2">Situação</th><th className="p-2">Ações</th></tr></thead><tbody>{items.map(u=><tr key={u.id}><td className="border-t p-2">{u.name}</td><td className="border-t p-2">{u.email}</td><td className="border-t p-2">{u.role}</td><td className="border-t p-2">{u.active?"Ativo":"Inativo"}</td><td className="border-t p-2">{!u.is_super_admin&&<button type="button" className="text-brand" onClick={()=>edit(u)}>Editar</button>}</td></tr>)}</tbody></table></div></section>;
+ <div className="overflow-x-auto rounded-xl border bg-white p-5"><table className="w-full text-left text-sm"><thead><tr><th className="p-2">Nome</th><th className="p-2">Login</th><th className="p-2">Perfil</th><th className="p-2">Situação</th><th className="p-2">Ações</th></tr></thead><tbody>{items.map(u=><tr key={u.id}><td className="border-t p-2">{u.name}</td><td className="border-t p-2">{u.email}</td><td className="border-t p-2">{u.role}</td><td className="border-t p-2">{u.active?"Ativo":"Inativo"}</td><td className="border-t p-2">{!u.is_super_admin&&<div className="flex gap-3"><button type="button" className="text-brand" onClick={()=>edit(u)}>Editar</button>{u.role==="seller"&&<button type="button" className="text-brand" onClick={()=>setAssignmentSeller(u)}>Carteira</button>}</div>}</td></tr>)}</tbody></table></div>{assignmentSeller&&<div className="mt-5"><button type="button" className="mb-3 rounded-lg border px-3 py-2" onClick={()=>setAssignmentSeller(null)}>Fechar carteira</button><SellerAssignments key={assignmentSeller.id} sellerId={assignmentSeller.id} sellerName={assignmentSeller.name}/></div>}</section>;
 }
