@@ -22,7 +22,7 @@ export class LegacyProxyMiddleware implements NestMiddleware {
 
   use(request: Request, response: Response, next: NextFunction): void {
     const path = request.originalUrl.split("?", 1)[0] ?? request.path;
-    if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/admin/companies", "/api/admin/products"].includes(path)) || (request.method === "POST" && ["/api/admin/companies", "/api/admin/products"].includes(path)) || (request.method === "PATCH" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path)) || (request.method === "DELETE" && /^\/api\/admin\/products\/\d+$/.test(path))) return next();
+    if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/admin/companies", "/api/admin/products", "/api/admin/products/export"].includes(path)) || (request.method === "POST" && ["/api/admin/companies", "/api/admin/products", "/api/admin/products/import"].includes(path)) || (request.method === "PATCH" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path)) || (request.method === "DELETE" && /^\/api\/admin\/products\/\d+$/.test(path))) return next();
 
     // Preserve non-JSON payloads (such as multipart uploads) instead of serializing them as JSON.
     const contentType = request.get("content-type") ?? "";
