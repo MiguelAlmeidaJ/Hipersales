@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe,expect,it } from "vitest";
 import type { DatabaseService } from "../src/database/database.service.js";
 import type { PublicUser } from "@hipersales/contracts";
+import { OccurrencesService } from "../src/occurrences/occurrences.service.js";
 import { OccurrenceCreationService,decodeOccurrenceAttachments } from "../src/occurrences/occurrence-creation.service.js";
 const seller={id:10,role:"seller",tenant_id:1} as PublicUser;
 function setup(){
@@ -19,11 +20,11 @@ function setup(){
  INSERT INTO customer_sellers VALUES(1,10);
  `);
  const database={db,transaction:<T>(fn:()=>T):T=>{db.exec("BEGIN IMMEDIATE");try{const result=fn();db.exec("COMMIT");return result;}catch(e){db.exec("ROLLBACK");throw e;}}} as DatabaseService;
- return {db,service:new OccurrenceCreationService(database)};
+ return {db,service:new OccurrenceCreationService(database),occurrences:new OccurrencesService(database)};
 }
 describe("occurrence creation",()=>{
  it("creates case, event, binary attachment and email outbox in one transaction",()=>{
-  const {db,service}=setup();
+  const {db,service,occurrences}=setup();
   const result=service.create(seller,{customer_id:1,reason:"Entrega",description:"Atraso",
     attachments:[{filename:"foto.txt",mimetype:"text/plain",content:Buffer.from("teste").toString("base64")}]});
   expect(result.id).toBeGreaterThan(0);
@@ -31,6 +32,10 @@ describe("occurrence creation",()=>{
   expect(db.prepare("SELECT COUNT(*) AS total FROM occurrence_events").get()).toMatchObject({total:1});
   expect(db.prepare("SELECT COUNT(*) AS total FROM occurrence_attachments").get()).toMatchObject({total:1});
   expect(db.prepare("SELECT kind FROM email_outbox").get()).toMatchObject({kind:"occurrence_created"});
+  const file=occurrences.attachment(seller,result.id,1);
+  expect(file.content.toString()).toBe("teste");
+  expect(()=>occurrences.attachment({...seller,id:20},result.id,1)).toThrow();
+  expect(()=>occurrences.attachment({...seller,tenant_id:2},result.id,1)).toThrow();
   db.close();
  });
  it("rejects an unassigned or foreign-tenant customer",()=>{
