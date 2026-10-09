@@ -185,3 +185,9 @@ O proxy **continua encaminhando todo PATCH de proposta ao Python**, sem flag de 
 O `ProposalUpdateService` agora grava mudancas de status, insere `proposal_events` e invoca `ProposalStatusNotificationsService` dentro da mesma transacao. Foram migrados os formatos de e-mail e WhatsApp para recusa, producao, faturamento e entrega. A transicao para `pedido_aprovado` e explicitamente bloqueada por uma excecao transacional, porque o e-mail detalhado do backoffice (incluindo itens) ainda nao foi portado. Uma falha na notificacao interrompe a transacao e evita historico incompleto.
 
 **O proxy continua usando o Python para toda rota PATCH /api/admin/proposals/:id.** Nao direcionar ao Nest enquanto faltar aprovacao detalhada, verificacao de disparo da outbox e testes de integracao dos demais status. Testes unitarios da formatacao foram adicionados em `test/proposal-status-notifications.spec.ts`; executar `npm run build:api && npm run test:api` antes de homologar.
+
+## Aprovacao de pedidos no Nest - mensagem detalhada
+
+O arquivo `src/proposals/approved-order-email.ts` reproduz o conteudo detalhado do email de aprovacao do Python: cabecalho, industria, cliente, endereco, operador fiscal, condicoes comerciais, itens e valores. `ProposalStatusNotificationsService` agora enfileira `approved_order_backoffice` alem do email ao representante, dentro da transacao de `PATCH /api/admin/proposals/:id`. Um teste de conteudo foi adicionado.
+
+O roteamento PATCH permanece **exclusivamente no Python** ate comparar datas/fuso horario, valores em reais, eventos e entrega de email/WhatsApp em dados reais. A outbox do Nest apenas enfileira; o disparo continua dependente do worker legado. Executar build e testes apos pull.
