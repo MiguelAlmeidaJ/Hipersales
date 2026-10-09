@@ -58,7 +58,7 @@ export class OccurrencesService {
         SELECT id FROM occurrences WHERE tenant_id=?
           AND status IN ('solucionada','solucionado','tratada','encerrada')
           AND resolved_at IS NOT NULL AND resolved_at<=?
-      )`).run(tenantId,tenantId,cutoff).changes;
+      )`).run(tenantId,tenantId,cutoff).changes as number;
   }
   update(user:PublicUser,id:number,input:Row){
     if(!Number.isSafeInteger(id)||id<=0||!input||typeof input!=="object"||Array.isArray(input))
