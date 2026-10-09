@@ -19,6 +19,7 @@ class SnapshotTests(unittest.TestCase):
             with closing(sqlite3.connect(source)) as db:
                 db.execute("CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT)")
                 db.execute("INSERT INTO customers VALUES (1, 'Test')")
+                db.commit()
             report = module.snapshot(source, output)
             self.assertEqual(report["table_counts"]["customers"], 1)
             self.assertEqual(report["foreign_key_violations"], 0)
@@ -37,6 +38,7 @@ class SnapshotTests(unittest.TestCase):
                 db.execute("CREATE TABLE parent(id INTEGER PRIMARY KEY)")
                 db.execute("CREATE TABLE child(parent_id INTEGER REFERENCES parent(id))")
                 db.execute("INSERT INTO child VALUES (99)")
+                db.commit()
             with self.assertRaises(RuntimeError):
                 module.snapshot(source, output)
             self.assertFalse(output.exists())
