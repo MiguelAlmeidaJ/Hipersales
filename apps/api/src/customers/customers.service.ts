@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseService } from "../database/database.service.js";
+import { customerAddress, customerField, customerText } from "./customer-fields.js";
 
 type CustomerRow = Record<string, unknown>;
 
@@ -10,15 +11,13 @@ function enrich(row: CustomerRow): CustomerRow {
     const parsed = JSON.parse(String(row.form_payload || "{}")) as unknown;
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) payload = parsed as Record<string, unknown>;
   } catch { /* Legacy records can have invalid JSON. */ }
-  const first = (...items: unknown[]) => items.find(item => typeof item === "string" && item.trim()) || "";
-  const address = first(row.address, payload.address, payload.street, payload.logradouro);
   return {
     ...row,
     form_payload: payload,
-    state_registration: first(row.state_registration, payload.state_registration, payload.insc_estadual, payload.inscricao_estadual),
-    address,
-    phone: first(row.phone, payload.phone, payload.buyer_phone_1, payload.finance_phone_1, payload.logistics_phone_1, payload.representative_phone),
-    email: first(row.email, payload.email, payload.buyer_email, payload.billing_email, payload.xml_email, payload.representative_email),
+    state_registration: customerText(row.state_registration, customerField(payload, "state_registration", "insc_estadual", "inscricao_estadual")),
+    address: customerText(row.address, customerAddress(payload)),
+    phone: customerText(row.phone, customerField(payload, "phone", "buyer_phone_1", "finance_phone_1", "logistics_phone_1", "representative_phone")),
+    email: customerText(row.email, customerField(payload, "email", "buyer_email", "billing_email", "xml_email", "representative_email")),
   };
 }
 
