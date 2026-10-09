@@ -1,23 +1,38 @@
-# Estado real da migração Next.js
+# Hipersales — frontend Next.js
 
-A nova interface React contém login, logout, navegação por permissões e consultas nativas para dashboard, pedidos, clientes, indústrias, produtos, ocorrências, metas, usuários e configurações. O frontend anterior ainda contém operações e formulários não portados. O link "Sistema clássico" garante continuidade.
+O frontend principal utiliza Next.js, TypeScript e Tailwind CSS. Os arquivos antigos `app.js`, `index.html`, `modules/`, `styles.css` e `styles/` foram removidos da branch `main`. A branch `old` mantém o histórico original.
 
-**Não excluir os módulos JavaScript antigos nem alterar o backend neste ponto.** A equivalência funcional ainda não foi demonstrada. Antes da remoção, converter operações de CRUD, solicitações de cadastro, geração de propostas e PDFs, relatórios, metas, modais, anexos, superadmin e PWA.
+A API de negócio permanece em Python com SQLite neste estágio. O banco PostgreSQL/Prisma ainda exige uma migração de backend separada. A Evolution API funciona via Docker.
 
-## Executar
+## Executar localmente (recomendado)
+
+No diretório raiz do repositório, configure o `.env` com as variáveis exigidas no `docker-compose.yml` e execute:
+
 ```bash
-python apps/api/app.py
-cd apps/web && npm install && npm run dev
+docker compose up --build -d
+docker compose ps
+docker compose logs -f web hipersales
 ```
-Acessar http://localhost:3000. A API atual continua em http://localhost:8000; o Next realiza proxy same-origin dos endpoints e dos recursos legados.
 
-## Testes obrigatórios antes do cutover
-- Validar build TypeScript, autenticação e logout (cookies).
-- Comparar respostas e permissões por perfil e tenant.
-- Validar todos os formulários, efeitos colaterais, status de pedidos e relatórios.
-- Confirmar upload de anexos, PDFs e WhatsApp.
-- Confirmar responsividade e funcionamento PWA.
+Abra http://localhost:3000. O backend usa a porta 8000 e é consumido pelo frontend através das rotas `/api/*`. Em instalações sem Docker, execute `python apps/api/app.py` e, em outro terminal, `cd apps/web && npm install && npm run dev`.
 
-## Migração de clientes
+## Verificações
 
-Cadastro e edição básica de clientes estão disponíveis em React, incluindo busca e situação. As validações de CNPJ, enriquecimento de dados e isolamento por tenant continuam no backend. Associações, exclusão e formulários avançados continuam no legado até testes completos. Nenhum código antigo foi removido neste commit.
+```bash
+cd apps/web
+npm install
+npm run check:contracts
+npm run audit:legacy
+npm run typecheck
+npm run build
+```
+
+O script de auditoria confere dependências e arquivos antigos; isso não garante paridade funcional. A validação manual deve seguir `docs/frontend-parity-checklist.md`, com contas dos perfis representante, administrador e superadmin.
+
+## Arquivos compartilhados
+
+`apps/web/assets/` permanece porque o backend usa as imagens em templates de e-mail, além de fornecê-las ao Next pela rota `/assets/*`. Não remover sem migrar o mecanismo de imagens do backend.
+
+## Critérios de aceite
+
+Antes de usar em produção, validar login e recuperação de sessão, permissões, emissão/edição de pedidos, gestão de clientes e empresas, propostas, geração de PDFs, metas, relatórios e Evolution API. O PWA tem manifesto Next.js, mas o funcionamento offline e o service worker ainda necessitam homologação.
