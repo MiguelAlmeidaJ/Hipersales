@@ -64,7 +64,7 @@ export default function CustomerEditor(){
   <p className="muted">{visible.length} cliente(s) encontrado(s)</p>
   <div className="table-wrap"><table><thead><tr><th>Razão social</th><th>CNPJ</th><th>Telefone</th><th>Situação</th><th>Ação</th></tr></thead>
   <tbody>{visible.map(c=><tr key={c.id}><td>{c.legal_name}</td><td>{c.cnpj}</td><td>{c.phone||"—"}</td><td>{c.active?"Ativo":"Inativo"}</td><td><button className="secondary" type="button" onClick={()=>edit(c)}>Editar</button></td></tr>)}</tbody></table></div>
-  <p className="muted">Associações comerciais, exclusão e cadastros detalhados permanecem no sistema clássico até a conversão integral.</p>
+  <p className="muted">Associações comerciais podem ser gerenciadas em Usuários → Carteira. Para clientes vinculados a pedidos, utilize a opção Inativo para preservar o histórico.</p>
   <a href="/legacy">Acessar funcionalidades ainda não migradas</a>
  </section>;
 }
