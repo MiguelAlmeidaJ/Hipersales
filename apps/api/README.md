@@ -135,3 +135,9 @@ Para validar: `npm ci && npm run build:api && npm run test:api`. Confirmar que o
 A rota **permanece em Python por padrao**. Somente `HIPERSALES_NEST_REGISTRATION_SUBMISSIONS=true` direciona ao Nest, devendo ser usada exclusivamente numa base de testes. O corpo de e-mail da primeira versao Nest e resumido e **ainda nao reproduz o template HTML completo** do Python; o comportamento de indisponibilidade do provedor CNPJ tambem precisa de homologacao. Aprovacao e recusa continuam integralmente no legado.
 
 Rodar `npm ci`, `npm run build:api` e `npm run test:api` antes de qualquer deploy. Nao remover os processos Python.
+
+## Processamento de solicitacoes (Nest em homologacao)
+
+Foi implementado `RegistrationReviewService` com `PATCH /api/admin/requests/:id`, validacao de status, edicao dos dados da solicitacao, transacao SQLite, criacao/atualizacao do cliente por CNPJ normalizado, associacao idempotente com o representante e escopo obrigatorio de empresa. Testes: `test/registration-review.spec.ts`.
+
+**A rota segue atendida apenas pelo Python no proxy de producao.** O Nest ainda nao cria as notificacoes baseadas nos templates configuraveis de email e WhatsApp, que o legado gera na transicao para `aprovada`. Habilitar o Nest nesse ponto pode omitir notificacoes; somente fazer a migracao da rota quando os templates e a outbox estiverem homologados. A implementacao ainda precisa passar por compilacao e testes na infraestrutura do projeto.
