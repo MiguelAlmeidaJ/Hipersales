@@ -1,35 +1,59 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
 
 type Tenant={id:number;name:string;slug:string;status:string};
-type Order={id:number;order_number?:number;customer_name:string;status:string;created_at:string;total:number};
-type Detail={tenant:Tenant;summary:Record<string,number>;statuses:{status:string;total:number}[];recent_orders:Order[]};
-const labels:Record<string,string>={proposals:"Pedidos e propostas",customers:"Clientes",products:"Produtos",companies:"Empresas",sellers:"Representantes"};
-const currency=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
+type Ranking={name:string;orders:number;total:number};
+type Product={name:string;company:string;quantity:number;total:number};
+type Order={id:number;order_number?:number;customer_name:string;company_name:string;status:string;created_at:string;total:number};
+type Detail={tenant:Tenant;summary:{orders:number;revenue:number;average_ticket:number;customers:number;products:number;companies:number;sellers:number;pending_requests:number};statuses:{status:string;total:number}[];company_ranking:Ranking[];seller_ranking:Ranking[];top_products:Product[];recent_orders:Order[]};
+const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v||0);
+const num=(v:number)=>new Intl.NumberFormat("pt-BR",{maximumFractionDigits:1}).format(v||0);
+const statusLabels:Record<string,string>={em_analise:"Em análise",pedido_aprovado:"Pedido aprovado",recusado:"Proposta recusada",em_producao:"Em produção",faturado:"Faturado",entregue:"Pedido entregue"};
+const palette:Record<string,string>={em_analise:"#eab308",pedido_aprovado:"#16a34a",recusado:"#ef4444",em_producao:"#0ea5e9",faturado:"#2563eb",entregue:"#0d9488"};
+const panel="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6";
+function TableHeading({title,subtitle}:{title:string;subtitle:string}){return <div className="mb-5"><h2 className="text-xl font-bold text-slate-900">{title}</h2><p className="mt-1 text-sm text-slate-500">{subtitle}</p></div>}
+function RankingTable({rows,empty}:{rows:Ranking[];empty:string}){return <div className="space-y-2">{rows.length?rows.map((item,i)=><div key={i} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-100 font-bold text-blue-800">{i+1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{item.name}</p><p className="text-xs text-slate-500">{num(item.orders)} pedido(s)</p></div><strong className="whitespace-nowrap text-sm text-slate-900">{money(item.total)}</strong></div>):<p className="text-sm text-slate-500">{empty}</p>}</div>}
 export default function TenantPreview({tenantId,onBack}:{tenantId:number;onBack:()=>void}){
- const [detail,setDetail]=useState<Detail|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true);
- useEffect(()=>{let active=true;setLoading(true);setError("");setDetail(null);
- api<Detail>(`/api/super-admin/tenants/${tenantId}`).then(v=>{if(active)setDetail(v)}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Falha ao consultar tenant")}).finally(()=>{if(active)setLoading(false)});
- return()=>{active=false};
- },[tenantId]);
- return <section className="space-y-6">
-  <div className="flex flex-wrap items-start justify-between gap-3"><div>
-   <button onClick={onBack} className="mb-3 text-sm font-medium text-blue-700 hover:underline">← Voltar ao Superadmin</button>
-   <h1 className="text-3xl font-bold tracking-tight">Dashboard do tenant</h1>
-   <p className="mt-1 text-slate-500">{detail?detail.tenant.name:"Visão da operação"} · Visualização administrativa somente leitura</p>
-  </div><span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-800">Modo de visualização</span></div>
-  {loading&&<p role="status">Carregando informações do tenant…</p>}
-  {error&&<p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">{error}</p>}
-  {detail&&<>
-   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Object.entries(detail.summary).map(([key,value])=><div key={key} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm text-slate-500">{labels[key]||key}</p><p className="mt-2 text-3xl font-bold tabular-nums">{value.toLocaleString("pt-BR")}</p></div>)}</div>
-   <div className="grid gap-5 xl:grid-cols-2">
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="mb-1 text-lg font-semibold">Pedidos por status</h2><p className="mb-5 text-sm text-slate-500">Distribuição de todas as propostas desta conta.</p>
-     <div className="space-y-4">{detail.statuses.length?detail.statuses.map(s=><div key={s.status}><div className="mb-1 flex justify-between text-sm"><span>{s.status.replaceAll("_"," ")}</span><strong>{s.total}</strong></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600" style={{width:`${detail.summary.proposals?100*s.total/detail.summary.proposals:0}%`}}/></div></div>):<p className="text-slate-500">Nenhum pedido cadastrado.</p>}</div>
-    </section>
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="mb-1 text-lg font-semibold">Informações da conta</h2><p className="mb-5 text-sm text-slate-500">Dados reais do tenant selecionado.</p><dl className="grid gap-4 text-sm">{[["Nome",detail.tenant.name],["Identificador",detail.tenant.slug],["Status",detail.tenant.status],["ID",String(detail.tenant.id)]].map(([k,v])=><div key={k} className="flex justify-between gap-4 border-b border-slate-100 pb-3"><dt className="text-slate-500">{k}</dt><dd className="font-semibold">{v}</dd></div>)}</dl></section>
-   </div>
-   <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="p-6"><h2 className="text-lg font-semibold">Últimos pedidos</h2><p className="text-sm text-slate-500">Registros recentes desta conta, sem acesso para edição.</p></div><div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr>{["Pedido","Cliente","Status","Valor","Data"].map(x=><th key={x} className="px-5 py-3">{x}</th>)}</tr></thead><tbody>{detail.recent_orders.map(o=><tr key={o.id} className="border-t border-slate-100"><td className="px-5 py-4 font-semibold">#{o.order_number||o.id}</td><td className="px-5 py-4">{o.customer_name}</td><td className="px-5 py-4"><span className="rounded-full bg-blue-50 px-3 py-1 text-blue-800">{o.status.replaceAll("_"," ")}</span></td><td className="px-5 py-4">{currency(o.total)}</td><td className="px-5 py-4">{new Date(o.created_at).toLocaleDateString("pt-BR")}</td></tr>)}{!detail.recent_orders.length&&<tr><td colSpan={5} className="px-5 py-6 text-center text-slate-500">Nenhum pedido encontrado.</td></tr>}</tbody></table></div></section>
-  </>}
+ const [data,setData]=useState<Detail|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
+ const [search,setSearch]=useState(""),[status,setStatus]=useState(""),[dateFrom,setDateFrom]=useState(""),[dateTo,setDateTo]=useState("");
+ const [applied,setApplied]=useState({q:"",status:"",date_from:"",date_to:""});
+ const refresh=useCallback(()=>setRevision(v=>v+1),[]);
+ useEffect(()=>{let active=true;setLoading(true);setError("");
+ const params=new URLSearchParams();
+ for(const [key,value] of Object.entries(applied))if(value)params.set(key,value);
+ api<Detail>(`/api/super-admin/tenants/${tenantId}/dashboard${params.size?"?"+params.toString():""}`)
+ .then(v=>{if(active)setData(v)}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Erro ao consultar indicadores")}).finally(()=>{if(active)setLoading(false)});
+ return()=>{active=false};},[tenantId,applied,revision]);
+ const kpis=useMemo(()=>data?[
+ ["Faturamento filtrado",money(data.summary.revenue),"Receita bruta dos pedidos"],
+ ["Ticket médio",money(data.summary.average_ticket),`${num(data.summary.orders)} pedidos filtrados`],
+ ["Clientes ativos",num(data.summary.customers),"Cadastrados na conta"],
+ ["Produtos ativos",num(data.summary.products),"Itens no catálogo"],
+ ["Pendências",num(data.summary.pending_requests),"Cadastros aguardando análise"],
+ ["Representantes",num(data.summary.sellers),"Representantes ativos"],
+ ]:[],[data]);
+ function submit(e:FormEvent){e.preventDefault();if(dateFrom&&dateTo&&dateFrom>dateTo){setError("A data inicial não pode ser posterior à final.");return;}setApplied({q:search,status,date_from:dateFrom,date_to:dateTo})}
+ function clear(){setSearch("");setStatus("");setDateFrom("");setDateTo("");setApplied({q:"",status:"",date_from:"",date_to:""});setError("")}
+ return <section className="space-y-5 pb-8">
+ <div className="flex flex-wrap items-center justify-between gap-4"><div><button type="button" onClick={onBack} className="mb-3 text-sm font-semibold text-blue-700 hover:underline">← Voltar ao Superadmin</button><p className="text-xs font-bold uppercase tracking-[.15em] text-blue-700">Dashboard / Tenant</p><h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">Painel executivo</h1><p className="mt-1 text-slate-500">{data?.tenant.name||"Carregando tenant…"} · Visão consolidada da operação</p></div><span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">Visualização segura · somente leitura</span></div>
+ <form onSubmit={submit} className={panel}><div className="mb-4 flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-bold text-slate-900">Filtros do painel</h2><p className="text-sm text-slate-500">Refine pedidos, faturamento e rankings sem alterar registros.</p></div><button type="button" onClick={refresh} className="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">↻ Atualizar dados</button></div><div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-6">
+ <label className="grid gap-1 text-xs font-semibold text-slate-600 xl:col-span-2">Buscar<input type="search" placeholder="Cliente, pedido, empresa, produto…" value={search} onChange={e=>setSearch(e.target.value)} className="min-w-0 rounded-lg border border-slate-300 p-3 text-sm font-normal"/></label>
+ <label className="grid gap-1 text-xs font-semibold text-slate-600">Status<select value={status} onChange={e=>setStatus(e.target.value)} className="rounded-lg border border-slate-300 bg-white p-3 text-sm font-normal"><option value="">Todos</option>{Object.entries(statusLabels).map(([key,label])=><option value={key} key={key}>{label}</option>)}</select></label>
+ <label className="grid gap-1 text-xs font-semibold text-slate-600">De<input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)} className="min-w-0 rounded-lg border border-slate-300 p-3 text-sm font-normal"/></label>
+ <label className="grid gap-1 text-xs font-semibold text-slate-600">Até<input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)} className="min-w-0 rounded-lg border border-slate-300 p-3 text-sm font-normal"/></label>
+ <div className="flex gap-2"><button type="button" onClick={clear} className="rounded-lg border border-slate-300 px-3 py-3 text-sm font-semibold">Limpar</button><button type="submit" disabled={loading} className="flex-1 rounded-lg bg-blue-700 px-3 py-3 text-sm font-semibold text-white disabled:opacity-60">Filtrar</button></div>
+ </div></form>
+ {error&&<p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">{error}</p>}
+ {loading&&<p role="status" className={panel}>Atualizando indicadores…</p>}
+ {data&&<div className={loading?"pointer-events-none space-y-5 opacity-50":"space-y-5"}>
+ <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{kpis.map(([label,value,subtitle],i)=><div key={label} className={panel}><div className="mb-3 flex items-center gap-3"><span className={`grid size-10 place-items-center rounded-xl text-lg ${["bg-purple-100 text-purple-700","bg-indigo-100 text-indigo-700","bg-emerald-100 text-emerald-700","bg-amber-100 text-amber-700","bg-red-100 text-red-700","bg-blue-100 text-blue-700"][i]}`}>{["◈","◉","♙","▣","!","♟"][i]}</span><span className="text-sm font-semibold text-slate-600">{label}</span></div><p className="break-words text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">{value}</p><p className="mt-2 text-xs text-slate-500">{subtitle}</p></div>)}</div>
+ <div className="grid gap-5 xl:grid-cols-2"><section className={panel}><TableHeading title="Status do funil" subtitle="Pedidos distribuídos por etapa no período filtrado."/><div className="space-y-4">{data.statuses.map(row=><div key={row.status}><div className="mb-1 flex justify-between gap-3 text-sm"><span className="font-semibold text-slate-700">{statusLabels[row.status]||row.status.replaceAll("_"," ")}</span><span className="font-bold">{num(row.total)} · {data.summary.orders?Math.round(row.total*100/data.summary.orders):0}%</span></div><div className="h-2.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full" style={{backgroundColor:palette[row.status]||"#64748b",width:`${data.summary.orders?row.total*100/data.summary.orders:0}%`}}/></div></div>)}{!data.statuses.length&&<p className="text-sm text-slate-500">Nenhum pedido corresponde aos filtros.</p>}</div></section>
+ <section className={panel}><TableHeading title="Ranking de empresas" subtitle="Empresas com maior valor de pedidos no filtro."/><RankingTable rows={data.company_ranking} empty="Nenhuma empresa com pedidos no período."/></section></div>
+ <div className="grid gap-5 xl:grid-cols-2"><section className={panel}><TableHeading title="Ranking do time comercial" subtitle="Representantes classificados pelo valor dos pedidos."/><RankingTable rows={data.seller_ranking} empty="Sem pedidos de representantes no período."/></section>
+ <section className={panel}><TableHeading title="Atividade recente" subtitle="Últimos pedidos registrados na conta."/><div className="space-y-2">{data.recent_orders.slice(0,5).map(row=><div key={row.id} className="flex items-center gap-3 border-b border-slate-100 py-3 last:border-0"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-700">↗</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{row.customer_name}</p><p className="truncate text-xs text-slate-500">#{row.order_number||row.id} · {statusLabels[row.status]||row.status}</p></div><span className="whitespace-nowrap text-xs font-bold">{money(row.total)}</span></div>)}{!data.recent_orders.length&&<p className="text-sm text-slate-500">Sem atividade para os filtros.</p>}</div></section></div>
+ <section className={panel}><TableHeading title="Produtos mais vendidos" subtitle="Itens ordenados pelo valor total negociado nos pedidos filtrados."/><div className="space-y-2">{data.top_products.map((product,i)=><div key={i} className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4"><span className="grid size-8 place-items-center rounded-lg bg-indigo-100 text-sm font-bold text-indigo-800">{i+1}</span><div className="min-w-0 flex-1"><p className="font-semibold text-slate-900">{product.name}</p><p className="text-xs text-slate-500">{product.company} · {num(product.quantity)} unidades</p></div><span className="font-bold text-slate-900">{money(product.total)}</span></div>)}{!data.top_products.length&&<p className="text-sm text-slate-500">Nenhum produto vendido no filtro.</p>}</div></section>
+ <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div className="p-5 sm:p-6"><TableHeading title="Últimos pedidos" subtitle="Pedidos recentes da empresa, em modo consulta."/></div><div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr>{["Pedido","Cliente / Empresa","Status","Valor","Data"].map(x=><th key={x} className="px-5 py-3">{x}</th>)}</tr></thead><tbody>{data.recent_orders.map(order=><tr key={order.id} className="border-t border-slate-100"><td className="px-5 py-4 font-bold">#{order.order_number||order.id}</td><td className="px-5 py-4"><p className="font-semibold">{order.customer_name}</p><p className="text-xs text-slate-500">{order.company_name}</p></td><td className="px-5 py-4"><span className="whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold" style={{color:palette[order.status]||"#475569",backgroundColor:"#f1f5f9"}}>{statusLabels[order.status]||order.status}</span></td><td className="px-5 py-4 font-semibold">{money(order.total)}</td><td className="px-5 py-4">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td></tr>)}{!data.recent_orders.length&&<tr><td colSpan={5} className="px-5 py-8 text-center text-slate-500">Nenhum pedido encontrado.</td></tr>}</tbody></table></div></section>
+ </div>}
  </section>;
 }
