@@ -147,7 +147,7 @@ class OrderAdminMixin:
                         now_iso(),
                     ),
                 )
-                customer_id = customer_cur.lastrowid
+                customer_id = inserted_id(customer_cur)
             conn.execute(
                 "INSERT OR IGNORE INTO customer_sellers (customer_id, seller_id) VALUES (?, ?)",
                 (customer_id, current_request["seller_id"]),
@@ -423,7 +423,7 @@ class OrderAdminMixin:
             )
         except sqlite3.IntegrityError as exc:
             raise ApiError(HTTPStatus.CONFLICT, "Este CNPJ ja foi cadastrado.") from exc
-        return {"id": cur.lastrowid, "message": "Cliente cadastrado."}
+        return {"id": inserted_id(cur), "message": "Cliente cadastrado."}
 
     def update_customer(self, conn: sqlite3.Connection, customer_id: int, data: dict[str, Any]) -> dict[str, Any]:
         required(data, ["legal_name", "cnpj"])
