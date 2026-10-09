@@ -153,3 +153,9 @@ Foi implementado `ApprovalNotificationsService`, integrado ao `RegistrationRevie
 `test/registration-approval.integration.spec.ts` cobre o processamento completo de uma aprovacao com as implementacoes reais `RegistrationReviewService` e `ApprovalNotificationsService`, utilizando SQLite em memoria. Os cenarios incluem rollback se WhatsApp estiver ligado mas sem template, aprovacao subsequente com canal desabilitado, ausencia de duplicidade na outbox e enfileiramento simultaneo de email/WhatsApp. Esses testes nao executam os provedores externos e nao comprovam equivalencia dos templates padrao legados.
 
 A rota `PATCH /api/admin/requests/:id` continua no Python ate passar por compilacao, testes do projeto e homologacao dos emails e identidade visual. Nao usar o teste automatizado como autorizacao de deploy.
+
+## Pedidos/propostas: migracao de consulta
+
+Implementado `ProposalsModule` com `GET /api/proposals` no NestJS. A listagem reproduz colunas principais de pedidos, dados do representante/cliente/empresa, itens e eventos do historico filtrados por status. Mantem isolamento por `tenant_id`; representantes so veem seus pedidos. Testes automatizados foram adicionados em `test/proposals.spec.ts`.
+
+O proxy preserva o Python por padrao. Para testes controlados, `HIPERSALES_NEST_PROPOSAL_READS=true` redireciona somente a consulta de propostas ao Nest; PDFs, inclusao e atualizacao de pedidos permanecem no Python. Nao ativar antes de comparar as respostas reais e de executar `npm run build:api` e `npm run test:api`.
