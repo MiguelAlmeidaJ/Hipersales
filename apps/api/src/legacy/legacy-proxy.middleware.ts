@@ -36,7 +36,7 @@ export class LegacyProxyMiddleware implements NestMiddleware {
     if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/customers", "/api/admin/customers", "/api/admin/companies", "/api/admin/products", "/api/admin/products/export"].includes(path)) || (request.method === "POST" && ["/api/admin/companies", "/api/admin/products", "/api/admin/products/import"].includes(path)) || (request.method === "PATCH" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path)) || (request.method === "DELETE" && /^\/api\/admin\/products\/\d+$/.test(path))) return next();
 
     if (this.migrateOccurrenceCrud && (
-      (request.method === "GET" && path === "/api/occurrences") ||
+      (["GET","POST"].includes(request.method) && path === "/api/occurrences") ||
       (["PATCH","DELETE"].includes(request.method) && /^\/api\/admin\/occurrences\/\d+$/.test(path))
     )) return next();
 
