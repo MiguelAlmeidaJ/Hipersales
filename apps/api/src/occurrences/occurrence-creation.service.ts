@@ -66,7 +66,7 @@ export class OccurrenceCreationService {
  "E-mail cliente: "+display(customer.email),"",
  "Motivo: "+reason,"","Relato:",description,"",
  "Anexos: "+(attachments.length?attachments.map(a=>a.filename).join(", "):"Sem anexos."),
- ].join("\\n"),now);
+ ].join("\n"),now);
       return {id,message:"Ocorrencia registrada e enviada para analise."};
     });
   }
