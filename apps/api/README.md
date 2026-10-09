@@ -127,3 +127,11 @@ A consulta administrativa `GET /api/admin/requests` tem implementacao Nest com i
 A criacao de solicitacoes (`POST /api/customer-requests`) e o processamento (`PATCH /api/admin/requests/:id`) permanecem no Python. Aprovacao envolve upsert de cliente, associacao do representante, templates de mensagem e gravacao de e-mail/WhatsApp na outbox; migrar apenas o status sem estas regras pode gerar perda de notificacoes e inconsistencias no cadastro.
 
 Para validar: `npm ci && npm run build:api && npm run test:api`. Confirmar que o processo Python segue ativo.
+
+## Envio de solicitacoes no Nest (fase experimental)
+
+`RegistrationSubmissionService` prepara o envio de `POST /api/customer-requests` exclusivamente para homologacao: valida o perfil seller, os campos obrigatorios, consulta CNPJ fora da transacao, protege contra cliente duplicado e grava a solicitacao e a linha de notificacao `email_outbox` na mesma transacao SQLite.
+
+A rota **permanece em Python por padrao**. Somente `HIPERSALES_NEST_REGISTRATION_SUBMISSIONS=true` direciona ao Nest, devendo ser usada exclusivamente numa base de testes. O corpo de e-mail da primeira versao Nest e resumido e **ainda nao reproduz o template HTML completo** do Python; o comportamento de indisponibilidade do provedor CNPJ tambem precisa de homologacao. Aprovacao e recusa continuam integralmente no legado.
+
+Rodar `npm ci`, `npm run build:api` e `npm run test:api` antes de qualquer deploy. Nao remover os processos Python.
