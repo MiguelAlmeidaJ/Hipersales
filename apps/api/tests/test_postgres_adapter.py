@@ -42,6 +42,34 @@ class TranslatorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.translate_insert_or_ignore("INSERT OR IGNORE INTO a VALUES (1); DELETE FROM b;")
 
+    def test_facade_commit_and_rollback(self):
+        from unittest.mock import patch
+        class FakeConnection:
+            def __init__(self):
+                self.actions = []
+            def execute(self, sql, parameters):
+                self.actions.append(("execute", sql, parameters))
+                return {"ok": True}
+            def commit(self):
+                self.actions.append(("commit",))
+            def rollback(self):
+                self.actions.append(("rollback",))
+            def close(self):
+                self.actions.append(("close",))
+        fake = FakeConnection()
+        with patch.object(module, "postgresql_connect", return_value=fake):
+            with module.PostgreSQLConnection("postgresql://test") as conn:
+                conn.execute("SELECT * FROM users WHERE id=?", (7,))
+        self.assertEqual(fake.actions, [
+            ("execute", "SELECT * FROM users WHERE id=%s", (7,)),
+            ("commit",), ("close",)])
+        fake.actions.clear()
+        with patch.object(module, "postgresql_connect", return_value=fake):
+            with self.assertRaises(ValueError):
+                with module.PostgreSQLConnection("postgresql://test"):
+                    raise ValueError("rollback")
+        self.assertEqual(fake.actions, [("rollback",), ("close",)])
+
     def test_dsn_rejected(self):
         with self.assertRaises(ValueError):
             module.postgresql_connect("sqlite:///foo.db")
