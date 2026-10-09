@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service.js";
+import { loadApprovedOrder } from "./approved-order-email.js";
 
 type Row = Record<string, unknown>;
 const labels: Record<string,string> = {
@@ -98,9 +99,8 @@ export class ProposalStatusNotificationsService {
     if(status==="pedido_aprovado") {
       if(sellerEmail) enqueue("status_update_seller",sellerEmail,
         `STATUS DO PEDIDO ${statusEmailSubject(status)} ${subjectBase}`,statusEmailBody(context));
-      // Approved-order backoffice email has a different full order-items document in Python.
-      // Refuse partial status migration until this formatter is ported.
-      throw new Error("Template completo do pedido aprovado ainda nao migrado.");
+      enqueue("approved_order_backoffice","vendas@hipermixrepresentacoes.com.br",
+        `NOVO PEDIDO ${subjectBase}`,loadApprovedOrder(db,tenantId,id));
     }
     if(status==="recusado") {
       enqueue("rejected_proposal_seller",sellerEmail,`PROPOSTA RECUSADA ${subjectBase}`,
