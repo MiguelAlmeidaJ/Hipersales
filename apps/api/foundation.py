@@ -363,7 +363,7 @@ def verify_password(password: str, stored: str) -> bool:
 
 def public_user_payload(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
     data = dict(row)
-    role = "super_admin" if coerce_bool(data.get("is_super_admin", 0)) else data.get("role")
+    role = "admin" if coerce_bool(data.get("is_super_admin", 0)) else data.get("role")
     return {
         "id": data.get("id"),
         "name": data.get("name"),
@@ -371,9 +371,9 @@ def public_user_payload(row: sqlite3.Row | dict[str, Any]) -> dict[str, Any]:
         "communication_email": data.get("communication_email"),
         "whatsapp_phone": data.get("whatsapp_phone"),
         "role": role,
-        "tenant_id": data.get("tenant_id"),
+        "tenant_id": data.get("tenant_id") or 1,
         "tenant_name": data.get("tenant_name"),
-        "is_super_admin": role == "super_admin",
+        "is_super_admin": False,
         "active": bool(data.get("active", 1)),
         "must_change_password": bool(data.get("must_change_password", 0)),
         "password_updated_at": data.get("password_updated_at"),
@@ -624,7 +624,7 @@ def seed(conn: sqlite3.Connection) -> None:
         "INSERT OR IGNORE INTO tenants (id, name, slug, status, owner_email, created_at) VALUES (?, ?, ?, ?, ?, ?)",
         (1, "HiperMix Representacoes", "hipermix", "active", "vendas@hipermixrepresentacoes.com.br", now_iso()),
     )
-    ensure_super_admin(conn)
+    # Single-company mode: users are provisioned using the terminal script.
     if not env_bool("HYPERSALES_SEED_DEMO_DATA", False):
         return
 
