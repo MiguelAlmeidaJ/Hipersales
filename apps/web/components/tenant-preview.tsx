@@ -26,7 +26,7 @@ export default function TenantPreview({tenantId,onBack}:{tenantId:number;onBack:
  .then(v=>{if(active)setData(v)}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Erro ao consultar indicadores")}).finally(()=>{if(active)setLoading(false)});
  return()=>{active=false};},[tenantId,applied,revision]);
  const kpis=useMemo(()=>data?[
- ["Faturamento filtrado",money(data.summary.revenue),"Receita bruta dos pedidos"],
+ ["Valor dos pedidos",money(data.summary.revenue),"Soma bruta dos itens, sem descontos"],
  ["Ticket médio",money(data.summary.average_ticket),`${num(data.summary.orders)} pedidos filtrados`],
  ["Clientes ativos",num(data.summary.customers),"Cadastrados na conta"],
  ["Produtos ativos",num(data.summary.products),"Itens no catálogo"],
