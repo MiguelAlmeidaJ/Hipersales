@@ -209,3 +209,9 @@ Executar `npm run build:api && npm run test:api` apos `git pull origin main`.
 ## Ocorrencias: primeiro bloco de migracao
 
 O Nest passa a implementar `GET /api/occurrences`, `PATCH /api/admin/occurrences/:id` e `DELETE /api/admin/occurrences/:id`. A consulta inclui cliente, vendedor, anexos e timeline; representantes veem apenas suas ocorrencias. Alteracoes de status e exclusoes usam transacao e isolamento por tenant. `HIPERSALES_NEST_OCCURRENCES=true` migra essas tres rotas em ambiente de desenvolvimento, desativada por padrao. A criacao `POST /api/occurrences`, download de anexos e PDFs permanecem no Python, assim como a rotina de expurgo de anexos antigos; nao ative a flag antes de executar build e testes do modulo.
+
+## Ocorrencias: criacao e anexos em desenvolvimento
+
+O Nest agora implementa `POST /api/occurrences` com validacao de cliente e representante, anexos base64 ate 25 MB, evento inicial e gravacao da notificacao `occurrence_created` na outbox na mesma transacao. O download `GET /api/occurrences/:id/attachments/:attachmentId` consulta os bytes no banco, limita acesso ao tenant e ao vendedor da ocorrencia, e envia o arquivo como anexo. `HIPERSALES_NEST_OCCURRENCES=true` passa a incluir essas duas rotas, alem das rotas anteriores do modulo.
+
+**Diferenca ainda pendente:** o Python envia o email da ocorrencia com arquivos anexados via SMTP; a fila de notificacao Nest atualmente registra apenas o texto e preserva os arquivos no banco, mas nao os anexa ao email. O PDF de ocorrencia e a limpeza automatica dos anexos antigos ainda permanecem no Python. Em banco descartavel de desenvolvimento, testar com `npm run build:api && npm run test:api` antes de ativar a flag.
