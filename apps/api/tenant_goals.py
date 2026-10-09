@@ -132,14 +132,18 @@ class TenantGoalsMixin:
         seller_ranking = [dict(row) for row in conn.execute(
             f"""SELECT u.name AS name, COUNT(*) AS orders,
             COALESCE(SUM((SELECT SUM(pi.quantity*pi.negotiated_price) FROM proposal_items pi WHERE pi.proposal_id=p.id)),0) AS total
-            {base} JOIN users u ON u.id=p.seller_id AND u.tenant_id=p.tenant_id
-            GROUP BY u.id, u.name ORDER BY total DESC LIMIT 5""", args)]
+            FROM proposals p JOIN customers c ON c.id=p.customer_id AND c.tenant_id=p.tenant_id
+            JOIN companies co ON co.id=p.company_id AND co.tenant_id=p.tenant_id
+            JOIN users u ON u.id=p.seller_id AND u.tenant_id=p.tenant_id
+            WHERE {predicate} GROUP BY u.id, u.name ORDER BY total DESC LIMIT 5""", args)]
         top_products = [dict(row) for row in conn.execute(
             f"""SELECT pr.name AS name, co.name AS company, SUM(pi.quantity) AS quantity,
             SUM(pi.quantity*pi.negotiated_price) AS total
-            {base} JOIN proposal_items pi ON pi.proposal_id=p.id
+            FROM proposals p JOIN customers c ON c.id=p.customer_id AND c.tenant_id=p.tenant_id
+            JOIN companies co ON co.id=p.company_id AND co.tenant_id=p.tenant_id
+            JOIN proposal_items pi ON pi.proposal_id=p.id
             JOIN products pr ON pr.id=pi.product_id AND pr.tenant_id=p.tenant_id
-            GROUP BY pr.id, pr.name, co.name ORDER BY total DESC LIMIT 5""", args)]
+            WHERE {predicate} GROUP BY pr.id, pr.name, co.name ORDER BY total DESC LIMIT 5""", args)]
         recent_orders = [dict(row) for row in conn.execute(
             f"""SELECT p.id, p.order_number, c.legal_name AS customer_name, co.name AS company_name,
             p.status, p.created_at, COALESCE((SELECT SUM(pi.quantity*pi.negotiated_price)
