@@ -95,3 +95,9 @@ Oito etapas representam uma estimativa tecnica e podem ser subdivididas apos a a
 O arquivo `src/customers/customer-fields.ts` centraliza as regras de composição de endereço e contatos antes implementadas em `foundation.py`. As consultas e escritas Nest compartilham agora esses auxiliares, inclusive para formulários legados com campos em `row`. Os cenários mínimos são exercitados em `test/customer-fields.spec.ts`.
 
 **Ainda pendente:** consulta externa de CNPJ (CNPJ.ws e BrasilAPI), normalização integral do retorno, equivalência dos enriquecimentos remotos e homologação contra amostras reais. Por isso, `HIPERSALES_NEST_CUSTOMER_WRITES` deve permanecer desativado em produção. Nenhuma remoção do Python foi realizada nesta etapa.
+
+## Consulta de CNPJ no Nest (homologacao)
+
+Adicionado `CnpjLookupService` com consulta primaria em CNPJ.ws e fallback para BrasilAPI, tratamento de falhas e campos no formato da resposta historica `GET /api/integrations/cnpj`. O endpoint exige sessao e valida CNPJ duplicado dentro da empresa. Testes isolados cobrem timeout, fallback e retorno invalido.
+
+O proxy continua utilizando Python por padrao. Para verificar o novo endpoint em ambiente de homologacao, configurar `HIPERSALES_NEST_CNPJ_LOOKUP=true` no processo Nest e reinicia-lo. **Nao ativar em producao sem conferir os retornos com CNPJs reais e a equivalencia integral dos provedores.** `HIPERSALES_NEST_CUSTOMER_WRITES` tambem permanece desativado. A escrita de clientes no Nest ainda nao consome o resultado remoto da consulta.
