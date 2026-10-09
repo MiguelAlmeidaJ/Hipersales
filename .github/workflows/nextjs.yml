@@ -17,6 +17,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: python3 -m unittest discover -s apps/api/tests -p 'test_*id.py' && python3 -m unittest discover -s apps/api/tests -p test_postgres_adapter.py\n        working-directory: .\n      - run: python3 -m unittest discover -s apps/api/tests -p test_sqlite_snapshot.py
         working-directory: .
+      - run: python3 -m unittest discover -s apps/api/tests -p test_import_snapshot_pg.py
+        working-directory: .
       - run: npm run check:contracts
       - run: npm run typecheck
       - run: npm run build
