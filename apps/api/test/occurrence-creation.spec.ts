@@ -8,15 +8,15 @@ const seller={id:10,role:"seller",tenant_id:1} as PublicUser;
 function setup(){
  const db=new DatabaseSync(":memory:");
  db.exec(`
- CREATE TABLE customers(id INTEGER PRIMARY KEY,tenant_id INTEGER,active INTEGER,legal_name TEXT,cnpj TEXT);
- CREATE TABLE users(id INTEGER PRIMARY KEY,tenant_id INTEGER,role TEXT,active INTEGER);
+ CREATE TABLE customers(id INTEGER PRIMARY KEY,tenant_id INTEGER,active INTEGER,legal_name TEXT,cnpj TEXT,trade_name TEXT,state_registration TEXT,address TEXT,phone TEXT,email TEXT);
+ CREATE TABLE users(id INTEGER PRIMARY KEY,tenant_id INTEGER,role TEXT,active INTEGER,name TEXT,email TEXT,communication_email TEXT);
  CREATE TABLE customer_sellers(customer_id INTEGER,seller_id INTEGER);
  CREATE TABLE occurrences(id INTEGER PRIMARY KEY,tenant_id INTEGER,seller_id INTEGER,customer_id INTEGER,reason TEXT,description TEXT,attachment_names TEXT,status TEXT,resolution TEXT,created_at TEXT,updated_at TEXT);
  CREATE TABLE occurrence_events(id INTEGER PRIMARY KEY,occurrence_id INTEGER,tenant_id INTEGER,status TEXT,title TEXT,notes TEXT,created_by INTEGER,created_at TEXT);
  CREATE TABLE occurrence_attachments(id INTEGER PRIMARY KEY,occurrence_id INTEGER,tenant_id INTEGER,filename TEXT,mimetype TEXT,content BLOB,created_at TEXT);
  CREATE TABLE email_outbox(id INTEGER PRIMARY KEY,tenant_id INTEGER,kind TEXT,recipients TEXT,subject TEXT,body TEXT,created_at TEXT);
- INSERT INTO customers VALUES (1,1,1,'Cliente A','123'),(2,2,1,'Cliente B','456');
- INSERT INTO users VALUES (10,1,'seller',1);
+ INSERT INTO customers (id,tenant_id,active,legal_name,cnpj) VALUES (1,1,1,'Cliente A','123'),(2,2,1,'Cliente B','456');
+ INSERT INTO users (id,tenant_id,role,active,name,email) VALUES (10,1,'seller',1,'Representante Teste','teste@example.com');
  INSERT INTO customer_sellers VALUES(1,10);
  `);
  const database={db,transaction:<T>(fn:()=>T):T=>{db.exec("BEGIN IMMEDIATE");try{const result=fn();db.exec("COMMIT");return result;}catch(e){db.exec("ROLLBACK");throw e;}}} as DatabaseService;
