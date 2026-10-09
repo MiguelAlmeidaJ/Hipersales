@@ -15,6 +15,7 @@ import PasswordChange from "../components/password-change";
 import DashboardView from "../components/dashboard-view";
 
 type Route = "approvals" | "requestCustomer" | "dashboard" | "orders" | "customers" | "companies" | "products" | "occurrences" | "reports" | "goals" | "users" | "admin";
+const routeIcons:Record<Route,string>={dashboard:"▥",orders:"▤",occurrences:"◫",customers:"◉",companies:"▦",products:"◇",reports:"▥",goals:"◎",users:"♧",admin:"⚙",approvals:"✓",requestCustomer:"+"};
 type RecordData = Record<string, unknown>;
 const adminRoutes: { id:Route; title:string; endpoint?:`/api/${string}`; key?:string }[] = [
  {id:"dashboard",title:"Dashboard",endpoint:"/api/admin/overview"},
@@ -75,9 +76,9 @@ export default function Home(){
  <button type="button" className="fixed bottom-5 right-5 z-50 rounded-xl bg-violet-800 px-5 py-3 font-semibold text-white shadow-lg md:hidden" onClick={()=>setMenuOpen(v=>!v)} aria-expanded={menuOpen} aria-controls="app-navigation">{menuOpen?"Fechar":"☰ Menu"}</button>
  {menuOpen&&<button type="button" aria-label="Fechar navegação" className="fixed inset-0 z-30 bg-slate-950/50 md:hidden" onClick={()=>setMenuOpen(false)}/>}
  <aside id="app-navigation" className={`nav-side ${menuOpen?"":"max-md:hidden"}`}>
- <div className="nav-brand"><h2>◆ Hipersales</h2><p>Console de gestão</p></div>
- <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-3"><p className="text-[10px] font-bold uppercase tracking-widest text-violet-200">Empresa</p><p className="mt-2 text-sm font-bold text-white">HiperMix Representações</p></div>
- <nav aria-label="Navegação principal">{navItems.map((item,i)=><div key={item.id}>{(i===0||i===7)&&<p className="nav-group-label">{i===0?"Ações":"Gestão"}</p>}<button type="button" className={item.id===selected.id?"selected":""} onClick={()=>{setRoute(item.id);setMenuOpen(false)}}>{item.title}</button></div>)}</nav>
+ <div className="nav-brand"><div className="flex items-center gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15 text-xl font-extrabold text-white">H</span><div><h2>Hipersales</h2><p>Console comercial</p></div></div></div>
+ <div className="mt-5 rounded-xl border border-white/10 bg-white/5 px-3 py-3"><p className="text-[10px] font-bold uppercase tracking-widest text-violet-200">Ambiente</p><p className="mt-1 truncate text-sm font-semibold text-white">HiperMix Representações</p></div>
+ <nav aria-label="Navegação principal">{navItems.map((item,i)=><div key={item.id}>{(i===0||i===7)&&<p className="nav-group-label">{i===0?"Ações":"Gestão"}</p>}<button type="button" className={item.id===selected.id?"selected":""} onClick={()=>{setRoute(item.id);setMenuOpen(false)}}><span aria-hidden className="mr-3 inline-flex w-5 justify-center text-lg text-violet-100">{routeIcons[item.id]}</span><span>{item.title}</span>{selected.id===item.id&&<span className="ml-auto size-1.5 rounded-full bg-violet-200"/>}</button></div>)}</nav>
  <div className="mt-auto border-t border-white/10 pt-4"><p className="truncate px-3 text-xs text-violet-200">{user?.name}</p></div>
  </aside>
  <div className="workspace-main">
