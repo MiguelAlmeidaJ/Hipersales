@@ -47,6 +47,11 @@ describe("Nest catalog read parity", () => {
     expect(result.companies[0]?.product_count).toBe(1);
   });
 
+  it("filters products by tenant, company, active flag and name", () => {
+    expect(service.adminProducts(user("admin"), "", "", "all").products).toHaveLength(2);
+    expect(service.adminProducts(user("admin"), "1", "Produto A").products).toHaveLength(1);
+    expect(service.adminProducts(user("admin"), "", "Produto C").products).toHaveLength(0);
+  });
   it("creates and updates companies without changing another tenant", () => {
     const created=service.createCompany(user("admin"),{name:"Nova Industria",active:true});
     expect(created.id).toBeGreaterThan(0);
@@ -64,9 +69,5 @@ describe("Nest catalog read parity", () => {
     expect(()=>service.deleteProduct(user("admin"),first.id)).toThrow();
   });
 
-  it("filters products by tenant, company, active flag and name", () => {
-    expect(service.adminProducts(user("admin"), "", "", "all").products).toHaveLength(2);
-    expect(service.adminProducts(user("admin"), "1", "Produto A").products).toHaveLength(1);
-    expect(service.adminProducts(user("admin"), "", "Produto C").products).toHaveLength(0);
-  });
+
 });
