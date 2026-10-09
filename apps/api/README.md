@@ -197,3 +197,11 @@ O roteamento PATCH permanece **exclusivamente no Python** ate comparar datas/fus
 `test/proposal-status.integration.spec.ts` testa o fluxo real de atualizacao da proposta com SQLite em memoria: aprovar e gerar avisos ao vendedor e backoffice; evitar reenvio na atualizacao repetida; validar isolamento de tenant e bloqueio de regressao; normalizar alias de recusa; opcionalmente enfileirar WhatsApp; e reverter a transacao se a outbox falhar.
 
 O `LegacyProxyMiddleware` agora aceita `HIPERSALES_NEST_PROPOSAL_STATUS=true` para direcionar `PATCH /api/admin/proposals/:id` ao Nest. **Esta variavel permanece desativada por padrao.** A implementacao continua usando fila de outbox e exige comparacao das mensagens geradas com o Python, teste no banco espelho e comprovacao de entrega pelo worker (o proxy nao executa estes testes). Nao ativar em producao apenas por ter testes unitarios passando. Para validar: `npm run build:api && npm run test:api`.
+
+## Propostas: CRUD Nest em um unico controle (ambiente de desenvolvimento)
+
+Com `ProposalDeletionService` e `DELETE /api/admin/proposals/:id`, a API Nest agora implementa listagem, criacao, edicao/status e exclusao de propostas. A exclusao remove itens e historico na mesma transacao e impede modificacoes fora do tenant. O Python continua com PDFs e demais endpoints nao migrados.
+
+Para acelerar testes de ponta a ponta **sem ativar quatro flags separadas**, `HIPERSALES_NEST_PROPOSALS=true` direciona GET/POST `/api/proposals` e PATCH/DELETE `/api/admin/proposals/:id` ao Nest. A flag e desativada por padrao. Recomendada somente em banco descartavel de desenvolvimento: ainda e necessario validar trabalhador da fila de notificacoes, formatos finais e eventuais referencias de pedidos antes de usar dados importantes. As flags individuais existentes continuam funcionando.
+
+Executar `npm run build:api && npm run test:api` apos `git pull origin main`.
