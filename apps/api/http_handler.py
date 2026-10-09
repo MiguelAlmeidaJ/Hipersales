@@ -238,33 +238,6 @@ class HttpHandlerMixin:
                 return {"user": user}
             if method == "POST" and path == "/api/me/password":
                 return self.change_own_password(conn, user, self.read_json())
-            if method == "GET" and path == "/api/super-admin/overview":
-                self.require_super_admin(user)
-                return self.super_admin_overview(conn)
-            if method == "GET" and path == "/api/super-admin/tenants":
-                self.require_super_admin(user)
-                return {"tenants": self.super_admin_tenants(conn)}
-            if method == "GET" and path.startswith("/api/super-admin/tenants/") and "/records/" in path:
-                self.require_super_admin(user)
-                tenant_part, section = path.removeprefix("/api/super-admin/tenants/").split("/records/", 1)
-                if not tenant_part.isdecimal() or not section or "/" in section:
-                    raise ApiError(HTTPStatus.BAD_REQUEST, "Parametros invalidos.")
-                return self.super_admin_tenant_records(conn, int(tenant_part), section, query)
-            if method == "GET" and path.startswith("/api/super-admin/tenants/") and path.endswith("/dashboard"):
-                self.require_super_admin(user)
-                tenant_part = path.removeprefix("/api/super-admin/tenants/").removesuffix("/dashboard")
-                if not tenant_part.isdecimal():
-                    raise ApiError(HTTPStatus.BAD_REQUEST, "ID de tenant invalido.")
-                return self.super_admin_tenant_dashboard(conn, int(tenant_part), query)
-            if method == "GET" and path.startswith("/api/super-admin/tenants/"):
-                self.require_super_admin(user)
-                tenant_part = path.removeprefix("/api/super-admin/tenants/")
-                if not tenant_part.isdecimal():
-                    raise ApiError(HTTPStatus.BAD_REQUEST, "ID de tenant invalido.")
-                return self.super_admin_tenant_detail(conn, int(tenant_part))
-            if method == "POST" and path == "/api/super-admin/tenants":
-                self.require_super_admin(user)
-                return self.create_tenant(conn, self.read_json())
             if method == "GET" and path == "/api/dashboard":
                 return self.dashboard(conn, user)
             if method == "GET" and path == "/api/goals/my":
