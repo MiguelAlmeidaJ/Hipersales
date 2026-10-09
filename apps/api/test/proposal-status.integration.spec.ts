@@ -45,6 +45,17 @@ function fixture(){
   return {db, service:new ProposalUpdateService(database,notifications)};
 }
 describe("proposal status integration",()=>{
+  it("tracks four lifecycle stages without sending duplicate messages",()=>{
+    const {db,service}=fixture();
+    for(const status of ["pedido_aprovado","em_producao","faturado","entregue"]){
+      service.update(admin,50,{status});
+    }
+    expect(db.prepare("SELECT COUNT(*) AS total FROM proposal_events").get()).toMatchObject({total:4});
+    expect(db.prepare("SELECT COUNT(*) AS total FROM email_outbox").get()).toMatchObject({total:5});
+    service.update(admin,50,{status:"entregue"});
+    expect(db.prepare("SELECT COUNT(*) AS total FROM email_outbox").get()).toMatchObject({total:5});
+    db.close();
+  });
   it("approves a proposal, queues two email messages and records one event",()=>{
     const {db,service}=fixture();
     expect(service.update(admin,50,{status:"pedido_aprovado"}).message).toBe("Status atualizado.");
