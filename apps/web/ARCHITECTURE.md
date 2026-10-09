@@ -57,3 +57,26 @@ pm2 restart hipersales-web
 Abrir `http://localhost:3000/app/painel`; navegar pelo menu e verificar que a URL muda. Testar login, logout, perfil admin e representante, inclusive acesso direto digitando uma URL não permitida. O backend e o banco não precisam ser migrados para esta mudança de navegação.
 
 **Nota:** o layout Next é persistente entre rotas do grupo `/app`. O provedor da sessão preserva login durante a navegação, enquanto cada `page.tsx` renderiza apenas seu módulo.
+
+## Padrão de manutenção do frontend
+
+- `components/app-shell.tsx`: somente ciclo de autenticação, estados de sessão e composição da tela.
+- `components/app-sidebar.tsx`: menu lateral e grupos de navegação.
+- `components/app-header.tsx`: cabeçalho, menu de conta e saída.
+- `components/session-context.tsx`: sessão React compartilhada.
+- `components/module-renderer.tsx`: seleção de módulos e perfis.
+- `lib/navigation.ts`: declaração centralizada de URLs e visibilidade.
+- Novos componentes devem usar TypeScript e responsabilidades pequenas; evite JSX inteiro em uma linha.
+
+O repositório inclui `.editorconfig`, `.prettierrc.json` e configurações do VS Code. O formatador está fixado em Prettier 3.6.2; não exige mudanças no `package-lock.json`.
+
+```bash
+cd apps/web
+npm run format       # normaliza arquivos TS, TSX e CSS do frontend
+npm run format:check # verifica inicialmente os arquivos principais refatorados
+npm run typecheck
+npm run check:contracts
+npm run build
+```
+
+O formatador está disponível, mas **a formatação global de todos os componentes antigos é uma etapa separada**. O script `format:check` usa um conjunto incremental de arquivos para não introduzir uma alteração massiva e não revisada no mesmo commit da refatoração.
