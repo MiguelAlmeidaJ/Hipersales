@@ -73,7 +73,7 @@ export class LegacyProxyMiddleware implements NestMiddleware {
     });
     request.on("aborted", () => upstream.destroy());
     if (body) upstream.end(body);
-    else if (request.readableEnded) upstream.end();
+    else if (request.readableEnded || request.complete) upstream.end();
     else request.pipe(upstream);
   }
 }
