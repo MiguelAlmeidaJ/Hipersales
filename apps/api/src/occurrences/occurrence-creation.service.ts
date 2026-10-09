@@ -37,10 +37,12 @@ export class OccurrenceCreationService {
       if(user.role==="admin"&&!db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,tenant))
         throw new BadRequestException("Representante invalido.");
       if(user.role!=="admin"&&sellerId!==user.id) throw new ForbiddenException("Representante invalido.");
-      const customer=db.prepare("SELECT legal_name,cnpj FROM customers WHERE id=? AND tenant_id=? AND active=1").get(customerId,tenant) as Data|undefined;
+      const customer=db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=? AND active=1").get(customerId,tenant) as Data|undefined;
       if(!customer) throw new BadRequestException("Cliente invalido.");
       if(user.role!=="admin"&&!db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
         throw new ForbiddenException("Cliente nao associado ao representante.");
+      const seller=db.prepare("SELECT name,email,communication_email FROM users WHERE id=? AND tenant_id=?").get(sellerId,tenant) as Data|undefined;
+      const display=(v:unknown)=>String(v||"").trim()||"-";
       const now=new Date().toISOString();
       const id=Number(db.prepare("INSERT INTO occurrences (tenant_id,seller_id,customer_id,reason,description,attachment_names,status,resolution,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)")
         .run(tenant,sellerId,customerId,reason,description,JSON.stringify(attachments.map(a=>a.filename)),"aberta","",now,now).lastInsertRowid);
@@ -51,7 +53,20 @@ export class OccurrenceCreationService {
       db.prepare("INSERT INTO email_outbox (tenant_id,kind,recipients,subject,body,created_at) VALUES (?,?,?,?,?,?)")
         .run(tenant,"occurrence_created","vendas@hipermixrepresentacoes.com.br,thallesmachadocomercial@gmail.com",
           "NOVA OCORRENCIA "+String(customer.legal_name||"")+" "+String(customer.cnpj||""),
-          "Ocorrencia #"+id+"\nMotivo: "+reason+"\nRelato: "+description,now);
+          [
+ "Nova ocorrencia registrada no HiperSales Web.","","Ocorrencia: #"+id,
+ "Representante comercial: "+display(seller?.name||user.name),
+ "E-mail do representante: "+display(seller?.communication_email||seller?.email),
+ "Cliente: "+display(customer.legal_name),
+ "Nome fantasia: "+display(customer.trade_name),
+ "CNPJ: "+display(customer.cnpj),
+ "Inscricao estadual: "+display(customer.state_registration),
+ "Endereco: "+display(customer.address),
+ "Telefone: "+display(customer.phone),
+ "E-mail cliente: "+display(customer.email),"",
+ "Motivo: "+reason,"","Relato:",description,"",
+ "Anexos: "+(attachments.length?attachments.map(a=>a.filename).join(", "):"Sem anexos."),
+ ].join("\\n"),now);
       return {id,message:"Ocorrencia registrada e enviada para analise."};
     });
   }
