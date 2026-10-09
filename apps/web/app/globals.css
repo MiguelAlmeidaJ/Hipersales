@@ -114,3 +114,13 @@
  .app-header { padding-right:1rem; }
  .app-content { padding-bottom:5rem; }
 }
+
+@layer components {
+ .app-header-actions { @apply relative; }
+ .app-account-popover { @apply absolute top-[calc(100%+12px)] right-0 z-50 w-[min(90vw,340px)] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_rgba(30,18,65,.16)]; }
+ .app-account-popover > section { @apply border-0 p-0 shadow-none; }
+ .app-account-popover button { @apply transition-colors; }
+ .app-account-popover form { @apply mt-3; }
+ .app-header-actions { @apply gap-2; }
+ .app-header { @apply min-h-[72px]; }
+}
