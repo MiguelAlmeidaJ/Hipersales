@@ -156,6 +156,54 @@ class TenantGoalsMixin:
             "filters": {"q": search, "status": status, "date_from": date_from, "date_to": date_to},
         }
 
+    def super_admin_tenant_records(self, conn: sqlite3.Connection, tenant_id: int, section: str, query: dict[str, list[str]]) -> dict[str, Any]:
+        """Read-only, allowlisted tenant records for the Superadmin console.
+
+        Never exposes password hashes, credentials, settings values, attachment
+        contents or a cross-tenant join.
+        """
+        tenant = conn.execute("SELECT id, name FROM tenants WHERE id = ?", (tenant_id,)).fetchone()
+        if tenant is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, "Tenant nao encontrado.")
+        definitions = {
+            "orders": ("proposals p", "p.id, p.order_number, p.status, p.created_at, c.legal_name AS customer_name, co.name AS company_name, u.name AS seller_name",
+                       "LEFT JOIN customers c ON c.id=p.customer_id AND c.tenant_id=p.tenant_id LEFT JOIN companies co ON co.id=p.company_id AND co.tenant_id=p.tenant_id LEFT JOIN users u ON u.id=p.seller_id AND u.tenant_id=p.tenant_id", "p"),
+            "occurrences": ("occurrences x", "x.id, x.reason, x.status, x.created_at, c.legal_name AS customer_name, u.name AS seller_name",
+                            "LEFT JOIN customers c ON c.id=x.customer_id AND c.tenant_id=x.tenant_id LEFT JOIN users u ON u.id=x.seller_id AND u.tenant_id=x.tenant_id", "x"),
+            "customers": ("customers x", "x.id, x.legal_name, x.trade_name, x.cnpj, x.active", "", "x"),
+            "companies": ("companies x", "x.id, x.name, x.legal_name, x.active", "", "x"),
+            "products": ("products x", "x.id, x.name, x.code, x.price, x.active, c.name AS company_name",
+                         "LEFT JOIN companies c ON c.id=x.company_id AND c.tenant_id=x.tenant_id", "x"),
+            "users": ("users x", "x.id, x.name, x.email, x.role, x.active", "", "x"),
+            "goals": ("seller_goals x", "x.id, x.year, x.month, x.sales_goal, x.new_customers_goal, u.name AS seller_name",
+                      "LEFT JOIN users u ON u.id=x.seller_id AND u.tenant_id=x.tenant_id", "x"),
+        }
+        if section not in definitions:
+            raise ApiError(HTTPStatus.NOT_FOUND, "Secao do tenant nao encontrada.")
+        source, fields, joins, alias = definitions[section]
+        search = str(query.get("q", [""])[0] or "").strip()[:100]
+        conditions = [f"{alias}.tenant_id = ?"]
+        parameters: list[Any] = [tenant_id]
+        if search:
+            search_fields = {
+                "orders": ["c.legal_name", "co.name", "u.name", "CAST(p.order_number AS TEXT)"],
+                "occurrences": ["x.reason", "c.legal_name", "u.name"],
+                "customers": ["x.legal_name", "x.trade_name", "x.cnpj"],
+                "companies": ["x.name", "x.legal_name"],
+                "products": ["x.name", "x.code", "c.name"],
+                "users": ["x.name", "x.email"],
+                "goals": ["u.name", "CAST(x.year AS TEXT)"],
+            }[section]
+            conditions.append("(" + " OR ".join(f"COALESCE({col}, '') LIKE ?" for col in search_fields) + ")")
+            parameters.extend(["%" + search + "%"] * len(search_fields))
+        predicate = " AND ".join(conditions)
+        base = f"FROM {source} {joins} WHERE {predicate}"
+        total = conn.execute(f"SELECT COUNT(*) AS total {base}", parameters).fetchone()["total"]
+        rows = [dict(row) for row in conn.execute(
+            f"SELECT {fields} {base} ORDER BY {alias}.id DESC LIMIT 100", parameters)]
+        return {"tenant": dict(tenant), "section": section, "total": total,
+                "records": rows, "limited": total > len(rows)}
+    
     def create_tenant(self, conn: sqlite3.Connection, data: dict[str, Any]) -> dict[str, Any]:
         required(data, ["name", "admin_name", "admin_email", "admin_password"])
         name = str(data["name"]).strip()
