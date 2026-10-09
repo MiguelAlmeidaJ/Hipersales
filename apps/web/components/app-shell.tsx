@@ -1,11 +1,13 @@
 "use client";
-import {useEffect,useState,type FormEvent,type ReactNode} from "react";
+import {useEffect,useState,createContext,useContext,type FormEvent,type ReactNode} from "react";
 import Link from "next/link";
 import {usePathname,useRouter} from "next/navigation";
 import {api,type SessionUser} from "../lib/api";
 import {getModuleFromPath,modulePath,visibleModules} from "../lib/navigation";
-import ModuleRenderer from "./module-renderer";
 import PasswordChange from "./password-change";
+
+const SessionContext=createContext<SessionUser|null>(null);
+export function useAuthenticatedUser(){const user=useContext(SessionContext);if(!user)throw new Error("Authenticated session is required");return user;}
 
 export default function AppShell({children}:{children:ReactNode}){
  const pathname=usePathname(),router=useRouter();
