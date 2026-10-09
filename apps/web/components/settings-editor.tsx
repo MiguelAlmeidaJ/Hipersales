@@ -5,8 +5,8 @@ import WorkflowSettings from "./workflow-settings";
 type Settings={smtp?:Record<string,unknown>;whatsapp?:Record<string,unknown>};
 type Response={settings:Settings};
 const css="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5";
-const smtpFields=[["host","Servidor"],["port","Porta"],["username","Usuário"],["password","Senha"],["from_email","Remetente"]] as const;
-const whatsappFields=[["enabled","Habilitado"],["instance_id","Instância"],["alert_phone","Telefone de alertas"]] as const;
+const smtpFields=[["host","Servidor"],["port","Porta"],["username","Usuário"],["password","Senha"],["from_name","Nome do remetente"],["from_email","E-mail do remetente"]] as const;
+const whatsappFields=[["enabled","Habilitado"],["connection_name","Nome da conexão"],["instance_id","Instância"],["alert_phone","Telefone de alertas"]] as const;
 export default function SettingsEditor(){
  const [settings,setSettings]=useState<Settings>({});
  const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(""),[notice,setNotice]=useState("");
@@ -25,7 +25,13 @@ export default function SettingsEditor(){
  <form onSubmit={e=>save(e,"whatsapp")} className="space-y-4 rounded-xl border border-slate-200 bg-white p-5"><h3 className="text-lg font-semibold">WhatsApp — Evolution API</h3>
  <p className="text-sm text-slate-600">Status: {settings.whatsapp?.connected?"Conectado":String(settings.whatsapp?.status_label||"Desconectado")}</p>
  <div className="grid gap-4 sm:grid-cols-2">{whatsappFields.map(([key,label])=>key==="enabled"?<label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(settings.whatsapp?.enabled)} onChange={e=>update("whatsapp",key,e.target.checked)}/>{label}</label>:<label className="grid gap-1.5 text-sm" key={key}>{label}<input className={css} value={String(settings.whatsapp?.[key]??"")} onChange={e=>update("whatsapp",key,e.target.value)}/></label>)}</div>
+ <div className="grid gap-4 sm:grid-cols-2">
+ <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(settings.whatsapp?.unavailable_reply_enabled)} onChange={e=>update("whatsapp","unavailable_reply_enabled",e.target.checked)}/> Resposta automática de indisponibilidade</label>
+ <label className="grid gap-1.5 text-sm sm:col-span-2">Mensagem automática<textarea rows={3} className={css} value={String(settings.whatsapp?.unavailable_reply_message??"")} onChange={e=>update("whatsapp","unavailable_reply_message",e.target.value)}/></label>
+ </div>
+ {Boolean(settings.whatsapp?.last_error)&&<p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{String(settings.whatsapp?.last_error)}</p>}
  <div className="flex flex-wrap gap-3"><button disabled={busy} className="rounded-lg bg-brand px-4 py-2 text-white">Salvar WhatsApp</button><button disabled={busy} type="button" className="rounded-lg border px-4 py-2" onClick={()=>{if(window.confirm("Iniciar uma nova conexão WhatsApp?"))void action("/api/admin/settings/whatsapp/connect",settings.whatsapp||{})}}>Conectar / gerar QR</button><button disabled={busy} type="button" className="rounded-lg border px-4 py-2 text-red-700" onClick={()=>{if(window.confirm("Desconectar instância WhatsApp?"))void action("/api/admin/settings/whatsapp/disconnect",{})}}>Desconectar</button><button type="button" className="rounded-lg border px-4 py-2" onClick={()=>void reload()}>Atualizar status</button></div>
- {typeof settings.whatsapp?.qr_image_url==="string"&&settings.whatsapp.qr_image_url.startsWith("data:image/")&&<img alt="QR Code para conectar WhatsApp" src={settings.whatsapp.qr_image_url} width={240} height={240}/>}</form>
+ {typeof settings.whatsapp?.qr_image_url==="string"&&/^data:image\/(png|jpeg|webp);base64,/.test(settings.whatsapp.qr_image_url)&&<img alt="QR Code para conectar WhatsApp" src={settings.whatsapp.qr_image_url} width={240} height={240}/>}
+ {Boolean(settings.whatsapp?.qr_payload)&&<p className="text-xs text-slate-500">QR disponível para conexão com o WhatsApp.</p>}</form>
  <WorkflowSettings/></section>;
 }
