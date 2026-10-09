@@ -37,7 +37,7 @@ devem declarar `@Roles("admin")`.
 
 ## Ordem recomendada da migracao
 
-1. Concluir escritas de catalogo (criar/editar/excluir/importar e exportar), com testes de regras e integridade.
+1. Homologar as escritas de catalogo no Nest e migrar importacao/exportacao. Revisar exclusao de empresa, pois o legado apaga pedidos em cascata.
 2. Clientes, usuarios e vinculos.
 3. Propostas e ocorrencias.
 4. Dashboard, metas e relatorios.
@@ -45,7 +45,7 @@ devem declarar `@Roles("admin")`.
 
 ## Fase de transicao do catalogo
 
-As consultas `GET /api/companies`, `GET /api/products`, `GET /api/admin/companies` e `GET /api/admin/products` agora sao atendidas pelo Nest, com respostas e filtros compativeis com Python. O Nest aplica sessao e controle de perfil nas rotas administrativas. Criacao, edicao, exclusao, importacao e exportacao continuam no legado, via proxy, para nao alterar regras de dependencia de pedidos.
+Consultas e escritas basicas de empresas e produtos agora sao atendidas pelo Nest. Migradas: GET /api/companies, GET /api/products, GET /api/admin/companies, GET /api/admin/products; POST/PATCH de empresas; POST/PATCH/DELETE de produtos. As regras de associacao de representante, tenant_id, unicidade de codigo e bloqueio de exclusao de produto com historico foram preservadas. Exclusao de empresa (destrutiva, remove pedidos), importacao de produtos e exportacao CSV continuam no Python.
 
 Validacao antes de reiniciar a API:
 
