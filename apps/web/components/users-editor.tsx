@@ -114,6 +114,7 @@ export default function UsersEditor() {
                 required={
                   k === "name" || k === "email" || (k === "temporary_password" && editing === null)
                 }
+                minLength={k === "temporary_password" ? 12 : undefined}
                 className="rounded-lg border p-2.5"
                 value={form[k]}
                 onChange={(e) => setForm((v) => ({ ...v, [k]: e.target.value }))}

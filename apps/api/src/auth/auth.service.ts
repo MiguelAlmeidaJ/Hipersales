@@ -9,56 +9,7 @@ import { randomBytes } from "node:crypto";
 import { DatabaseService } from "../database/database.service.js";
 import { EnvService } from "../config/env.service.js";
 import { hashPassword, verifyPassword } from "./password.js";
-
-interface UserRow {
-  id: number;
-  tenant_id: number | null;
-  tenant_name?: string | null;
-  name: string;
-  email: string;
-  communication_email?: string | null;
-  whatsapp_phone?: string | null;
-  role: "admin" | "seller";
-  is_super_admin?: number;
-  is_dev?: number;
-  active: number;
-  must_change_password?: number;
-  password_updated_at?: string | null;
-  password_hash?: string;
-}
-
-const USER_SELECT = `
-  SELECT u.id, u.tenant_id, t.name AS tenant_name, u.name, u.email,
-         u.communication_email, u.whatsapp_phone, u.role, u.is_super_admin,
-         u.is_dev, u.active, u.must_change_password, u.password_updated_at,
-         u.password_hash
-  FROM users u
-  LEFT JOIN tenants t ON t.id = u.tenant_id
-`;
-
-function normalizeUsername(value: string): string {
-  const normalized = value.trim().toLowerCase();
-  return normalized.includes("@") ? normalized.split("@", 1)[0]! : normalized;
-}
-
-function publicUser(row: UserRow): PublicUser {
-  const wasSuperAdmin = Boolean(row.is_super_admin);
-  return {
-    id: Number(row.id),
-    name: row.name,
-    email: row.email,
-    communication_email: row.communication_email ?? null,
-    whatsapp_phone: row.whatsapp_phone ?? null,
-    role: wasSuperAdmin ? "admin" : row.role,
-    tenant_id: Number(row.tenant_id || 1),
-    tenant_name: wasSuperAdmin ? "HiperMix Representacoes" : (row.tenant_name ?? null),
-    is_super_admin: false,
-    is_dev: Boolean(row.is_dev),
-    active: Boolean(row.active),
-    must_change_password: Boolean(row.must_change_password),
-    password_updated_at: row.password_updated_at ?? null,
-  };
-}
+import { normalizeUsername, toPublicUser, USER_SELECT, type UserRow } from "../users/user.mapper.js";
 
 @Injectable()
 export class AuthService {
@@ -102,7 +53,7 @@ export class AuthService {
         .run(token, row.id, nowSeconds + this.env.sessionTtlSeconds, nowIso);
     });
 
-    return { token, user: publicUser(row) };
+    return { token, user: toPublicUser(row) };
   }
 
   logout(token?: string): void {
@@ -118,7 +69,7 @@ export class AuthService {
          LIMIT 1`,
       )
       .get(token, Math.floor(Date.now() / 1000)) as UserRow | undefined;
-    return row ? publicUser(row) : null;
+    return row ? toPublicUser(row) : null;
   }
 
   changePassword(
@@ -151,6 +102,6 @@ export class AuthService {
     });
 
     const updated = { ...row, must_change_password: 0, password_updated_at: updatedAt };
-    return { message: "Senha atualizada com sucesso.", user: publicUser(updated) };
+    return { message: "Senha atualizada com sucesso.", user: toPublicUser(updated) };
   }
 }

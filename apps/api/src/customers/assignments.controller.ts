@@ -1,6 +1,13 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Query, Req } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Query, Req } from "@nestjs/common";
+import {
+  assignmentRequestSchema,
+  legacyCustomerAssignmentRequestSchema,
+  type AssignmentRequest,
+  type LegacyCustomerAssignmentRequest,
+} from "@hipersales/contracts";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
+import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 import { AssignmentsService } from "./assignments.service.js";
 
 @Roles("admin")
@@ -22,13 +29,22 @@ export class AssignmentsController {
 
   @Patch("customer-assignments")
   assignCustomer(@Req() request: AuthenticatedRequest,
-    @Body() input: {customer_id:number; seller_id:number; assigned:boolean}) {
+    @Body(new ZodValidationPipe(assignmentRequestSchema)) input: AssignmentRequest) {
     return this.assignments.set(request.user, "customers", input);
   }
 
   @Patch("company-assignments")
   assignCompany(@Req() request: AuthenticatedRequest,
-    @Body() input: {company_id:number; seller_id:number; assigned:boolean}) {
+    @Body(new ZodValidationPipe(assignmentRequestSchema)) input: AssignmentRequest) {
     return this.assignments.set(request.user, "companies", input);
+  }
+
+  @HttpCode(200)
+  @Post("assign-customer")
+  assignCustomerLegacy(
+    @Req() request: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(legacyCustomerAssignmentRequestSchema)) input: LegacyCustomerAssignmentRequest,
+  ) {
+    return this.assignments.set(request.user, "customers", { ...input, assigned: true });
   }
 }

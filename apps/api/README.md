@@ -4,6 +4,12 @@ O ponto de entrada publico e agora NestJS/TypeScript. As fatias migradas incluem
 continuam no processo Python interno e sao encaminhados pelo Nest sem alterar as
 rotas `/api/*`; esse proxy e uma ponte temporaria, nao uma arquitetura final.
 
+> Estado atual: autenticacao, catalogo, clientes/CNPJ, solicitacoes, vinculos, usuarios,
+> propostas (exceto PDF), ocorrencias (exceto PDF), outbox de leitura, metas e dashboards
+> possuem implementacao Nest. `HIPERSALES_NEST_MIGRATED_ROUTES=true` direciona esse conjunto
+> ao Nest para homologacao integrada. A flag nao inclui PDFs, configuracoes, SMTP/WhatsApp,
+> webhook Evolution nem jobs; portanto ainda nao autoriza desligar o processo Python.
+
 ## Desenvolvimento
 
 Na raiz do repositorio:

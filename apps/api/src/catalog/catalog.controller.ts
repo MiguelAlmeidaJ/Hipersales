@@ -54,6 +54,12 @@ export class CatalogController {
     return this.catalog.updateCompany(request.user,id,data);
   }
 
+  @Roles("admin")
+  @Delete("admin/companies/:id")
+  deleteCompany(@Req() request: AuthenticatedRequest, @Param("id", ParseIntPipe) id: number) {
+    return this.catalog.deleteCompany(request.user, id);
+  }
+
 
   @Roles("admin")
   @Get("admin/products/export")

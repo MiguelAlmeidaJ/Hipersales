@@ -58,4 +58,15 @@ describe("representative assignments", () => {
     expect(service.list(admin,"companies",10).assigned_count).toBe(0);
     db.close();
   });
+
+  it("supports the legacy assign-customer contract without weakening tenant isolation", () => {
+    const {db,service}=fixture();
+    const input={customer_id:1,seller_id:10};
+    expect(service.set(admin,"customers",{...input,assigned:true})).toEqual({
+      message:"Cliente associado ao representante comercial.",
+    });
+    expect(service.list(admin,"customers",10).assigned_count).toBe(1);
+    expect(()=>service.set(admin,"customers",{customer_id:2,seller_id:10,assigned:true})).toThrow();
+    db.close();
+  });
 });

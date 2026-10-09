@@ -6,6 +6,9 @@ import { CatalogModule } from "./catalog/catalog.module.js";
 import { CustomersModule } from "./customers/customers.module.js";
 import { ProposalsModule } from "./proposals/proposals.module.js";
 import { OccurrencesModule } from "./occurrences/occurrences.module.js";
+import { UsersModule } from "./users/users.module.js";
+import { GoalsModule } from "./goals/goals.module.js";
+import { DashboardModule } from "./dashboard/dashboard.module.js";
 import { CsrfMiddleware } from "./common/middleware/csrf.middleware.js";
 import { RolesGuard } from "./common/guards/roles.guard.js";
 import { SessionGuard } from "./common/guards/session.guard.js";
@@ -22,6 +25,9 @@ import { LegacyProxyMiddleware } from "./legacy/legacy-proxy.middleware.js";
     CustomersModule,
     ProposalsModule,
     OccurrencesModule,
+    UsersModule,
+    GoalsModule,
+    DashboardModule,
   ],
   controllers: [HealthController],
   providers: [

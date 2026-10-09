@@ -15,18 +15,22 @@ const NEST_ROUTES = new Set([
 @Injectable()
 export class LegacyProxyMiddleware implements NestMiddleware {
   private readonly target: URL;
-  private readonly migrateOutboxReads = process.env.HIPERSALES_NEST_OUTBOX_READS === "true";
-  private readonly migrateOccurrenceCrud = process.env.HIPERSALES_NEST_OCCURRENCES === "true";
-  private readonly migrateAllProposals = process.env.HIPERSALES_NEST_PROPOSALS === "true";
-  private readonly migrateProposalDelete = process.env.HIPERSALES_NEST_PROPOSAL_DELETE === "true";
-  private readonly migrateProposalStatus = process.env.HIPERSALES_NEST_PROPOSAL_STATUS === "true";
-  private readonly migrateProposalWrites = process.env.HIPERSALES_NEST_PROPOSAL_WRITES === "true";
-  private readonly migrateProposalReads = process.env.HIPERSALES_NEST_PROPOSAL_READS === "true";
-  private readonly migrateRegistrationSubmissions = process.env.HIPERSALES_NEST_REGISTRATION_SUBMISSIONS === "true";
-  private readonly migrateRegistrationReads = process.env.HIPERSALES_NEST_REGISTRATION_READS === "true";
-  private readonly migrateAssignments = process.env.HIPERSALES_NEST_ASSIGNMENTS === "true";
-  private readonly migrateCnpjLookup = process.env.HIPERSALES_NEST_CNPJ_LOOKUP === "true";
-  private readonly migrateCustomerWrites = process.env.HIPERSALES_NEST_CUSTOMER_WRITES === "true";
+  private readonly migrateImplementedRoutes = process.env.HIPERSALES_NEST_MIGRATED_ROUTES === "true";
+  private readonly migrateOutboxReads = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_OUTBOX_READS === "true";
+  private readonly migrateOccurrenceCrud = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_OCCURRENCES === "true";
+  private readonly migrateAllProposals = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_PROPOSALS === "true";
+  private readonly migrateProposalDelete = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_PROPOSAL_DELETE === "true";
+  private readonly migrateProposalStatus = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_PROPOSAL_STATUS === "true";
+  private readonly migrateProposalWrites = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_PROPOSAL_WRITES === "true";
+  private readonly migrateProposalReads = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_PROPOSAL_READS === "true";
+  private readonly migrateRegistrationSubmissions = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_REGISTRATION_SUBMISSIONS === "true";
+  private readonly migrateRegistrationReads = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_REGISTRATION_READS === "true";
+  private readonly migrateAssignments = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_ASSIGNMENTS === "true";
+  private readonly migrateCnpjLookup = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_CNPJ_LOOKUP === "true";
+  private readonly migrateCustomerWrites = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_CUSTOMER_WRITES === "true";
+  private readonly migrateUsers = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_USERS === "true";
+  private readonly migrateGoals = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_GOALS === "true";
+  private readonly migrateDashboard = this.migrateImplementedRoutes || process.env.HIPERSALES_NEST_DASHBOARD === "true";
 
   constructor(env: EnvService) {
     this.target = new URL(env.legacyApiOrigin);
@@ -34,9 +38,26 @@ export class LegacyProxyMiddleware implements NestMiddleware {
 
   use(request: Request, response: Response, next: NextFunction): void {
     const path = request.originalUrl.split("?", 1)[0] ?? request.path;
-    if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/customers", "/api/admin/customers", "/api/admin/companies", "/api/admin/products", "/api/admin/products/export"].includes(path)) || (request.method === "POST" && ["/api/admin/companies", "/api/admin/products", "/api/admin/products/import"].includes(path)) || (request.method === "PATCH" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path)) || (request.method === "DELETE" && /^\/api\/admin\/products\/\d+$/.test(path))) return next();
+    if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path) || (request.method === "GET" && ["/api/companies", "/api/products", "/api/customers", "/api/admin/customers", "/api/admin/companies", "/api/admin/products", "/api/admin/products/export"].includes(path)) || (request.method === "POST" && ["/api/admin/companies", "/api/admin/products", "/api/admin/products/import"].includes(path)) || (request.method === "PATCH" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path)) || (request.method === "DELETE" && /^\/api\/admin\/(companies|products)\/\d+$/.test(path))) return next();
 
     if (this.migrateOutboxReads && request.method === "GET" && path === "/api/admin/outbox") return next();
+
+    if (this.migrateUsers && (
+      (["GET", "POST"].includes(request.method) && path === "/api/admin/users") ||
+      (request.method === "PATCH" && /^\/api\/admin\/users\/\d+$/.test(path))
+    )) return next();
+
+    if (this.migrateGoals && (
+      (request.method === "GET" && ["/api/goals/my", "/api/admin/goals"].includes(path)) ||
+      (request.method === "POST" && path === "/api/admin/goals")
+    )) return next();
+
+    if (this.migrateDashboard && request.method === "GET" && [
+      "/api/dashboard",
+      "/api/admin/summary",
+      "/api/admin/overview",
+      "/api/admin/executive-dashboard",
+    ].includes(path)) return next();
 
     if (this.migrateOccurrenceCrud && (
       (["GET","POST"].includes(request.method) && path === "/api/occurrences") ||
@@ -54,11 +75,15 @@ export class LegacyProxyMiddleware implements NestMiddleware {
 
     if (this.migrateRegistrationSubmissions && request.method === "POST" && path === "/api/customer-requests") return next();
 
-    if (this.migrateRegistrationReads && request.method === "GET" && path === "/api/admin/requests") return next();
+    if (this.migrateRegistrationReads && (
+      (request.method === "GET" && path === "/api/admin/requests") ||
+      (request.method === "PATCH" && /^\/api\/admin\/requests\/\d+$/.test(path))
+    )) return next();
 
     if (this.migrateAssignments && (
       (request.method === "GET" && /^\/api\/admin\/users\/\d+\/(customers|companies)$/.test(path)) ||
-      (request.method === "PATCH" && ["/api/admin/customer-assignments", "/api/admin/company-assignments"].includes(path))
+      (request.method === "PATCH" && ["/api/admin/customer-assignments", "/api/admin/company-assignments"].includes(path)) ||
+      (request.method === "POST" && path === "/api/admin/assign-customer")
     )) return next();
 
     if (this.migrateCnpjLookup && request.method === "GET" && path === "/api/integrations/cnpj") return next();

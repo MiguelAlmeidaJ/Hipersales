@@ -102,6 +102,28 @@ export class CatalogService {
     return {id,message:"Empresa atualizada."};
   }
 
+  deleteCompany(user: PublicUser, id: number): { message: string } {
+    return this.database.transaction(() => {
+      const company = this.database.db.prepare("SELECT id FROM companies WHERE id = ? AND tenant_id = ?")
+        .get(id, user.tenant_id);
+      if (!company) throw new NotFoundException("Empresa nao encontrada.");
+
+      const proposals = this.database.db.prepare("SELECT id FROM proposals WHERE company_id = ? AND tenant_id = ?")
+        .all(id, user.tenant_id) as Array<{ id: number }>;
+      if (proposals.length > 0) {
+        const placeholders = proposals.map(() => "?").join(",");
+        const proposalIds = proposals.map((proposal) => Number(proposal.id));
+        this.database.db.prepare(`DELETE FROM proposal_items WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
+        this.database.db.prepare(`DELETE FROM proposal_events WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
+        this.database.db.prepare(`DELETE FROM proposals WHERE id IN (${placeholders})`).run(...proposalIds);
+      }
+
+      this.database.db.prepare("DELETE FROM products WHERE company_id = ? AND tenant_id = ?").run(id, user.tenant_id);
+      this.database.db.prepare("DELETE FROM companies WHERE id = ? AND tenant_id = ?").run(id, user.tenant_id);
+      return { message: "Empresa excluida definitivamente." };
+    });
+  }
+
   private productData(user:PublicUser,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}){
     const companyId=Number(data.company_id);
     if(!Number.isSafeInteger(companyId)||companyId<=0) throw new BadRequestException("company_id invalido.");

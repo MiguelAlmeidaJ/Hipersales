@@ -22,6 +22,7 @@ const environmentSchema = z
     HYPERSALES_ALLOWED_ORIGINS: z.string().default(""),
     LEGACY_API_ORIGIN: z.url().default("http://127.0.0.1:8001"),
     TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(1),
+    HYPERSALES_REPORT_TIMEZONE: z.string().min(1).default("America/Sao_Paulo"),
   })
   .superRefine((value, context) => {
     if (value.HYPERSALES_COOKIE_SAMESITE === "None" && !value.HYPERSALES_COOKIE_SECURE) {
@@ -63,4 +64,5 @@ export class EnvService {
   );
   readonly legacyApiOrigin = this.values.LEGACY_API_ORIGIN;
   readonly trustProxy = this.values.TRUST_PROXY;
+  readonly reportTimezone = this.values.HYPERSALES_REPORT_TIMEZONE;
 }
