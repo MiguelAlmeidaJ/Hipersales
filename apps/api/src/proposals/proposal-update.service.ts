@@ -30,19 +30,22 @@ function discountOn(value:unknown):string {
     "Desconto no boleto":"Boleto Bancario","Desconto na nota fiscal":"Nota Fiscal",
     "Boleto Bancário":"Boleto Bancario",
   };
-  return mapping[raw]??raw??"Sem descontos";
+  return mapping[raw] || raw || "Sem descontos";
 }
 export function normalizeProposalStatus(status:unknown,previous:string) {
   const requested=String(status||previous);
   const current=alias[requested]??requested;
   if(!(current in labels)) throw new BadRequestException("Status invalido.");
-  if(rank[current]<rank[previous]) throw new BadRequestException("Nao e permitido voltar o pedido para uma etapa anterior.");
+  const currentRank = rank[current];
+  const previousRank = rank[previous];
+  if(previousRank !== undefined && currentRank !== undefined && currentRank < previousRank)
+    throw new BadRequestException("Nao e permitido voltar o pedido para uma etapa anterior.");
   return current;
 }
 
 /**
- * Stages a proposal edit, but explicitly blocks status changes until the legacy
- * notification handlers have been ported. The Python endpoint remains authoritative.
+ * Changes are persisted atomically with history events and notification outbox records.
+ * The proxy keeps the Python implementation authoritative until rollout validation.
  */
 @Injectable()
 export class ProposalUpdateService {
