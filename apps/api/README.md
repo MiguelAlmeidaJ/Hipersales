@@ -119,3 +119,11 @@ npm run test:api
 Os endpoints `GET /api/admin/users/:id/customers`, `GET /api/admin/users/:id/companies`, `PATCH /api/admin/customer-assignments` e `PATCH /api/admin/company-assignments` estao implementados no `AssignmentsController` e `AssignmentsService`. Aplicam isolamento por empresa e validam o perfil seller antes de criar/remover relacionamentos. A alteracao usa transacao; insercoes sao idempotentes.
 
 A opcao `HIPERSALES_NEST_ASSIGNMENTS=true` redireciona esses quatro endpoints ao Nest em homologacao. Sem essa variavel, o Python continua respondendo. Validar com `npm run build:api` e `npm run test:api` e comparar os resultados com o legado antes de habilitar em producao. Solicitacoes de cadastro e aprovacoes permanecem no Python.
+
+## Solicitacoes de cadastro: fase de migracao
+
+A consulta administrativa `GET /api/admin/requests` tem implementacao Nest com isolamento por `tenant_id`, JOIN com representantes e ordenacao decrescente. O endpoint exige o perfil admin. Por padrao, o proxy ainda usa a API Python; `HIPERSALES_NEST_REGISTRATION_READS=true` habilita a consulta Nest em ambiente de homologacao. Nao habilitar antes de build, testes e comparacao de resposta.
+
+A criacao de solicitacoes (`POST /api/customer-requests`) e o processamento (`PATCH /api/admin/requests/:id`) permanecem no Python. Aprovacao envolve upsert de cliente, associacao do representante, templates de mensagem e gravacao de e-mail/WhatsApp na outbox; migrar apenas o status sem estas regras pode gerar perda de notificacoes e inconsistencias no cadastro.
+
+Para validar: `npm ci && npm run build:api && npm run test:api`. Confirmar que o processo Python segue ativo.
