@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, type NestModule } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AuthModule } from "./auth/auth.module.js";
+import { CatalogModule } from "./catalog/catalog.module.js";
 import { CsrfMiddleware } from "./common/middleware/csrf.middleware.js";
 import { RolesGuard } from "./common/guards/roles.guard.js";
 import { SessionGuard } from "./common/guards/session.guard.js";
@@ -14,6 +15,7 @@ import { LegacyProxyMiddleware } from "./legacy/legacy-proxy.middleware.js";
     DatabaseModule,
     ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 120 }]),
     AuthModule,
+    CatalogModule,
   ],
   controllers: [HealthController],
   providers: [
