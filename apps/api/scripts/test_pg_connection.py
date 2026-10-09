@@ -7,6 +7,10 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from postgres_adapter import PostgreSQLConnection
+from env_loader import load_env_file
+
+ROOT = Path(__file__).resolve().parents[3]
+load_env_file(ROOT / ".env")
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
