@@ -1,7 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 
-const reportTypes=[["vendas","Vendas"],["pedidos","Pedidos"],["clientes","Clientes"],["produtos","Produtos"],["representantes","Representantes"]] as const;
+const reportTypes=[["vendas","Vendas"],["pedidos","Acompanhamento de pedidos"],["bonificacoes","Bonificações"],["produtos_vendidos","Produtos vendidos"],["prazo_pagamento","Prazo de pagamento"],["fechamento_mensal","Fechamento mensal"]] as const;
 export default function ReportsView(){
  const [kind,setKind]=useState("vendas"),[start,setStart]=useState(""),[end,setEnd]=useState("");
  const [seller,setSeller]=useState(""),[company,setCompany]=useState(""),[customer,setCustomer]=useState(""),[status,setStatus]=useState("");
