@@ -112,6 +112,49 @@ def postgresql_connect(dsn: str):
     return psycopg.connect(dsn, row_factory=dict_row, autocommit=False)
 
 
+class PostgreSQLConnection:
+    """Explicitly opt-in connection facade for validating existing DML.
+
+    Not wired into the production API until migrations and all SQL dialect
+    differences have been resolved. Preserves context manager transactions.
+    """
+
+    def __init__(self, dsn: str):
+        self._connection = postgresql_connect(dsn)
+
+    def execute(self, sql: str, parameters: tuple[Any, ...] | list[Any] = ()):
+        translated = translate_simple_dml(sql)
+        return self._connection.execute(translated, parameters)
+
+    def executemany(self, sql: str, parameters):
+        translated = translate_simple_dml(sql)
+        with self._connection.cursor() as cursor:
+            cursor.executemany(translated, parameters)
+            return cursor
+
+    def commit(self):
+        self._connection.commit()
+
+    def rollback(self):
+        self._connection.rollback()
+
+    def close(self):
+        self._connection.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        try:
+            if exc_type is None:
+                self.commit()
+            else:
+                self.rollback()
+        finally:
+            self.close()
+        return False
+
+
 def sql_dialect_report(text: str) -> dict[str, int]:
     """Inventory SQLite-only constructs for migration planning and regression checks."""
     patterns = {
