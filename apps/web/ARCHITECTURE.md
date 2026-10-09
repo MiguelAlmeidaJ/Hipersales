@@ -7,7 +7,8 @@ apps/web/
 ├── app/
 │   ├── layout.tsx              # Layout HTML global
 │   ├── page.tsx                # / -> /app/painel
-│   └── app/
+│   └── (workspace)/            # Route group (fora da URL)
+│       └── app/
 │       ├── layout.tsx          # Shell persistente autenticado
 │       ├── page.tsx            # /app -> /app/painel
 │       ├── painel/page.tsx
@@ -35,7 +36,7 @@ apps/web/
 
 ## Recomendações para novas telas
 
-1. Criar `app/app/<rota>/page.tsx` com `<ModulePage module="..." />`.
+1. Criar `app/(workspace)/app/<rota>/page.tsx` com `<ModulePage module="..." />`.
 2. Registrar rota e permissões em `lib/navigation.ts`.
 3. Reutilizar o layout e a sessão em `components/app-shell.tsx`.
 4. Concentrar operações específicas em seus componentes; não duplicar sidebar, login e acesso a dados.
