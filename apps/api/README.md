@@ -191,3 +191,9 @@ O `ProposalUpdateService` agora grava mudancas de status, insere `proposal_event
 O arquivo `src/proposals/approved-order-email.ts` reproduz o conteudo detalhado do email de aprovacao do Python: cabecalho, industria, cliente, endereco, operador fiscal, condicoes comerciais, itens e valores. `ProposalStatusNotificationsService` agora enfileira `approved_order_backoffice` alem do email ao representante, dentro da transacao de `PATCH /api/admin/proposals/:id`. Um teste de conteudo foi adicionado.
 
 O roteamento PATCH permanece **exclusivamente no Python** ate comparar datas/fuso horario, valores em reais, eventos e entrega de email/WhatsApp em dados reais. A outbox do Nest apenas enfileira; o disparo continua dependente do worker legado. Executar build e testes apos pull.
+
+## Homologacao de PATCH de pedidos por status
+
+`test/proposal-status.integration.spec.ts` testa o fluxo real de atualizacao da proposta com SQLite em memoria: aprovar e gerar avisos ao vendedor e backoffice; evitar reenvio na atualizacao repetida; validar isolamento de tenant e bloqueio de regressao; normalizar alias de recusa; opcionalmente enfileirar WhatsApp; e reverter a transacao se a outbox falhar.
+
+O `LegacyProxyMiddleware` agora aceita `HIPERSALES_NEST_PROPOSAL_STATUS=true` para direcionar `PATCH /api/admin/proposals/:id` ao Nest. **Esta variavel permanece desativada por padrao.** A implementacao continua usando fila de outbox e exige comparacao das mensagens geradas com o Python, teste no banco espelho e comprovacao de entrega pelo worker (o proxy nao executa estes testes). Nao ativar em producao apenas por ter testes unitarios passando. Para validar: `npm run build:api && npm run test:api`.
