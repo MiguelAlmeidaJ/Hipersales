@@ -22,9 +22,12 @@ export class LegacyProxyMiddleware implements NestMiddleware {
 
   use(request: Request, response: Response, next: NextFunction): void {
     const path = request.originalUrl.split("?", 1)[0] ?? request.path;
-    if (!path.startsWith("/api/") || NEST_ROUTES.has(path)) return next();
+    if ((!path.startsWith("/api/") && !path.startsWith("/assets/")) || NEST_ROUTES.has(path)) return next();
 
-    const body = request.body === undefined ? undefined : Buffer.from(JSON.stringify(request.body));
+    // Preserve non-JSON payloads (such as multipart uploads) instead of serializing them as JSON.
+    const contentType = request.get("content-type") ?? "";
+    const serializedBody = request.body !== undefined && (contentType.includes("application/json") || contentType.includes("application/x-www-form-urlencoded"));
+    const body = serializedBody ? Buffer.from(contentType.includes("application/json") ? JSON.stringify(request.body) : new URLSearchParams(request.body as Record<string, string>).toString()) : undefined;
     const headers = { ...request.headers };
     for (const header of [
       "connection",
@@ -70,6 +73,7 @@ export class LegacyProxyMiddleware implements NestMiddleware {
     });
     request.on("aborted", () => upstream.destroy());
     if (body) upstream.end(body);
-    else upstream.end();
+    else if (request.readableEnded) upstream.end();
+    else request.pipe(upstream);
   }
 }
