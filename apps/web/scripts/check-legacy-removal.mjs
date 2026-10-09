@@ -8,10 +8,10 @@ const dependencies=[
  ["apps/web/next.config.ts","/legacy","Legacy route is still proxied"],
  ["apps/web/next.config.ts","/modules/:path*","Legacy JS modules are still served"],
  ["apps/web/next.config.ts","/styles/:path*","Legacy stylesheets are still served"],
- ["apps/api/foundation.py","FRONTEND_DIR","Backend references frontend files"]
+ ["apps/web/next.config.ts","/app.js","Legacy script is still proxied"]
 ];
 const blockers=dependencies.filter(([path,token])=>file(path).includes(token));
-const legacy=["apps/web/app.js","apps/web/index.html","apps/web/styles.css","apps/web/modules/admin/orders.js"];
+const legacy=["apps/web/app.js","apps/web/index.html","apps/web/styles.css","apps/web/modules/admin/orders.js","apps/web/sw.js","apps/web/manifest.webmanifest"];
 const existing=legacy.filter(path=>existsSync(resolve(root,path)));
 console.log("Legacy removal readiness:");
 for(const [path,,reason] of blockers)console.log(`BLOCKED: ${reason} (${path})`);
@@ -21,5 +21,5 @@ if(blockers.length||existing.length){
  process.exitCode=1;
 }else{
  assert.ok(!blockers.length&&!existing.length);
- console.log("READY: No known legacy dependencies remain (manual acceptance still required).");
+ console.log("READY: No known legacy application dependencies remain (manual acceptance still required).");
 }
