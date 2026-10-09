@@ -36,7 +36,7 @@ export class RegistrationSubmissionService {
     const representativeEmail = customerText(
       user.communication_email, input.representative_email, user.email,
     );
-    const form = {
+    const form: RegistrationInput = {
       ...input,
       representative_name: user.name || input.representative_name,
       representative_email: representativeEmail,
