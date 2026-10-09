@@ -173,3 +173,9 @@ Prioridade imediata para concluir, em vez de abrir novas migracoes em paralelo: 
 `ProposalNotificationService` agora reproduz exatamente o assunto e o texto do e-mail `format_new_proposal_email`/`format_proposal_subject` de `documents.py` e insere o registro `new_proposal_admin` na `email_outbox` na mesma transacao que grava pedido, itens e evento. A identificacao de bonificacao tambem trata cedilha/acentos. Os testes `proposal-notification.spec.ts` e `proposal-creation.spec.ts` cobrem formato de mensagem e registros da outbox.
 
 **Aviso de implantacao:** a outbox agora e enfileirada mas nao houve homologacao do processamento/entrega de mensagens pelo worker Python. Manter `HIPERSALES_NEST_PROPOSAL_WRITES` desativada em producao ate validacao local dos testes, compatibilidade com o banco real e da entrega; outras rotas de pedidos seguem no Python.
+
+## Edicao de propostas - primeira etapa Nest
+
+A rota `PATCH /api/admin/proposals/:id` foi criada no Nest, com service de atualizacao transacional. Inclui validacao de tenant, campos comerciais, bonificacao, forma de pagamento, itens ativos da industria, alteracao integral de itens na mesma transacao e validacao da progressao dos status. O service rejeita explicitamente qualquer mudanca de status, porque o legado envia notificacoes especificas em cada transicao e **ainda nao ha paridade**.
+
+O proxy **continua encaminhando todo PATCH de proposta ao Python**, sem flag de ativacao. Nao mudar isto antes de portar integralmente as notificacoes de aprovacao, recusa, producao, faturamento, entrega e WhatsApp. `test/proposal-update.spec.ts` verifica aliases e proibicao de regressao; faltam testes de integracao da edicao com banco real e entrega de mensagens.
