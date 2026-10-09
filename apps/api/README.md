@@ -159,3 +159,11 @@ A rota `PATCH /api/admin/requests/:id` continua no Python ate passar por compila
 Implementado `ProposalsModule` com `GET /api/proposals` no NestJS. A listagem reproduz colunas principais de pedidos, dados do representante/cliente/empresa, itens e eventos do historico filtrados por status. Mantem isolamento por `tenant_id`; representantes so veem seus pedidos. Testes automatizados foram adicionados em `test/proposals.spec.ts`.
 
 O proxy preserva o Python por padrao. Para testes controlados, `HIPERSALES_NEST_PROPOSAL_READS=true` redireciona somente a consulta de propostas ao Nest; PDFs, inclusao e atualizacao de pedidos permanecem no Python. Nao ativar antes de comparar as respostas reais e de executar `npm run build:api` e `npm run test:api`.
+
+## Propostas: criacao transacional no Nest (teste controlado)
+
+Foi implementado `ProposalCreationService` com a rota `POST /api/proposals`: validacao de vendedor, empresa e cliente do tenant, vinculos comerciais, produtos ativos, quantidade/preco, percentuais e desconto; criacao de pedido, itens e primeiro evento em uma transacao. A sequencia de pedidos segue o criterio legado (maior numero + 1 com piso de 10840), com serializacao pelo `BEGIN IMMEDIATE` do `DatabaseService`.
+
+A rota permanece no Python por padrao. A variavel `HIPERSALES_NEST_PROPOSAL_WRITES=true` e **exclusiva de homologacao**: falta integrar o template HTML real `format_new_proposal_email` e `queue_outbox`, conferir todas as classificacoes de bonificacao e comparar campos do banco original antes do uso real. O Nest nesta fase ainda NAO enfileira o aviso de nova proposta, portanto ativar a variavel em producao geraria perda de notificacao. `test/proposal-creation.spec.ts` verifica criacao, numeracao, limites entre empresas, permissoes e rollback.
+
+Prioridade imediata para concluir, em vez de abrir novas migracoes em paralelo: concluir paridade de e-mail e homologar essa rota; concluir as rotas de cadastro ja implementadas; entao migrar atualizacoes de proposta.
