@@ -13,10 +13,8 @@ import ReportsView from "../components/reports-view";
 import SettingsEditor from "../components/settings-editor";
 import PasswordChange from "../components/password-change";
 import DashboardView from "../components/dashboard-view";
-import SuperAdminView from "../components/superadmin-view";
-import TenantConsole, {type Section as TenantSection} from "../components/tenant-console";
 
-type Route = "approvals" | "requestCustomer" | "dashboard" | "orders" | "customers" | "companies" | "products" | "occurrences" | "reports" | "goals" | "users" | "admin" | "superAdmin";
+type Route = "approvals" | "requestCustomer" | "dashboard" | "orders" | "customers" | "companies" | "products" | "occurrences" | "reports" | "goals" | "users" | "admin";
 type RecordData = Record<string, unknown>;
 const adminRoutes: { id:Route; title:string; endpoint?:`/api/${string}`; key?:string }[] = [
  {id:"dashboard",title:"Dashboard",endpoint:"/api/admin/overview"},
@@ -61,49 +59,31 @@ export default function Home(){
  const [username,setUsername]=useState("");const [password,setPassword]=useState("");
  const [busy,setBusy]=useState(false);const [error,setError]=useState("");
  const [menuOpen,setMenuOpen]=useState(false);
- const [tenantContext,setTenantContext]=useState<{id:number;name:string}|null>(null);
- const [tenantSection,setTenantSection]=useState<TenantSection>("dashboard");
- const exitTenant=()=>{setTenantContext(null);setTenantSection("dashboard");setRoute("superAdmin");setMenuOpen(false)};
- useEffect(()=>{let active=true;api<{user:SessionUser}>("/api/me").then(r=>{if(!active)return;setUser(r.user);setRoute(r.user.is_super_admin?"superAdmin":"dashboard");setView("home")}).catch(()=>{if(active)setView("login")});return()=>{active=false}},[]);
+ useEffect(()=>{let active=true;api<{user:SessionUser}>("/api/me").then(r=>{if(!active)return;setUser(r.user);setRoute("dashboard");setView("home")}).catch(()=>{if(active)setView("login")});return()=>{active=false}},[]);
  async function login(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");
  try{await api("/api/login",{method:"POST",body:JSON.stringify({username,password})});const r=await api<{user:SessionUser}>("/api/me");setUser(r.user);setRoute(r.user.is_super_admin?"superAdmin":"dashboard");setView("home");setPassword("")}
  catch(e){setError(e instanceof Error?e.message:"Falha no login")}finally{setBusy(false)}}
- async function logout(){setBusy(true);try{await api("/api/logout",{method:"POST"});setView("login");setUser(null);setTenantContext(null)}catch(e){setError(e instanceof Error?e.message:"Falha ao sair")}finally{setBusy(false)}}
+ async function logout(){setBusy(true);try{await api("/api/logout",{method:"POST"});setView("login");setUser(null)}catch(e){setError(e instanceof Error?e.message:"Falha ao sair")}finally{setBusy(false)}}
  if(view==="home"&&user?.must_change_password)return <PasswordChange required onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user)}}/>;
  if(view==="loading")return <main className="wrap">Carregando Hipersales…</main>;
  if(view==="login")return <main className="wrap"><form className="panel" onSubmit={login}><h1>Hipersales</h1><p>Portal comercial</p><label className="field">Usuário<input required autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)}/></label><label className="field">Senha<input required type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></label>{error&&<p role="alert" className="error">{error}</p>}<button className="primary" disabled={busy}>{busy?"Entrando…":"Entrar"}</button></form></main>;
- const tenantItems:{id:TenantSection;title:string;group:"Ações"|"Gestão";icon:string}[]=[
-  {id:"dashboard",title:"Dashboard",group:"Ações",icon:"▥"},
-  {id:"orders",title:"Pedidos",group:"Ações",icon:"▤"},
-  {id:"occurrences",title:"Ocorrências",group:"Ações",icon:"◫"},
-  {id:"customers",title:"Clientes",group:"Ações",icon:"♙"},
-  {id:"companies",title:"Empresas",group:"Ações",icon:"▦"},
-  {id:"products",title:"Produtos",group:"Ações",icon:"◇"},
-  {id:"reports",title:"Relatórios",group:"Gestão",icon:"▥"},
-  {id:"goals",title:"Metas",group:"Gestão",icon:"◎"},
-  {id:"users",title:"Usuários",group:"Gestão",icon:"♧"},
-  {id:"settings",title:"Configurações",group:"Gestão",icon:"⚙"}
- ];
- const nav=user?.is_super_admin?[{id:"superAdmin" as Route,title:"Superadmin",endpoint:"/api/super-admin/overview" as const}]:user?.role==="admin"?adminRoutes:sellerRoutes;
+ const nav=user?.role==="admin"?adminRoutes:sellerRoutes;
  const navItems=user?.role==="seller"?[...nav,{id:"requestCustomer" as Route,title:"Solicitar cadastro"}]:nav;
  const selected=navItems.find(v=>v.id===route)||nav[0];
- const tenantMode=Boolean(user?.is_super_admin&&tenantContext);
- const title=tenantMode?tenantItems.find(x=>x.id===tenantSection)?.title||"Dashboard":selected.title;
+ const title=selected.title;
  return <div className="workspace">
  <button type="button" className="fixed bottom-5 right-5 z-50 rounded-xl bg-violet-800 px-5 py-3 font-semibold text-white shadow-lg md:hidden" onClick={()=>setMenuOpen(v=>!v)} aria-expanded={menuOpen} aria-controls="app-navigation">{menuOpen?"Fechar":"☰ Menu"}</button>
  {menuOpen&&<button type="button" aria-label="Fechar navegação" className="fixed inset-0 z-30 bg-slate-950/50 md:hidden" onClick={()=>setMenuOpen(false)}/>}
  <aside id="app-navigation" className={`nav-side ${menuOpen?"":"max-md:hidden"}`}>
  <div className="nav-brand"><h2>◆ Hipersales</h2><p>Console de gestão</p></div>
- {tenantMode&&<div className="mt-5"><button type="button" className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-3 text-left text-sm font-semibold text-white hover:bg-white/20" onClick={exitTenant}>← Voltar ao Superadmin</button><p className="mt-3 truncate px-2 text-xs text-violet-200" title={tenantContext?.name}>{tenantContext?.name}</p></div>}
- <nav aria-label="Navegação principal">{tenantMode?tenantItems.map((item,i)=><div key={item.id}>{(i===0||tenantItems[i-1].group!==item.group)&&<p className="nav-group-label">{item.group}</p>}<button type="button" className={item.id===tenantSection?"selected":""} aria-current={item.id===tenantSection?"page":undefined} onClick={()=>{setTenantSection(item.id);setMenuOpen(false)}}><span aria-hidden className="mr-2 inline-block w-5 text-center">{item.icon}</span>{item.title}</button></div>):navItems.map((item,i)=><div key={item.id}>{(i===0||i===7)&&<p className="nav-group-label">{i===0?"Ações":"Gestão"}</p>}<button type="button" className={item.id===selected.id?"selected":""} onClick={()=>{setRoute(item.id);setMenuOpen(false)}}>{item.title}</button></div>)}</nav>
+ <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-3"><p className="text-[10px] font-bold uppercase tracking-widest text-violet-200">Empresa</p><p className="mt-2 text-sm font-bold text-white">HiperMix Representações</p></div>
+ <nav aria-label="Navegação principal">{navItems.map((item,i)=><div key={item.id}>{(i===0||i===7)&&<p className="nav-group-label">{i===0?"Ações":"Gestão"}</p>}<button type="button" className={item.id===selected.id?"selected":""} onClick={()=>{setRoute(item.id);setMenuOpen(false)}}>{item.title}</button></div>)}</nav>
  <div className="mt-auto border-t border-white/10 pt-4"><p className="truncate px-3 text-xs text-violet-200">{user?.name}</p></div>
  </aside>
  <div className="workspace-main">
- <header className="top"><div className="min-w-0"><span className="text-[10px] font-bold uppercase tracking-widest text-violet-700">{tenantMode?"Superadmin / "+tenantContext?.name:"Hipersales"}</span><strong className="block truncate text-base">{title}</strong></div><div className="flex items-center gap-3"><span className="hidden text-sm text-slate-500 sm:inline">{user?.name}</span><button className="secondary" disabled={busy} onClick={logout}>Sair</button></div></header>
+ <header className="top"><div className="min-w-0"><span className="text-[10px] font-bold uppercase tracking-widest text-violet-700">{"HiperMix / Hipersales"}</span><strong className="block truncate text-base">{title}</strong></div><div className="flex items-center gap-3"><span className="hidden text-sm text-slate-500 sm:inline">{user?.name}</span><button className="secondary" disabled={busy} onClick={logout}>Sair</button></div></header>
  <main className="content"><div className="mb-5 flex justify-end"><PasswordChange onSuccess={async()=>{const result=await api<{user:SessionUser}>("/api/me");setUser(result.user)}}/></div>
- {tenantMode&&tenantContext?<TenantConsole tenantId={tenantContext.id} tenantName={tenantContext.name} section={tenantSection} onBack={exitTenant}/>:
- selected.id==="superAdmin"&&user?.is_super_admin?<SuperAdminView onOpenTenant={tenant=>{setTenantContext(tenant);setTenantSection("dashboard");setMenuOpen(false)}}/>:
- selected.id==="dashboard"&&user?<DashboardView user={user}/>:
+ {selected.id==="dashboard"&&user?<DashboardView user={user}/>:
  selected.id==="admin"&&user?.role==="admin"?<SettingsEditor/>:
  selected.id==="goals"&&user?<GoalsView user={user}/>:
  selected.id==="reports"&&user?.role==="admin"?<ReportsView/>:
