@@ -43,7 +43,7 @@ def translate_qmark(sql: str) -> str:
             else:
                 out.append(ch)
         elif state == "single":
-            out.append(ch)
+            out.append("%%" if ch == "%" else ch)
             if ch == "'" and nxt == "'":
                 out.append(nxt)
                 i += 2
@@ -51,7 +51,7 @@ def translate_qmark(sql: str) -> str:
             if ch == "'":
                 state = "normal"
         elif state == "double":
-            out.append(ch)
+            out.append("%%" if ch == "%" else ch)
             if ch == '"' and nxt == '"':
                 out.append(nxt)
                 i += 2
@@ -59,11 +59,11 @@ def translate_qmark(sql: str) -> str:
             if ch == '"':
                 state = "normal"
         elif state == "line":
-            out.append(ch)
+            out.append("%%" if ch == "%" else ch)
             if ch == "\n":
                 state = "normal"
         else:
-            out.append(ch)
+            out.append("%%" if ch == "%" else ch)
             if ch == "*" and nxt == "/":
                 out.append("/")
                 i += 2
