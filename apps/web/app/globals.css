@@ -26,7 +26,7 @@
   .status { @apply text-sm; }
   .top { @apply flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4; }
   .content { @apply mx-auto max-w-6xl px-5 py-8; }
-  .grid { @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3; }
+  .data-grid { @apply grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3; }
   .tile { @apply min-w-0 rounded-xl border border-slate-200 bg-white p-5; }
   .tile h2 { @apply mb-4; }
   .workspace { @apply min-h-screen md:flex; }
@@ -53,4 +53,13 @@
   .editor-form .checkbox-row input { @apply w-auto; }
   .editor-form .wide { @apply basis-full; }
   .tile .tile { @apply mt-5; }
+}
+
+@layer components {
+  .nav-side { @apply max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(85vw,320px)] max-md:overflow-y-auto max-md:shadow-2xl; }
+  .nav-side nav { @apply max-md:flex-col; }
+  .workspace-main { @apply w-full min-w-0; }
+  .content { @apply max-sm:px-3 max-sm:py-4; }
+  .top { @apply max-sm:px-4 max-sm:pr-24; }
+  input, select, textarea { @apply max-w-full; }
 }
