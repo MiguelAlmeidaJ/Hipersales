@@ -4,7 +4,11 @@ O frontend principal utiliza Next.js, TypeScript e Tailwind CSS. Os arquivos ant
 
 A API de negócio permanece em Python com SQLite neste estágio. O banco PostgreSQL/Prisma ainda exige uma migração de backend separada. A Evolution API funciona via Docker.
 
-## Executar localmente (recomendado)
+## Executar com PM2 (sem Docker para API/Web)
+
+A configuração oficial para API e Web separados está na raiz em `ecosystem.config.cjs`. Consulte [o guia PM2](../../../docs/pm2-deploy.md) para instalação, build, inicialização e reinício dos dois processos.
+
+## Alternativa com Docker
 
 No diretório raiz do repositório, configure o `.env` com as variáveis exigidas no `docker-compose.yml` e execute:
 
