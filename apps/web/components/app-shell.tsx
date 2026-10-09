@@ -34,7 +34,6 @@ export default function AppShell({children}:{children:ReactNode}){
   <Link href="/app/painel" className="app-brand" onClick={()=>setMenuOpen(false)}>
    <span className="app-brand-mark" aria-hidden>H</span><span className="min-w-0"><strong className="block text-lg font-extrabold tracking-tight">Hipersales</strong><span className="block text-xs text-violet-200/80">Gestão comercial</span></span>
   </Link>
-  <div className="app-company"><span className="text-[10px] font-bold uppercase tracking-[.15em] text-violet-200/70">Empresa</span><strong className="mt-1 block truncate text-sm text-white">HiperMix Representações</strong></div>
   <nav className="app-menu" aria-label="Navegação principal">{nav.map((item,i)=><div key={item.id}>{(i===0||nav[i-1].group!==item.group)&&<p className="app-menu-heading">{item.group}</p>}<Link href={modulePath(item)} onClick={()=>setMenuOpen(false)} aria-current={selected?.id===item.id?"page":undefined} className={`app-menu-link ${selected?.id===item.id?"is-active":""}`}><span className="app-menu-icon" aria-hidden>{item.icon}</span><span className="truncate">{item.title}</span></Link></div>)}</nav>
   <div className="app-sidebar-footer"><span className="app-user-avatar" aria-hidden>{(user?.name||"H").slice(0,1).toUpperCase()}</span><div className="min-w-0"><strong className="block truncate text-xs text-white">{user?.name}</strong><span className="text-[11px] text-violet-200/70">{user?.is_dev?"Desenvolvedor":user?.role==="admin"?"Administrador":"Representante"}</span></div></div>
  </aside>
