@@ -34,7 +34,7 @@ assert.ok(assignments.includes("seller_id:sellerId"), "Assignments need seller_i
 assert.ok(reports.includes("date_from") && reports.includes("seller_id"), "Report filters missing");
 const segments=["painel","pedidos","ocorrencias","clientes","empresas","produtos","relatorios","metas","usuarios","configuracoes","aprovacoes","solicitar-cliente"];
 for(const segment of segments){
-  assert.ok(existsSync(resolve(root,`apps/web/app/app/${segment}/page.tsx`)), `Missing Next page: ${segment}`);
+  assert.ok(existsSync(resolve(root,`apps/web/app/(workspace)/app/${segment}/page.tsx`)), `Missing Next page: ${segment}`);
   assert.ok(navigation.includes(`slug:"${segment}"`), `Missing navigation registry: ${segment}`);
 }
 assert.ok(shell.includes("SessionContext.Provider") && shell.includes("visibleModules"), "Shared authentication shell missing");
