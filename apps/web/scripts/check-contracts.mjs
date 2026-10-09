@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
 
@@ -10,13 +10,14 @@ const orders = read("apps/web/components/order-admin.tsx");
 const listing = read("apps/web/components/orders-view.tsx");
 const assignments = read("apps/web/components/seller-assignments.tsx");
 const reports = read("apps/web/components/reports-view.tsx");
-const superadmin = read("apps/web/components/superadmin-view.tsx");
+const navigation = read("apps/web/lib/navigation.ts");
+const shell = read("apps/web/components/app-shell.tsx");
 
 const requiredRoutes = [
   "/api/me/password", "/api/proposals", "/api/admin/proposals/",
   "/api/admin/customer-assignments", "/api/admin/company-assignments",
   "/api/admin/reports/pdf", "/api/admin/goals", "/api/admin/settings",
-  "/api/super-admin/overview", "/api/super-admin/tenants"
+  "/api/admin/executive-dashboard"
 ];
 for (const route of requiredRoutes) {
   assert.ok(handler.includes(route), `Missing backend route: ${route}`);
@@ -31,5 +32,10 @@ assert.ok(listing.includes("company_id:number"), "Order editing needs company_id
 assert.ok(orders.includes("items:rows.map"), "Order editor must send item rows");
 assert.ok(assignments.includes("seller_id:sellerId"), "Assignments need seller_id");
 assert.ok(reports.includes("date_from") && reports.includes("seller_id"), "Report filters missing");
-assert.ok(superadmin.includes("admin_password") && superadmin.includes("summary"), "Superadmin contract missing");
-console.log(`Frontend contract checks passed: ${requiredRoutes.length} routes, ${allowedStatuses.length} statuses, 6 integration assertions.`);
+const segments=["painel","pedidos","ocorrencias","clientes","empresas","produtos","relatorios","metas","usuarios","configuracoes","aprovacoes","solicitar-cliente"];
+for(const segment of segments){
+  assert.ok(existsSync(resolve(root,`apps/web/app/app/${segment}/page.tsx`)), `Missing Next page: ${segment}`);
+  assert.ok(navigation.includes(`slug:"${segment}"`), `Missing navigation registry: ${segment}`);
+}
+assert.ok(shell.includes("SessionContext.Provider") && shell.includes("visibleModules"), "Shared authentication shell missing");
+console.log(`Frontend contract checks passed: ${requiredRoutes.length} routes, ${allowedStatuses.length} statuses, 5 integration assertions plus ${segments.length} App Router modules.`);
