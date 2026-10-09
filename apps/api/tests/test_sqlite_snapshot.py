@@ -1,4 +1,5 @@
 import importlib.util
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -15,14 +16,14 @@ class SnapshotTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "source.sqlite3"
             output = Path(tmp) / "snapshot.sqlite3"
-            with sqlite3.connect(source) as db:
+            with closing(sqlite3.connect(source)) as db:
                 db.execute("CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT)")
                 db.execute("INSERT INTO customers VALUES (1, 'Test')")
             report = module.snapshot(source, output)
             self.assertEqual(report["table_counts"]["customers"], 1)
             self.assertEqual(report["foreign_key_violations"], 0)
             self.assertTrue(Path(str(output) + ".manifest.json").exists())
-            with sqlite3.connect(output) as db:
+            with closing(sqlite3.connect(output)) as db:
                 self.assertEqual(db.execute("SELECT name FROM customers WHERE id=1").fetchone()[0], "Test")
             with self.assertRaises(FileExistsError):
                 module.snapshot(source, output)
@@ -31,7 +32,7 @@ class SnapshotTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "bad.sqlite3"
             output = Path(tmp) / "snapshot.sqlite3"
-            with sqlite3.connect(source) as db:
+            with closing(sqlite3.connect(source)) as db:
                 db.execute("PRAGMA foreign_keys=OFF")
                 db.execute("CREATE TABLE parent(id INTEGER PRIMARY KEY)")
                 db.execute("CREATE TABLE child(parent_id INTEGER REFERENCES parent(id))")
