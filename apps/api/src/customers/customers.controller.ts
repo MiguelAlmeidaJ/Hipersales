@@ -5,11 +5,12 @@ import { CustomersService } from "./customers.service.js";
 import { CnpjLookupService } from "./cnpj-lookup.service.js";
 import { CustomerRegistrationService } from "./customer-registration.service.js";
 import { RegistrationRequestsService } from "./registration-requests.service.js";
+import { RegistrationSubmissionService, type RegistrationInput } from "./registration-submission.service.js";
 import { CustomersWriteService, type CustomerInput } from "./customers-write.service.js";
 
 @Controller("api")
 export class CustomersController {
-  constructor(private readonly customers: CustomersService, private readonly writes: CustomersWriteService, private readonly cnpjLookup: CnpjLookupService, private readonly registration: CustomerRegistrationService, private readonly requests: RegistrationRequestsService) {}
+  constructor(private readonly customers: CustomersService, private readonly writes: CustomersWriteService, private readonly cnpjLookup: CnpjLookupService, private readonly registration: CustomerRegistrationService, private readonly requests: RegistrationRequestsService, private readonly submissions: RegistrationSubmissionService) {}
 
   @Get("integrations/cnpj")
   lookupCnpj(
@@ -24,6 +25,11 @@ export class CustomersController {
   @Get("customers")
   list(@Req() request: AuthenticatedRequest, @Query("q") term = "") {
     return this.customers.list(request.user, term);
+  }
+
+  @Post("customer-requests")
+  submitRequest(@Req() request: AuthenticatedRequest, @Body() input: RegistrationInput) {
+    return this.submissions.submit(request.user, input);
   }
 
   @Roles("admin")
