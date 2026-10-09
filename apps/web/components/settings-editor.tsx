@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
+import WorkflowSettings from "./workflow-settings";
 type Settings={smtp?:Record<string,unknown>;whatsapp?:Record<string,unknown>};
 type Response={settings:Settings};
 const css="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5";
@@ -26,5 +27,5 @@ export default function SettingsEditor(){
  <div className="grid gap-4 sm:grid-cols-2">{whatsappFields.map(([key,label])=>key==="enabled"?<label key={key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(settings.whatsapp?.enabled)} onChange={e=>update("whatsapp",key,e.target.checked)}/>{label}</label>:<label className="grid gap-1.5 text-sm" key={key}>{label}<input className={css} value={String(settings.whatsapp?.[key]??"")} onChange={e=>update("whatsapp",key,e.target.value)}/></label>)}</div>
  <div className="flex flex-wrap gap-3"><button disabled={busy} className="rounded-lg bg-brand px-4 py-2 text-white">Salvar WhatsApp</button><button disabled={busy} type="button" className="rounded-lg border px-4 py-2" onClick={()=>{if(window.confirm("Iniciar uma nova conexão WhatsApp?"))void action("/api/admin/settings/whatsapp/connect",settings.whatsapp||{})}}>Conectar / gerar QR</button><button disabled={busy} type="button" className="rounded-lg border px-4 py-2 text-red-700" onClick={()=>{if(window.confirm("Desconectar instância WhatsApp?"))void action("/api/admin/settings/whatsapp/disconnect",{})}}>Desconectar</button><button type="button" className="rounded-lg border px-4 py-2" onClick={()=>void reload()}>Atualizar status</button></div>
  {typeof settings.whatsapp?.qr_image_url==="string"&&settings.whatsapp.qr_image_url.startsWith("data:image/")&&<img alt="QR Code para conectar WhatsApp" src={settings.whatsapp.qr_image_url} width={240} height={240}/>}</form>
- <p className="text-sm text-slate-500">Funis, modelos de mensagem e estágios configuráveis ainda precisam ser migrados antes da remoção do frontend antigo.</p></section>;
+ <WorkflowSettings/></section>;
 }
