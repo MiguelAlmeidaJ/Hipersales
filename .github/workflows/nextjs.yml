@@ -1,10 +1,12 @@
-name: TypeScript CI
+name: HiperSales monorepo CI
+
 on:
   push:
     branches: [main]
   pull_request:
+
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -25,11 +27,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: npm
-      - run: npm ci
-      - run: npm ci --prefix apps/web
-      - run: npm run build:api
-      - run: npm run test:api
-      - run: npm run typecheck
-      - run: npm run build --prefix apps/web
+          node-version: "24"
+      - run: corepack enable
+      # Use an unfrozen install until pnpm-lock.yaml is generated and committed.
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm run build:api
+      - run: pnpm run test:api
+      - run: pnpm run typecheck
+      - run: pnpm run build:web
