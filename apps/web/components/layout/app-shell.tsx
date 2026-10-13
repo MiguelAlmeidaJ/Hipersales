@@ -24,6 +24,19 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    setSidebarCollapsed(window.localStorage.getItem("hipersales:sidebar-collapsed") === "true");
+  }, []);
+
+  function toggleSidebarCollapsed() {
+    setSidebarCollapsed(previous => {
+      const next = !previous;
+      window.localStorage.setItem("hipersales:sidebar-collapsed", String(next));
+      return next;
+    });
+  }
 
   useEffect(() => {
     let active = true;
@@ -147,7 +160,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const selectedModule = navigation.find((item) => item.id === requestedModule?.id);
 
   return (
-    <div className="workspace app-frame">
+    <div className={`workspace app-frame ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <button
         type="button"
         className="app-mobile-toggle md:hidden"
@@ -161,6 +174,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       <AppSidebar
         user={user!}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={toggleSidebarCollapsed}
         items={navigation}
         activeId={selectedModule?.id}
         open={menuOpen}
