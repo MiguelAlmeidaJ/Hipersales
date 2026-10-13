@@ -1,6 +1,6 @@
 # Migracao SQLite → PostgreSQL com Prisma
 
-**Estado:** preparacao, sem cutover. O backend atual e Python, baseado em `sqlite3` e SQL SQLite direto. Prisma Client e Node.js/TypeScript; instalar Prisma e mudar uma URL nao migra essas consultas. O backend existente continua usando SQLite ate que os repositorios de dados sejam adaptados e testados.
+**Estado:** preparacao, sem cutover. O backend atual e NestJS/TypeScript, baseado em `node:sqlite` e SQL SQLite direto. Prisma Client e Node.js/TypeScript; instalar Prisma e mudar uma URL nao migra essas consultas. O backend NestJS permanece em SQLite ate que os servicos sejam adaptados para Prisma/PostgreSQL e testados.
 
 ## Limites inegociaveis
 
@@ -15,7 +15,7 @@
 1. Congelar copia consistente do SQLite de producao e verificar `PRAGMA integrity_check`.
 2. Levantar esquema real e todas as consultas SQLite, inclusive `PRAGMA`, `INSERT OR IGNORE`, `?`, `lastrowid` e adaptacoes de `ON CONFLICT`.
 3. Completar `schema.prisma` para **todas** as tabelas; reconciliar constraints do banco existente.
-4. Implementar repositorios Prisma em um servico Node com contratos internos versionados, ou migrar o backend para Node/TypeScript. **Nao** fingir que Prisma Client roda diretamente no Python.
+4. Implementar repositorios Prisma em um servico Node com contratos internos versionados, no NestJS existente. **Nao** fingir que Prisma Client roda diretamente no Python.
 5. Testar cada fluxo em homologacao; migrar dados na ordem das FKs, preservar IDs, alinhar sequences e comparar contagens/checksums.
 6. Fazer cutover atomico, apontando API para repositorios PostgreSQL e mantendo SQLite somente como backup.
 
@@ -38,7 +38,7 @@ python3 packages/database/scripts/sqlite_to_postgres.py --backup-dir ./migration
 python3 packages/database/scripts/sqlite_to_postgres.py --backup-dir ./migration-import-001 --execute
 ```
 
-**Avisos:** use essa importação somente em ambiente isolado/homologação. `DATABASE_URL` nos argumentos do `psql` pode ficar visível na lista de processos; execute em servidor seguro. Não suba a API em PostgreSQL após importar: o backend Python ainda é SQLite. Falta implementação do adaptador PostgreSQL, reconciliação de constraints/índices e validação dos fluxos da aplicação. A ferramenta recusa um schema público com tabelas existentes e não altera o SQLite original.
+**Avisos:** use essa importação somente em ambiente isolado/homologação. `DATABASE_URL` nos argumentos do `psql` pode ficar visível na lista de processos; execute em servidor seguro. Não suba a API em PostgreSQL após importar: a API NestJS ainda usa SQLite. Falta implementação do adaptador PostgreSQL, reconciliação de constraints/índices e validação dos fluxos da aplicação. A ferramenta recusa um schema público com tabelas existentes e não altera o SQLite original.
 
 ## Verificação adicional, somente leitura
 
@@ -65,7 +65,7 @@ A auditoria consulta a integridade SQLite, tabelas, colunas, quantidades e sequ�
 
 ## Adaptador transacional PostgreSQL (somente opt-in)
 
-A API recebeu `PostgreSQLConnection` em `apps/api/postgres_adapter.py`, com `execute`, `executemany`, `commit`, `rollback` e gestão de transação via `with`. **Ainda não substitui `foundation.connect()`**; comandos DDL, funções SQL e fluxos com `RETURNING id` dependem de implementação posterior. Ele rejeita operações com padrões incompatíveis conhecidos, mas não é um tradutor SQL completo.
+A API recebeu `PostgreSQLConnection` em `(legado removido) apps/api/postgres_adapter.py`, com `execute`, `executemany`, `commit`, `rollback` e gestão de transação via `with`. **Ainda não substitui `foundation.connect()`**; comandos DDL, funções SQL e fluxos com `RETURNING id` dependem de implementação posterior. Ele rejeita operações com padrões incompatíveis conhecidos, mas não é um tradutor SQL completo.
 
 Teste apenas a conectividade, sem alterar tabelas:
 
@@ -89,4 +89,10 @@ python packages/database/scripts/prepare_sqlite_snapshot.py --output backups/hip
 
 O utilitário lê `HYPERSALES_DB_PATH` do `.env` (padrão: `database/hypersales.sqlite3`), usa a API nativa de backup do SQLite e grava arquivo `.manifest.json` com SHA-256, contagem por tabela e verificações de integridade/FKs. O arquivo de saída **não pode existir previamente**, para impedir sobrescrita acidental. Se detectar falha de integridade/FK, recusa o snapshot.
 
-Não execute importação definitiva ainda. O procedimento antigo de importação com `pgloader` depende de ferramentas externas e não faz o cutover Python. A conclusão requer adaptar os comandos específicos do SQLite na API e homologar PostgreSQL antes de alternar o PM2.
+Não execute importação definitiva ainda. O procedimento antigo de importação com `pgloader` depende de ferramentas externas e não faz o cutover da API NestJS. A conclusão requer adaptar os comandos específicos do SQLite na API e homologar PostgreSQL antes de alternar o PM2.
+
+## Situacao revisada em outubro/2026
+
+A migracao de codigo Python -> NestJS terminou, e o CI para o commit `0810d20` passou no build, nos testes e no typecheck. **Isso nao e uma migracao de banco de dados**: `apps/api/src/database/database.service.ts` ainda instancia `DatabaseSync`, enquanto os servicos usam SQL SQLite direto. O esquema Prisma existente e preparatorio. Scripts Python em `packages/database/scripts/` sao ferramentas auxiliares de migracao, nao o backend do produto. Trechos acima que descrevem etapas antigas devem ser interpretados como registro historico, e nao como comandos prontos para cutover.
+
+Proxima fase: (1) inventariar tabelas, consultas e constraints do SQLite; (2) definir migrations versionadas PostgreSQL/Prisma; (3) criar camada de acesso aos dados no NestJS e substituir consultas em lotes; (4) testar copias de dados e reconciliar IDs/contagens; (5) cortar a escrita SQLite apenas depois de homologacao integral. Manter backup verificado e caminho de rollback.
