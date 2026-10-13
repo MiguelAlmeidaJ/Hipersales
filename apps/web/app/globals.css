@@ -499,3 +499,18 @@
   .app-header-title { font-size: 15px; }
   .app-header .app-breadcrumb { font-size: 10px; }
 }
+
+/* Registry tables and forms: shared treatment across customers, companies and products. */
+@layer components {
+  .app-content .table-wrap { min-width: 0; }
+  .app-content .table-wrap table { min-width: 650px; border-collapse: separate; border-spacing: 0; }
+  .app-content .table-wrap th { background: #f5f9fc; color: #536476; font-size: 12px; font-weight: 700; }
+  .app-content .table-wrap td { color: #263747; }
+  .app-content .table-wrap tbody tr { transition: background-color .15s ease; }
+  .app-content .table-wrap tbody tr:hover { background: #f8fbfe; }
+  .app-content .editor-form > label { min-width: 0; }
+  .app-content .editor-form input:not([type="checkbox"]),
+  .app-content .editor-form select { border-color: #dbe5ed; border-radius: 10px; background: #fff; }
+  .app-content .editor-form input:focus-visible,
+  .app-content .editor-form select:focus-visible { outline: 2px solid #009ad6; outline-offset: 1px; }
+}
