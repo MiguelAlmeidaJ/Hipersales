@@ -12,14 +12,16 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "validate:sqlserver": "prisma validate --config prisma.sqlserver.config.ts",
     "generate:sqlserver": "prisma generate --config prisma.sqlserver.config.ts",
-    "migrate:sqlserver:dev": "prisma migrate dev --config prisma.sqlserver.config.ts"
+    "migrate:sqlserver:dev": "prisma migrate dev --config prisma.sqlserver.config.ts",
+    "smoke:sqlserver": "node scripts/smoke_sqlserver.mjs"
   },
   "dependencies": {
     "@prisma/client": "^7.10.0",
     "@prisma/adapter-pg": "^7.10.0",
     "pg": "^8.16.3",
     "dotenv": "^17.2.3",
-    "@prisma/adapter-mssql": "^7.10.0"
+    "@prisma/adapter-mssql": "^7.10.0",
+    "mssql": "^11.0.1"
   },
   "devDependencies": {
     "prisma": "^7.10.0",
