@@ -33,7 +33,7 @@ services:
       retries: 10
 
   evolution:
-    image: atendai/evolution-api:v2.2.3
+    image: evoapicloud/evolution-api:v2.2.3
     restart: unless-stopped
     environment:
       SERVER_URL: ${EVOLUTION_SERVER_URL:-http://localhost:8081}
