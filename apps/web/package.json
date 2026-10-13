@@ -14,18 +14,18 @@
   },
   "dependencies": {
     "@hipersales/contracts": "file:../../packages/contracts",
-    "next": "^16.1.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-icons": "^5.5.0"
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-icons": "^5.7.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.15.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@types/node": "^22.15.0",
+    "postcss": "^8.5.0",
     "tailwindcss": "^4.1.0",
-    "@tailwindcss/postcss": "^4.1.0",
-    "postcss": "^8.5.0"
+    "typescript": "^5.9.3"
   }
 }
