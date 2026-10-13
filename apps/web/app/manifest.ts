@@ -4,11 +4,15 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Hipersales — Gestão Comercial",
     short_name: "Hipersales",
     description: "Portal comercial e gestão de propostas.",
-    start_url: "/",
+    id: "/app/painel",
+    start_url: "/app/painel",
     scope: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#0d6fd8",
-    icons: [{ src: "/assets/logoapp.png", sizes: "any", type: "image/png", purpose: "any" }],
+    background_color: "#fcfcfc",
+    theme_color: "#0767b4",
+    icons: [
+      { src: "/assets/appicon-pwa.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/assets/logoapp.png", sizes: "any", type: "image/png", purpose: "any" },
+    ],
   };
 }
