@@ -12,14 +12,14 @@ IF EXISTS (SELECT 1 FROM dbo.proposals WHERE order_number IS NOT NULL GROUP BY t
 GO
 
 -- Os indices UNIQUE originais podem existir como UNIQUE INDEX gerado pelo Prisma.
-IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'registration_requests_tenant_id_order_number_key' AND object_id = OBJECT_ID('dbo.registration_requests'))
-    DROP INDEX [registration_requests_tenant_id_order_number_key] ON dbo.registration_requests;
 IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = 'registration_requests_tenant_id_order_number_key' AND parent_object_id = OBJECT_ID('dbo.registration_requests'))
     ALTER TABLE dbo.registration_requests DROP CONSTRAINT [registration_requests_tenant_id_order_number_key];
-IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'proposals_tenant_id_order_number_key' AND object_id = OBJECT_ID('dbo.proposals'))
-    DROP INDEX [proposals_tenant_id_order_number_key] ON dbo.proposals;
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'registration_requests_tenant_id_order_number_key' AND object_id = OBJECT_ID('dbo.registration_requests') AND is_unique_constraint = 0)
+    DROP INDEX [registration_requests_tenant_id_order_number_key] ON dbo.registration_requests;
 IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = 'proposals_tenant_id_order_number_key' AND parent_object_id = OBJECT_ID('dbo.proposals'))
     ALTER TABLE dbo.proposals DROP CONSTRAINT [proposals_tenant_id_order_number_key];
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'proposals_tenant_id_order_number_key' AND object_id = OBJECT_ID('dbo.proposals') AND is_unique_constraint = 0)
+    DROP INDEX [proposals_tenant_id_order_number_key] ON dbo.proposals;
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_registration_requests_tenant_order_notnull' AND object_id = OBJECT_ID('dbo.registration_requests'))
