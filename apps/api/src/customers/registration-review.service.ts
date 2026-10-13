@@ -19,9 +19,9 @@ export class RegistrationReviewService {
   review(user: PublicUser, id: number, data: Data) {
     if (!Number.isSafeInteger(id) || id <= 0 || !data || typeof data !== "object" || Array.isArray(data))
       throw new BadRequestException("Solicitacao invalida.");
-    return this.database.transaction(() => {
+    return this.database.transaction(async () => {
       const db = this.database.db;
-      const original = db.prepare("SELECT * FROM registration_requests WHERE id=? AND tenant_id=?")
+      const original = await db.prepare("SELECT * FROM registration_requests WHERE id=? AND tenant_id=?")
         .get(id, user.tenant_id) as Data | undefined;
       if (!original) throw new NotFoundException("Solicitacao nao encontrada.");
       const status = String(data.status ?? original.status);
@@ -55,7 +55,7 @@ export class RegistrationReviewService {
       delete rest.form_payload;
       const formPayload = JSON.stringify({...payload,...rest,...editable});
 
-      db.prepare(`UPDATE registration_requests SET legal_name=?,trade_name=?,cnpj=?,
+      await db.prepare(`UPDATE registration_requests SET legal_name=?,trade_name=?,cnpj=?,
         state_registration=?,address=?,phone=?,email=?,notes=?,form_payload=?,status=?
         WHERE id=? AND tenant_id=?`).run(
           editable.legal_name as string,editable.trade_name as string,editable.cnpj as string,
@@ -67,7 +67,7 @@ export class RegistrationReviewService {
       if (status === "aprovada") {
         const currentCnpj = cnpjDigits(editable.cnpj);
         if (currentCnpj.length !== 14) throw new BadRequestException("Informe um CNPJ valido.");
-        const customers = db.prepare("SELECT id,cnpj FROM customers WHERE tenant_id=?")
+        const customers = await db.prepare("SELECT id,cnpj FROM customers WHERE tenant_id=?")
           .all(user.tenant_id) as {id:number;cnpj:string}[];
         const matched = customers.filter(c => cnpjDigits(c.cnpj) === currentCnpj);
         if (matched.length > 1) throw new ConflictException("Ja existe esse CNPJ na nossa base.");
@@ -75,14 +75,14 @@ export class RegistrationReviewService {
         let customerId: number;
         if (existing) {
           customerId = existing.id;
-          db.prepare(`UPDATE customers SET legal_name=?,trade_name=?,state_registration=?,address=?,
+          await db.prepare(`UPDATE customers SET legal_name=?,trade_name=?,state_registration=?,address=?,
             phone=?,email=?,form_payload=?,active=1 WHERE id=? AND tenant_id=?`).run(
               editable.legal_name as string,editable.trade_name as string,
               editable.state_registration as string,address,editable.phone_1 as string,
               editable.purchase_email as string,formPayload,customerId,user.tenant_id,
             );
         } else {
-          const result = db.prepare(`INSERT INTO customers
+          const result = await db.prepare(`INSERT INTO customers
             (tenant_id,legal_name,trade_name,cnpj,state_registration,address,phone,email,form_payload,active,created_at)
             VALUES (?,?,?,?,?,?,?,?,?,1,?)`).run(
               user.tenant_id,editable.legal_name as string,editable.trade_name as string,
@@ -92,9 +92,9 @@ export class RegistrationReviewService {
             );
           customerId = Number(result.lastInsertRowid);
         }
-        db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)")
+        await db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)")
           .run(customerId,Number(original.seller_id));
-        if (original.status !== "aprovada") this.notifications.queue(user.tenant_id,id,status);
+        if (original.status !== "aprovada") await this.notifications.queue(user.tenant_id,id,status);
       }
       return {message:"Solicitacao atualizada."};
     });

@@ -31,7 +31,7 @@ function filterActive(input: string): number | null {
 export class CustomersService {
   constructor(private readonly database: DatabaseService) {}
 
-  list(user: PublicUser, term = "") {
+  async list(user: PublicUser, term = "") {
     const like = `%${term.trim()}%`;
     const query = user.role === "admin"
       ? `SELECT c.* FROM customers c WHERE c.tenant_id=? AND c.active=1
@@ -41,14 +41,14 @@ export class CustomersService {
          WHERE c.tenant_id=? AND c.active=1
          AND (c.legal_name LIKE ? OR c.trade_name LIKE ? OR c.cnpj LIKE ?) ORDER BY c.legal_name`;
     const params = user.role === "admin" ? [user.tenant_id,like,like,like] : [user.id,user.tenant_id,like,like,like];
-    const rows = this.database.db.prepare(query).all(...params);
+    const rows = await this.database.db.prepare(query).all(...params);
     return { customers: rows.map(row => enrich(row as CustomerRow)) };
   }
 
-  adminList(user: PublicUser, term = "", active = "all") {
+  async adminList(user: PublicUser, term = "", active = "all") {
     const like = `%${term.trim()}%`;
     const filter = filterActive(active);
-    const rows = this.database.db.prepare(`SELECT c.*,
+    const rows = await this.database.db.prepare(`SELECT c.*,
       (SELECT u.name FROM customer_sellers cs JOIN users u ON u.id=cs.seller_id
        WHERE cs.customer_id=c.id ORDER BY cs.seller_id LIMIT 1) AS seller_name,
       (SELECT COALESCE(NULLIF(u.communication_email,''),u.email) FROM customer_sellers cs

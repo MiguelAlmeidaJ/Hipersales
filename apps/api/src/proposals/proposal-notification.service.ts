@@ -25,14 +25,14 @@ export function proposalEmailBody(row: ProposalMailRow): string {
 export class ProposalNotificationService {
   constructor(private readonly database: DatabaseService) {}
 
-  queueNewProposal(tenantId:number, proposalId:number):void {
+  async queueNewProposal(tenantId:number, proposalId:number):Promise<void> {
     const db=this.database.db;
-    const row=db.prepare(`SELECT u.name AS seller_name, c.legal_name AS customer_name, c.cnpj
+    const row=await db.prepare(`SELECT u.name AS seller_name, c.legal_name AS customer_name, c.cnpj
       FROM proposals p JOIN users u ON u.id=p.seller_id
       JOIN customers c ON c.id=p.customer_id
       WHERE p.id=? AND p.tenant_id=?`).get(proposalId,tenantId) as ProposalMailRow|undefined;
     if(!row) throw new Error("Dados obrigatorios do email de proposta nao encontrados.");
-    db.prepare(`INSERT INTO email_outbox
+    await db.prepare(`INSERT INTO email_outbox
       (tenant_id,kind,recipients,subject,body,created_at)
       VALUES (?,?,?,?,?,?)`).run(
       tenantId,"new_proposal_admin","thallesmachadocomercial@gmail.com",

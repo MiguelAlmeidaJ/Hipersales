@@ -22,11 +22,11 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(200)
   @Post("login")
-  login(
+  async login(
     @Body(new ZodValidationPipe(loginRequestSchema)) input: LoginRequest,
     @Res({ passthrough: true }) response: Response,
-  ): SessionResponse {
-    const result = this.auth.login(input);
+  ): Promise<SessionResponse> {
+    const result = await this.auth.login(input);
     response.cookie(this.auth.sessionCookieName, result.token, this.auth.cookieOptions);
     return { user: result.user };
   }
@@ -34,9 +34,9 @@ export class AuthController {
   @Public()
   @HttpCode(200)
   @Post("logout")
-  logout(@Req() request: Request, @Res({ passthrough: true }) response: Response): LogoutResponse {
+  async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<LogoutResponse> {
     const token = request.cookies?.[this.auth.sessionCookieName] as string | undefined;
-    this.auth.logout(token);
+    await this.auth.logout(token);
     const { maxAge: _maxAge, ...clearOptions } = this.auth.cookieOptions;
     response.clearCookie(this.auth.sessionCookieName, clearOptions);
     return { ok: true };

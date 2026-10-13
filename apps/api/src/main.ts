@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import { config } from "dotenv";
+import { resolve } from "node:path";
 import { NestFactory } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -6,6 +8,8 @@ import helmet from "helmet";
 import { AppModule } from "./app.module.js";
 import { ApiExceptionFilter } from "./common/filters/api-exception.filter.js";
 import { EnvService } from "./config/env.service.js";
+
+config({ path: resolve(import.meta.dirname, "../../../.env") });
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {

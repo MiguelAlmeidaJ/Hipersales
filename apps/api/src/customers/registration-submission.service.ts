@@ -48,15 +48,15 @@ export class RegistrationSubmissionService {
       form.purchase_email, form.billing_email, form.xml_email, external.email,
     );
 
-    return this.database.transaction(() => {
-      const records = this.database.db.prepare(
+    return this.database.transaction(async () => {
+      const records = await this.database.db.prepare(
         "SELECT cnpj FROM customers WHERE tenant_id = ?",
       ).all(user.tenant_id) as { cnpj: string }[];
       const digits = cnpj.replace(/\D/g, "");
       if (records.some(row => row.cnpj.replace(/\D/g, "") === digits)) {
         throw new ConflictException("Ja existe esse CNPJ na nossa base.");
       }
-      const result = this.database.db.prepare(`INSERT INTO registration_requests
+      const result = await this.database.db.prepare(`INSERT INTO registration_requests
         (tenant_id, seller_id, legal_name, trade_name, cnpj, state_registration,
          address, phone, email, notes, form_payload, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
@@ -75,7 +75,7 @@ export class RegistrationSubmissionService {
         `Contato: ${contact}`,
         `Telefone: ${phone}`,
       ].join("\n");
-      this.database.db.prepare(`INSERT INTO email_outbox
+      await this.database.db.prepare(`INSERT INTO email_outbox
         (tenant_id, kind, recipients, subject, body, created_at)
         VALUES (?, ?, ?, ?, ?, ?)`).run(
         user.tenant_id, "customer_request",

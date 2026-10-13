@@ -20,14 +20,14 @@ import {
 export class UsersService {
   constructor(private readonly database: DatabaseService) {}
 
-  list(actor: PublicUser): UsersResponse {
-    const rows = this.database.db
+  async list(actor: PublicUser): Promise<UsersResponse> {
+    const rows = await this.database.db
       .prepare(`${USER_SELECT} WHERE u.tenant_id = ? AND COALESCE(u.is_super_admin, 0) = 0 ORDER BY u.name`)
       .all(actor.tenant_id) as unknown as UserRow[];
     return { users: rows.map(toPublicUser) };
   }
 
-  create(actor: PublicUser, input: CreateUserRequest): UserMutationResponse {
+  async create(actor: PublicUser, input: CreateUserRequest): Promise<UserMutationResponse> {
     const email = normalizeUsername(input.email);
     if (!email) throw new BadRequestException("Informe o usuario.");
     let whatsappPhone: string;
@@ -41,7 +41,7 @@ export class UsersService {
     if (!password) throw new BadRequestException("Informe a senha ou a senha temporaria.");
     const now = new Date().toISOString();
     try {
-      const result = this.database.db
+      const result = await this.database.db
         .prepare(`INSERT INTO users
           (tenant_id, name, email, communication_email, whatsapp_phone, password_hash, role,
            active, must_change_password, password_updated_at, created_at)
@@ -60,28 +60,28 @@ export class UsersService {
           now,
         );
       const id = Number(result.lastInsertRowid);
-      return { id, message: "Usuario cadastrado.", user: this.getTenantUser(actor.tenant_id, id) };
+      return { id, message: "Usuario cadastrado.", user: await this.getTenantUser(actor.tenant_id, id) };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
       throw new ConflictException("Este usuario ja esta em uso.");
     }
   }
 
-  update(
+  async update(
     actor: PublicUser,
     userId: number,
     input: UpdateUserRequest,
     currentSessionToken: string,
-  ): UserMutationResponse {
-    return this.database.transaction(() => {
-      const row = this.getTenantUserRow(actor.tenant_id, userId);
+  ): Promise<UserMutationResponse> {
+    return this.database.transaction(async () => {
+      const row = await this.getTenantUserRow(actor.tenant_id, userId);
       const role = input.role ?? row.role;
       const active = input.active ?? Boolean(row.active);
       if (actor.id === userId && (!active || role !== "admin")) {
         throw new BadRequestException("Voce nao pode desativar ou remover o perfil administrador da propria conta.");
       }
       if (row.role === "admin" && row.active && (!active || role !== "admin")) {
-        const otherAdmin = this.database.db
+        const otherAdmin = await this.database.db
           .prepare(`SELECT 1 FROM users
             WHERE tenant_id = ? AND id <> ? AND role = 'admin' AND active = 1
               AND COALESCE(is_super_admin, 0) = 0 LIMIT 1`)
@@ -127,7 +127,7 @@ export class UsersService {
       values.push(userId, actor.tenant_id);
 
       try {
-        const result = this.database.db
+        const result = await this.database.db
           .prepare(`UPDATE users SET ${assignments.join(", ")}
             WHERE id = ? AND tenant_id = ? AND COALESCE(is_super_admin, 0) = 0`)
           .run(...values);
@@ -139,21 +139,21 @@ export class UsersService {
 
       if (password || role !== row.role || active !== Boolean(row.active) || email !== row.email) {
         if (actor.id === userId) {
-          this.database.db.prepare("DELETE FROM sessions WHERE user_id = ? AND token <> ?").run(userId, currentSessionToken);
+          await this.database.db.prepare("DELETE FROM sessions WHERE user_id = ? AND token <> ?").run(userId, currentSessionToken);
         } else {
-          this.database.db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
+          await this.database.db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
         }
       }
-      return { message: "Usuario atualizado.", user: this.getTenantUser(actor.tenant_id, userId) };
+      return { message: "Usuario atualizado.", user: await this.getTenantUser(actor.tenant_id, userId) };
     });
   }
 
-  private getTenantUser(tenantId: number, userId: number): PublicUser {
-    return toPublicUser(this.getTenantUserRow(tenantId, userId));
+  private async getTenantUser(tenantId: number, userId: number): Promise<PublicUser> {
+    return toPublicUser(await this.getTenantUserRow(tenantId, userId));
   }
 
-  private getTenantUserRow(tenantId: number, userId: number): UserRow {
-    const row = this.database.db
+  private async getTenantUserRow(tenantId: number, userId: number): Promise<UserRow> {
+    const row = await this.database.db
       .prepare(`${USER_SELECT}
         WHERE u.id = ? AND u.tenant_id = ? AND COALESCE(u.is_super_admin, 0) = 0 LIMIT 1`)
       .get(userId, tenantId) as UserRow | undefined;

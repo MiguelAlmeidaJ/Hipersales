@@ -11,7 +11,7 @@ export class SessionGuard implements CanActivate {
     private readonly auth: AuthService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -22,7 +22,7 @@ export class SessionGuard implements CanActivate {
     const token = request.cookies?.[this.auth.sessionCookieName] as string | undefined;
     if (!token) throw new UnauthorizedException("Sessao expirada. Faca login novamente.");
 
-    const user = this.auth.findSessionUser(token);
+    const user = await this.auth.findSessionUser(token);
     if (!user) throw new UnauthorizedException("Sessao expirada. Faca login novamente.");
     request.user = user;
     request.sessionToken = token;

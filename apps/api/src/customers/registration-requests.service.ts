@@ -6,8 +6,8 @@ import { DatabaseService } from "../database/database.service.js";
 export class RegistrationRequestsService {
   constructor(private readonly database: DatabaseService) {}
 
-  list(user: PublicUser) {
-    const rows = this.database.db.prepare(`
+  async list(user: PublicUser) {
+    const rows = await this.database.db.prepare(`
       SELECT rr.*, u.name AS seller_name,
         COALESCE(NULLIF(u.communication_email, ''), u.email) AS seller_email,
         u.whatsapp_phone AS seller_whatsapp_phone

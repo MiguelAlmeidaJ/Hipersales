@@ -43,12 +43,12 @@ export class DocumentsService {
   }
 
   async proposal(user: PublicUser, id: number): Promise<Buffer> {
-    const proposal = this.database.db.prepare(`SELECT p.*,u.name seller_name,c.legal_name customer_name,c.cnpj,
+    const proposal = await this.database.db.prepare(`SELECT p.*,u.name seller_name,c.legal_name customer_name,c.cnpj,
       co.name company_name FROM proposals p JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id
       JOIN companies co ON co.id=p.company_id WHERE p.id=? AND p.tenant_id=?`).get(id, user.tenant_id) as Row | undefined;
     if (!proposal) throw new NotFoundException("Pedido nao encontrado.");
     if (user.role !== "admin" && Number(proposal.seller_id) !== user.id) throw new ForbiddenException("Acesso negado.");
-    const items = this.database.db.prepare(`SELECT pr.code,pr.name,pr.unit,pi.quantity,pi.negotiated_price,
+    const items = await this.database.db.prepare(`SELECT pr.code,pr.name,pr.unit,pi.quantity,pi.negotiated_price,
       pi.quantity*pi.negotiated_price total FROM proposal_items pi JOIN products pr ON pr.id=pi.product_id
       WHERE pi.proposal_id=? ORDER BY pi.id`).all(id) as Row[];
     const total = items.reduce((sum, item) => sum + Number(item.total || 0), 0);
@@ -65,11 +65,11 @@ export class DocumentsService {
   }
 
   async occurrence(user: PublicUser, id: number): Promise<Buffer> {
-    const row = this.database.db.prepare(`SELECT o.*,u.name seller_name,c.legal_name customer_name,c.cnpj
+    const row = await this.database.db.prepare(`SELECT o.*,u.name seller_name,c.legal_name customer_name,c.cnpj
       FROM occurrences o JOIN users u ON u.id=o.seller_id JOIN customers c ON c.id=o.customer_id
       WHERE o.id=? AND o.tenant_id=?`).get(id, user.tenant_id) as Row | undefined;
     if (!row) throw new NotFoundException("Ocorrencia nao encontrada.");
-    const events = this.database.db.prepare(`SELECT status,title,notes,created_at FROM occurrence_events
+    const events = await this.database.db.prepare(`SELECT status,title,notes,created_at FROM occurrence_events
       WHERE occurrence_id=? AND tenant_id=? ORDER BY created_at,id`).all(id, user.tenant_id) as Row[];
     return this.pdf(`Ocorrencia #${id}`, `Gerado em ${safeDate(new Date().toISOString())}`, [
       { title: "Registro", lines: [{ label: "Cliente", value: row.customer_name }, { label: "CNPJ", value: row.cnpj },
@@ -81,10 +81,10 @@ export class DocumentsService {
   }
 
   async customerPerformance(user: PublicUser, customerId: number): Promise<{ buffer: Buffer; name: string }> {
-    const customer = this.database.db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=?")
+    const customer = await this.database.db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=?")
       .get(customerId, user.tenant_id) as Row | undefined;
     if (!customer) throw new NotFoundException("Cliente nao encontrado.");
-    const rows = this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,co.name company_name,
+    const rows = await this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,co.name company_name,
       COALESCE(SUM(pi.quantity*pi.negotiated_price),0) total FROM proposals p JOIN companies co ON co.id=p.company_id
       LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE p.customer_id=? AND p.tenant_id=?
       GROUP BY p.id ORDER BY p.created_at DESC`).all(customerId, user.tenant_id) as Row[];
@@ -107,9 +107,9 @@ export class DocumentsService {
       if (query[key]) { const value = Number(query[key]); if (!Number.isSafeInteger(value) || value < 1) throw new BadRequestException("Filtro invalido."); where.push(`${column}=?`); params.push(value); }
     }
     if (query.status) { where.push("p.status=?"); params.push(query.status); }
-    if (query.date_from) { where.push("substr(p.created_at,1,10)>=?"); params.push(query.date_from); }
-    if (query.date_to) { where.push("substr(p.created_at,1,10)<=?"); params.push(query.date_to); }
-    const rows = this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,u.name seller_name,c.legal_name customer_name,
+    if (query.date_from) { where.push("p.created_at::date>=?::date"); params.push(query.date_from); }
+    if (query.date_to) { where.push("p.created_at::date<=?::date"); params.push(query.date_to); }
+    const rows = await this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,u.name seller_name,c.legal_name customer_name,
       co.name company_name,COALESCE(SUM(pi.quantity*pi.negotiated_price),0) total FROM proposals p
       JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id JOIN companies co ON co.id=p.company_id
       LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE ${where.join(" AND ")}

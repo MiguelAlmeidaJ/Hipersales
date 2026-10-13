@@ -46,14 +46,14 @@ export function approvedOrderBody(p:Row,items:Row[]):string {
     "","Atenciosamente,","Comunicacao HiperSales Web");
   return lines.join("\n");
 }
-export function loadApprovedOrder(db:DatabaseService["db"],tenantId:number,id:number) {
-  const row=db.prepare(`SELECT p.*,u.name AS seller_name,c.legal_name AS customer_name,
+export async function loadApprovedOrder(db:DatabaseService["db"],tenantId:number,id:number) {
+  const row=await db.prepare(`SELECT p.*,u.name AS seller_name,c.legal_name AS customer_name,
     c.cnpj,c.address,co.name AS company_name FROM proposals p
     JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id
     JOIN companies co ON co.id=p.company_id
     WHERE p.id=? AND p.tenant_id=?`).get(id,tenantId) as Row|undefined;
   if(!row) throw new Error("Pedido nao encontrado para notificacao.");
-  const items=db.prepare(`SELECT pi.quantity,pi.negotiated_price,pr.code,pr.name,pr.unit
+  const items=await db.prepare(`SELECT pi.quantity,pi.negotiated_price,pr.code,pr.name,pr.unit
     FROM proposal_items pi JOIN products pr ON pr.id=pi.product_id
     WHERE pi.proposal_id=? ORDER BY pi.id`).all(id) as Row[];
   return approvedOrderBody(row,items);

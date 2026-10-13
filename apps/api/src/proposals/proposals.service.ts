@@ -26,10 +26,10 @@ export function normalizeProposalTimeline(events: Row[]): Row[] {
 export class ProposalsService {
   constructor(private readonly database: DatabaseService) {}
 
-  list(user: PublicUser) {
+  async list(user: PublicUser) {
     const db = this.database.db;
     const sellerOnly = user.role !== "admin";
-    const rows = db.prepare(`SELECT p.*, u.name AS seller_name,
+    const rows = await db.prepare(`SELECT p.*, u.name AS seller_name,
       COALESCE(NULLIF(u.communication_email, ''), u.email) AS seller_email,
       u.whatsapp_phone AS seller_whatsapp_phone,
       c.legal_name AS customer_name, c.trade_name AS customer_trade_name,
@@ -51,10 +51,10 @@ export class ProposalsService {
     const eventsQuery = db.prepare(`SELECT pe.*, u.name AS created_by_name
       FROM proposal_events pe LEFT JOIN users u ON u.id = pe.created_by
       WHERE pe.proposal_id = ? ORDER BY pe.created_at, pe.id`);
-    return { proposals: rows.map(row => ({
+    return { proposals: await Promise.all(rows.map(async row => ({
       ...row,
-      items: itemsQuery.all(row.id as number),
-      timeline: normalizeProposalTimeline(eventsQuery.all(row.id as number) as Row[]),
-    })) };
+      items: await itemsQuery.all(row.id as number),
+      timeline: normalizeProposalTimeline(await eventsQuery.all(row.id as number) as Row[]),
+    }))) };
   }
 }

@@ -34,9 +34,9 @@ export class AuthService {
     } as const;
   }
 
-  login(input: LoginRequest): { token: string; user: PublicUser } {
+  async login(input: LoginRequest): Promise<{ token: string; user: PublicUser }> {
     const username = normalizeUsername(input.username || input.email || "");
-    const row = this.database.db
+    const row = await this.database.db
       .prepare(`${USER_SELECT} WHERE u.email = ? AND u.active = 1 LIMIT 1`)
       .get(username) as UserRow | undefined;
 
@@ -46,9 +46,9 @@ export class AuthService {
     const token = randomBytes(32).toString("base64url");
     const nowSeconds = Math.floor(Date.now() / 1000);
     const nowIso = new Date().toISOString();
-    this.database.transaction(() => {
-      this.database.db.prepare("DELETE FROM sessions WHERE expires_at < ?").run(nowSeconds);
-      this.database.db
+    await this.database.transaction(async () => {
+      await this.database.db.prepare("DELETE FROM sessions WHERE expires_at < ?").run(nowSeconds);
+      await this.database.db
         .prepare("INSERT INTO sessions (token, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
         .run(token, row.id, nowSeconds + this.env.sessionTtlSeconds, nowIso);
     });
@@ -56,12 +56,12 @@ export class AuthService {
     return { token, user: toPublicUser(row) };
   }
 
-  logout(token?: string): void {
-    if (token) this.database.db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
+  async logout(token?: string): Promise<void> {
+    if (token) await this.database.db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
   }
 
-  findSessionUser(token: string): PublicUser | null {
-    const row = this.database.db
+  async findSessionUser(token: string): Promise<PublicUser | null> {
+    const row = await this.database.db
       .prepare(
         `${USER_SELECT}
          JOIN sessions s ON s.user_id = u.id
@@ -72,12 +72,12 @@ export class AuthService {
     return row ? toPublicUser(row) : null;
   }
 
-  changePassword(
+  async changePassword(
     user: PublicUser,
     sessionToken: string,
     input: ChangePasswordRequest,
-  ): ChangePasswordResponse {
-    const row = this.database.db
+  ): Promise<ChangePasswordResponse> {
+    const row = await this.database.db
       .prepare(`${USER_SELECT} WHERE u.id = ? AND u.active = 1 LIMIT 1`)
       .get(user.id) as UserRow | undefined;
     if (!row) throw new UnauthorizedException("Sessao expirada. Faca login novamente.");
@@ -90,13 +90,13 @@ export class AuthService {
     }
 
     const updatedAt = new Date().toISOString();
-    this.database.transaction(() => {
-      this.database.db
+    await this.database.transaction(async () => {
+      await this.database.db
         .prepare(
           "UPDATE users SET password_hash = ?, must_change_password = 0, password_updated_at = ? WHERE id = ?",
         )
         .run(hashPassword(input.new_password), updatedAt, row.id);
-      this.database.db
+      await this.database.db
         .prepare("DELETE FROM sessions WHERE user_id = ? AND token <> ?")
         .run(row.id, sessionToken);
     });

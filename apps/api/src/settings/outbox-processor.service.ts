@@ -31,20 +31,20 @@ export class OutboxProcessorService implements OnApplicationBootstrap, OnApplica
     this.running = true;
     let sent = 0;
     try {
-      const rows = this.database.db.prepare(`SELECT id,tenant_id,recipients,subject,body FROM email_outbox
+      const rows = await this.database.db.prepare(`SELECT id,tenant_id,recipients,subject,body FROM email_outbox
         WHERE recipients NOT LIKE 'whatsapp:%' AND sent_at IS NULL AND COALESCE(attempts,0)<5
         ORDER BY id LIMIT 10`).all() as unknown as OutboxRow[];
       for (const row of rows) {
-        const claimed = this.database.db.prepare(`UPDATE email_outbox SET attempts=COALESCE(attempts,0)+1,error=NULL
+        const claimed = await this.database.db.prepare(`UPDATE email_outbox SET attempts=COALESCE(attempts,0)+1,error=NULL
           WHERE id=? AND sent_at IS NULL AND COALESCE(attempts,0)<5`).run(row.id);
         if (!claimed.changes) continue;
         try {
           await this.integrations.sendEmail(row.tenant_id, row);
-          this.database.db.prepare("UPDATE email_outbox SET sent_at=?,error=NULL WHERE id=?").run(new Date().toISOString(), row.id);
+          await this.database.db.prepare("UPDATE email_outbox SET sent_at=?,error=NULL WHERE id=?").run(new Date().toISOString(), row.id);
           sent++;
         } catch (error) {
           const message = (error instanceof Error ? error.message : String(error)).slice(0, 2000);
-          this.database.db.prepare("UPDATE email_outbox SET error=? WHERE id=?").run(message, row.id);
+          await this.database.db.prepare("UPDATE email_outbox SET error=? WHERE id=?").run(message, row.id);
         }
       }
       return sent;

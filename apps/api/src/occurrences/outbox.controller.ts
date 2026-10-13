@@ -7,7 +7,7 @@ export class OutboxController {
  constructor(private readonly database:DatabaseService){}
  @Roles("admin")
  @Get("outbox")
- list(@Req() request:AuthenticatedRequest){
-  return {outbox:this.database.db.prepare("SELECT * FROM email_outbox WHERE tenant_id=? ORDER BY id DESC LIMIT 20").all(request.user.tenant_id)};
+ async list(@Req() request:AuthenticatedRequest){
+  return {outbox:await this.database.db.prepare("SELECT * FROM email_outbox WHERE tenant_id=? ORDER BY id DESC LIMIT 20").all(request.user.tenant_id)};
  }
 }

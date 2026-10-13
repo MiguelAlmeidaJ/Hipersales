@@ -25,24 +25,24 @@ function boolean(value: unknown, fallback = false): boolean {
 export class SettingsService {
   constructor(private readonly database: DatabaseService) {}
 
-  read(tenantId: number, key: SettingsSection): unknown {
-    const tenant = this.database.db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND key=?")
+  async read(tenantId: number, key: SettingsSection): Promise<unknown> {
+    const tenant = await this.database.db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND key=?")
       .get(tenantId, key) as { value: string } | undefined;
-    const system = tenant ? undefined : this.database.db.prepare("SELECT value FROM system_settings WHERE key=?")
+    const system = tenant ? undefined : await this.database.db.prepare("SELECT value FROM system_settings WHERE key=?")
       .get(key) as { value: string } | undefined;
     try { return JSON.parse(tenant?.value ?? system?.value ?? JSON.stringify(DEFAULT_SETTINGS[key])); }
     catch { return structuredClone(DEFAULT_SETTINGS[key]); }
   }
 
-  write(tenantId: number, key: SettingsSection, value: unknown): void {
-    this.database.db.prepare(`INSERT INTO tenant_settings (tenant_id,key,value,updated_at) VALUES (?,?,?,?)
+  async write(tenantId: number, key: SettingsSection, value: unknown): Promise<void> {
+    await this.database.db.prepare(`INSERT INTO tenant_settings (tenant_id,key,value,updated_at) VALUES (?,?,?,?)
       ON CONFLICT(tenant_id,key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at`)
       .run(tenantId, key, JSON.stringify(value), new Date().toISOString());
   }
 
-  get(user: PublicUser) {
-    const settings = Object.fromEntries(Object.keys(DEFAULT_SETTINGS).map((key) =>
-      [key, this.read(user.tenant_id, key as SettingsSection)])) as JsonObject;
+  async get(user: PublicUser) {
+    const settings = Object.fromEntries(await Promise.all(Object.keys(DEFAULT_SETTINGS).map(async (key) =>
+      [key, await this.read(user.tenant_id, key as SettingsSection)]))) as JsonObject;
     const smtp = object(settings.smtp, "Configuracao SMTP invalida.");
     settings.smtp = { ...smtp, password_configured: Boolean(smtp.password), password: "" };
     const whatsapp = object(settings.whatsapp, "Configuracao WhatsApp invalida.");
@@ -53,17 +53,17 @@ export class SettingsService {
     return { settings, placeholders: PLACEHOLDERS, status_labels: STATUS_LABELS };
   }
 
-  save(user: PublicUser, input: UpdateSettingsRequest) {
-    const normalized = this.normalize(user.tenant_id, input.section, input.data);
-    this.database.transaction(() => this.write(user.tenant_id, input.section, normalized));
-    return { message: "Configuracao salva.", ...this.get(user) };
+  async save(user: PublicUser, input: UpdateSettingsRequest) {
+    const normalized = await this.normalize(user.tenant_id, input.section, input.data);
+    await this.database.transaction(() => this.write(user.tenant_id, input.section, normalized));
+    return { message: "Configuracao salva.", ...await this.get(user) };
   }
 
-  smtpConfiguration(tenantId: number, override?: unknown): JsonObject {
-    return this.normalize(tenantId, "smtp", override ?? this.read(tenantId, "smtp")) as JsonObject;
+  async smtpConfiguration(tenantId: number, override?: unknown): Promise<JsonObject> {
+    return await this.normalize(tenantId, "smtp", override ?? await this.read(tenantId, "smtp")) as JsonObject;
   }
 
-  private normalize(tenantId: number, section: SettingsSection, value: unknown): unknown {
+  private async normalize(tenantId: number, section: SettingsSection, value: unknown): Promise<unknown> {
     if (section === "customer_funnel" || section === "product_funnel") {
       if (!Array.isArray(value)) throw new BadRequestException("Etapas invalidas.");
       const stages = value.slice(0, 50).map((item) => object(item, "Etapa invalida.")).map((item) => {
@@ -89,7 +89,7 @@ export class SettingsService {
     }
     if (section === "smtp") {
       const row = object(value, "Configuracao SMTP invalida.");
-      const current = object(this.read(tenantId, "smtp"), "Configuracao SMTP invalida.");
+      const current = object(await this.read(tenantId, "smtp"), "Configuracao SMTP invalida.");
       const port = Number(row.port ?? 587);
       if (!Number.isInteger(port) || port < 1 || port > 65535) throw new BadRequestException("Porta SMTP invalida.");
       return {
@@ -101,7 +101,7 @@ export class SettingsService {
     }
     if (section === "whatsapp") {
       const row = object(value, "Configuracao WhatsApp invalida.");
-      const current = object(this.read(tenantId, "whatsapp"), "Configuracao WhatsApp invalida.");
+      const current = object(await this.read(tenantId, "whatsapp"), "Configuracao WhatsApp invalida.");
       return {
         ...current,
         enabled: boolean(row.enabled, Boolean(current.enabled)), connection_name: text(row.connection_name || current.connection_name),

@@ -49,26 +49,26 @@ export class ProposalCreationService {
     const commission=bonus?0:percentage(data.commission_percent);
     const discount=bonus?0:percentage(data.discount_percent);
     const dOn=bonus?"Sem descontos":discountOn(data.discount_on);
-    return this.database.transaction(()=>{
+    return this.database.transaction(async ()=>{
       const db=this.database.db;
-      const exists=(table:string,id:number)=>db.prepare(`SELECT id FROM ${table} WHERE id=? AND tenant_id=? AND active=1`).get(id,user.tenant_id);
-      if(!exists("companies",companyId)) throw new BadRequestException("Empresa invalida para esta conta.");
-      if(!exists("customers",customerId)) throw new BadRequestException("Cliente invalido para esta conta.");
-      if(user.role==="admin"&&!db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,user.tenant_id)) {
+      const exists=async (table:string,id:number)=>await db.prepare(`SELECT id FROM ${table} WHERE id=? AND tenant_id=? AND active=1`).get(id,user.tenant_id);
+      if(!await exists("companies",companyId)) throw new BadRequestException("Empresa invalida para esta conta.");
+      if(!await exists("customers",customerId)) throw new BadRequestException("Cliente invalido para esta conta.");
+      if(user.role==="admin"&&!await db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,user.tenant_id)) {
         throw new BadRequestException("Selecione um representante comercial ativo para criar o pedido.");
       }
       if(user.role!=="admin"&&sellerId!==user.id) throw new ForbiddenException("Representante comercial invalido para esta proposta.");
-      if(!db.prepare("SELECT 1 FROM company_sellers WHERE company_id=? AND seller_id=?").get(companyId,sellerId))
+      if(!await db.prepare("SELECT 1 FROM company_sellers WHERE company_id=? AND seller_id=?").get(companyId,sellerId))
         throw new ForbiddenException("Empresa nao associada ao representante comercial.");
-      if(user.role!=="admin"&&!db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
+      if(user.role!=="admin"&&!await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
         throw new ForbiddenException("Cliente nao associado ao representante comercial.");
-      for(const item of items) if(!db.prepare("SELECT 1 FROM products WHERE id=? AND tenant_id=? AND company_id=? AND active=1").get(item.id,user.tenant_id,companyId))
+      for(const item of items) if(!await db.prepare("SELECT 1 FROM products WHERE id=? AND tenant_id=? AND company_id=? AND active=1").get(item.id,user.tenant_id,companyId))
         throw new BadRequestException("Produto invalido para a empresa selecionada.");
 
-      const orderNumberRow=db.prepare("SELECT COALESCE(MAX(order_number),10839)+1 AS next_number FROM proposals WHERE tenant_id=?").get(user.tenant_id) as {next_number:number};
+      const orderNumberRow=await db.prepare("SELECT COALESCE(MAX(order_number),10839)+1 AS next_number FROM proposals WHERE tenant_id=?").get(user.tenant_id) as {next_number:number};
       const orderNumber=Number(orderNumberRow.next_number);
       const now=new Date().toISOString();
-      const result=db.prepare(`INSERT INTO proposals
+      const result=await db.prepare(`INSERT INTO proposals
         (tenant_id,order_number,seller_id,company_id,customer_id,order_type,purchase_order,commission_percent,invoice_type,
          tax_operator_invoice,freight_type,delivery_type,scheduled_delivery_date,discount_percent,discount_on,
          payment_terms,notes,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
@@ -78,11 +78,11 @@ export class ProposalCreationService {
         data.notes||null,"em_analise",now,now);
       const proposalId=Number(result.lastInsertRowid);
       const insertItem=db.prepare("INSERT INTO proposal_items (proposal_id,product_id,quantity,negotiated_price) VALUES (?,?,?,?)");
-      for(const item of items) insertItem.run(proposalId,item.id,item.quantity,item.price);
-      db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
+      for(const item of items) await insertItem.run(proposalId,item.id,item.quantity,item.price);
+      await db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
         .run(proposalId,"em_analise","Em analise","Proposta enviada para analise.",sellerId,now);
-      if(user.role==="admin") db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)").run(customerId,sellerId);
-      this.notifications.queueNewProposal(user.tenant_id,proposalId);
+      if(user.role==="admin") await db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)").run(customerId,sellerId);
+      await this.notifications.queueNewProposal(user.tenant_id,proposalId);
       return {id:proposalId,order_number:orderNumber,status:"em_analise",company_id:companyId,
         customer_id:customerId,message:user.role==="admin"?"Pedido criado pelo admin.":"Proposta enviada para analise."};
     });

@@ -28,8 +28,8 @@ export class IntegrationsService {
     if (!timingSafeEqual(left, right)) throw new ForbiddenException("Token interno invalido.");
   }
 
-  private smtpTransport(tenantId: number, override?: unknown) {
-    const smtp = this.settings.smtpConfiguration(tenantId, override);
+  private async smtpTransport(tenantId: number, override?: unknown) {
+    const smtp = await this.settings.smtpConfiguration(tenantId, override);
     if (!smtp.host) throw new BadRequestException("Informe o servidor SMTP para testar a conexao.");
     return nodemailer.createTransport({
       host: String(smtp.host), port: Number(smtp.port), secure: Boolean(smtp.use_ssl),
@@ -41,7 +41,7 @@ export class IntegrationsService {
   }
 
   async testSmtp(user: PublicUser, input?: unknown) {
-    const transport = this.smtpTransport(user.tenant_id, input);
+    const transport = await this.smtpTransport(user.tenant_id, input);
     try { await transport.verify(); }
     catch (error) { throw new BadGatewayException(`Falha ao testar SMTP: ${errorMessage(error)}`); }
     finally { transport.close(); }
@@ -49,8 +49,8 @@ export class IntegrationsService {
   }
 
   async sendEmail(tenantId: number, message: { recipients: string; subject: string; body: string }): Promise<void> {
-    const smtp = this.settings.smtpConfiguration(tenantId);
-    const transport = this.smtpTransport(tenantId);
+    const smtp = await this.settings.smtpConfiguration(tenantId);
+    const transport = await this.smtpTransport(tenantId);
     try {
       await transport.sendMail({
         from: { name: String(smtp.from_name || "Hipersales"), address: String(smtp.from_email || smtp.username || "") },
@@ -89,8 +89,8 @@ export class IntegrationsService {
   }
 
   async connect(user: PublicUser, input: unknown) {
-    this.settings.save(user, { section: "whatsapp", data: input });
-    const current = this.settings.read(user.tenant_id, "whatsapp") as Row;
+    await this.settings.save(user, { section: "whatsapp", data: input });
+    const current = await this.settings.read(user.tenant_id, "whatsapp") as Row;
     const instance = this.instance(user.tenant_id);
     const old = String(current.instance_id ?? "");
     if (old && old !== instance) await this.evolution("DELETE", `/instance/delete/${encodeURIComponent(old)}`, undefined, true);
@@ -106,35 +106,35 @@ export class IntegrationsService {
       qr_payload: String(qrcode.code ?? ""), qr_image_url: String(qrcode.base64 ?? ""),
       qr_token: randomBytes(24).toString("base64url"), last_qr_at: new Date().toISOString(), connected_at: null,
       last_error: webhook.error ? String(webhook.message ?? "Falha ao configurar webhook do WhatsApp.") : "" };
-    this.settings.write(user.tenant_id, "whatsapp", value);
+    await this.settings.write(user.tenant_id, "whatsapp", value);
     return { message: "QR gerado pelo Evolution. Escaneie pelo WhatsApp.", whatsapp: { ...value, status_label: "Aguardando QR" } };
   }
 
   async disconnect(user: PublicUser) {
-    const current = this.settings.read(user.tenant_id, "whatsapp") as Row;
+    const current = await this.settings.read(user.tenant_id, "whatsapp") as Row;
     const instance = String(current.instance_id || this.instance(user.tenant_id));
     await this.evolution("DELETE", `/instance/logout/${encodeURIComponent(instance)}`, undefined, true);
     await this.evolution("DELETE", `/instance/delete/${encodeURIComponent(instance)}`, undefined, true);
-    this.settings.write(user.tenant_id, "whatsapp", { ...current, enabled: false, connected: false, qr_payload: "",
+    await this.settings.write(user.tenant_id, "whatsapp", { ...current, enabled: false, connected: false, qr_payload: "",
       qr_image_url: "", qr_token: "", last_qr_at: null, last_error: "", connected_at: null });
-    return { message: "Conexao WhatsApp desconectada.", ...this.settings.get(user) };
+    return { message: "Conexao WhatsApp desconectada.", ...await this.settings.get(user) };
   }
 
   async refresh(user: PublicUser): Promise<void> {
-    const current = this.settings.read(user.tenant_id, "whatsapp") as Row;
+    const current = await this.settings.read(user.tenant_id, "whatsapp") as Row;
     if (!current.enabled || !this.env.evolutionApiKey) return;
     const instance = String(current.instance_id || this.instance(user.tenant_id));
     const result = await this.evolution("GET", `/instance/connectionState/${encodeURIComponent(instance)}`, undefined, true);
     const state = String((result.instance as Row | undefined)?.state ?? "").toLowerCase();
-    if (state === "open") this.settings.write(user.tenant_id, "whatsapp", { ...current, connected: true,
+    if (state === "open") await this.settings.write(user.tenant_id, "whatsapp", { ...current, connected: true,
       connected_at: current.connected_at || new Date().toISOString(), qr_payload: "", qr_image_url: "", last_error: "" });
-    else if (["connecting", "close", "closed"].includes(state)) this.settings.write(user.tenant_id, "whatsapp", { ...current, connected: false });
+    else if (["connecting", "close", "closed"].includes(state)) await this.settings.write(user.tenant_id, "whatsapp", { ...current, connected: false });
   }
 
-  internalSettings(tenantId: number) { return { whatsapp: this.settings.read(tenantId, "whatsapp") }; }
+  async internalSettings(tenantId: number) { return { whatsapp: await this.settings.read(tenantId, "whatsapp") }; }
 
-  updateInternalState(tenantId: number, input: Row) {
-    const current = this.settings.read(tenantId, "whatsapp") as Row;
+  async updateInternalState(tenantId: number, input: Row) {
+    const current = await this.settings.read(tenantId, "whatsapp") as Row;
     const connected = input.connected === undefined ? current.connected : bool(input.connected);
     const value = { ...current,
       enabled: input.enabled === undefined ? current.enabled : bool(input.enabled), connected,
@@ -143,31 +143,32 @@ export class IntegrationsService {
       last_error: connected ? "" : input.last_error === undefined ? current.last_error : String(input.last_error ?? "").trim(),
       instance_id: input.instance_id === undefined ? current.instance_id : String(input.instance_id ?? "").trim(),
     };
-    this.settings.write(tenantId, "whatsapp", value);
+    await this.settings.write(tenantId, "whatsapp", value);
     return { ok: true };
   }
 
-  pendingMessages() {
-    const rows = this.database.db.prepare(`SELECT id,tenant_id,kind,recipients,subject,body,attempts,created_at FROM email_outbox
+  async pendingMessages() {
+    const rows = await this.database.db.prepare(`SELECT id,tenant_id,kind,recipients,subject,body,attempts,created_at FROM email_outbox
       WHERE recipients LIKE 'whatsapp:%' AND sent_at IS NULL AND COALESCE(attempts,0)<5 ORDER BY id LIMIT 10`).all() as Row[];
-    return { messages: rows.flatMap((row) => {
+    const groups = await Promise.all(rows.map(async (row) => {
       let phone = String(row.recipients ?? "").replace(/^whatsapp:/, "").replace(/\D/g, "");
       if (phone && !phone.startsWith("55") && phone.length >= 10 && phone.length <= 11) phone = `55${phone}`;
-      if (!phone) { this.database.db.prepare("UPDATE email_outbox SET attempts=attempts+1,error=? WHERE id=?").run("Numero de WhatsApp vazio ou invalido.", Number(row.id)); return []; }
+      if (!phone) { await this.database.db.prepare("UPDATE email_outbox SET attempts=attempts+1,error=? WHERE id=?").run("Numero de WhatsApp vazio ou invalido.", Number(row.id)); return []; }
       return [{ ...row, phone }];
-    }) };
+    }));
+    return { messages: groups.flat() };
   }
 
-  updateOutbox(id: number, input: Row) {
-    if (bool(input.sent)) this.database.db.prepare("UPDATE email_outbox SET sent_at=?,error=NULL WHERE id=?").run(new Date().toISOString(), id);
-    else this.database.db.prepare("UPDATE email_outbox SET attempts=attempts+1,error=? WHERE id=?").run(String(input.error || "Falha ao enviar WhatsApp."), id);
+  async updateOutbox(id: number, input: Row) {
+    if (bool(input.sent)) await this.database.db.prepare("UPDATE email_outbox SET sent_at=?,error=NULL WHERE id=?").run(new Date().toISOString(), id);
+    else await this.database.db.prepare("UPDATE email_outbox SET attempts=attempts+1,error=? WHERE id=?").run(String(input.error || "Falha ao enviar WhatsApp."), id);
     return { ok: true };
   }
 
   async webhook(input: Row) {
     const instance = String(input.instance || input.instanceName || "");
     const tenantId = Number(/hipersales-tenant-(\d+)/.exec(instance)?.[1] || 1);
-    const whatsapp = this.settings.read(tenantId, "whatsapp") as Row;
+    const whatsapp = await this.settings.read(tenantId, "whatsapp") as Row;
     if (!whatsapp.enabled || !whatsapp.unavailable_reply_enabled) return { ok: true, ignored: "auto_reply_disabled" };
     const raw = Array.isArray(input.data) ? input.data : [input.data];
     let sent = 0;
@@ -182,11 +183,11 @@ export class IntegrationsService {
     const remote = String(key.remoteJid || message.remoteJid || message.chatId || "");
     const id = String(key.id || message.id || "");
     if (!remote || !id || remote.includes("@g.us") || remote === "status@broadcast") return false;
-    if (this.database.db.prepare("SELECT 1 FROM whatsapp_auto_replies WHERE tenant_id=? AND instance_id=? AND message_id=?").get(tenantId, instance, id)) return false;
+    if (await this.database.db.prepare("SELECT 1 FROM whatsapp_auto_replies WHERE tenant_id=? AND instance_id=? AND message_id=?").get(tenantId, instance, id)) return false;
     const result = await this.evolution("POST", `/message/sendText/${encodeURIComponent(instance)}`,
       { number: remote, text: String(whatsapp.unavailable_reply_message || "") }, true);
     if (result.error) return false;
-    this.database.db.prepare(`INSERT OR IGNORE INTO whatsapp_auto_replies
+    await this.database.db.prepare(`INSERT OR IGNORE INTO whatsapp_auto_replies
       (tenant_id,instance_id,message_id,remote_jid,replied_at) VALUES (?,?,?,?,?)`)
       .run(tenantId, instance, id, remote, new Date().toISOString());
     return true;

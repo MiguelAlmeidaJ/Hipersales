@@ -11,7 +11,7 @@ A API NestJS e o frontend Next.js não possuem Dockerfile e são executados pelo
 
 A Evolution fica vinculada a `127.0.0.1:8081`. Os bancos e o Redis não publicam portas
 no Compose principal. O serviço `hipersales-postgres` está provisionado para a futura
-migração do banco comercial; a API ainda usa SQLite.
+migrations do banco comercial; a API usa PostgreSQL por meio do Prisma.
 
 Não execute `docker compose down -v` quando houver dados que precisem ser preservados.
 Os volumes da Evolution guardam banco, cache e sessões do WhatsApp.

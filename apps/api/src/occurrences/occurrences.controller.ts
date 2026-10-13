@@ -13,9 +13,9 @@ export class OccurrencesController {
   @Get("occurrences")
   list(@Req() request:AuthenticatedRequest){return this.occurrences.list(request.user);}
   @Get("occurrences/:id/attachments/:attachmentId")
-  download(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,
+  async download(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,
     @Param("attachmentId",ParseIntPipe) attachmentId:number,@Res() response:Response){
-    const file=this.occurrences.attachment(request.user,id,attachmentId);
+    const file=await this.occurrences.attachment(request.user,id,attachmentId);
     const safeName=file.filename.replace(/[\r\n"\\]/g,"_");
     response.setHeader("Content-Type",file.mimetype||"application/octet-stream");
     response.setHeader("Content-Disposition",'attachment; filename="'+safeName+'"');

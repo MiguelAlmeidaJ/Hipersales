@@ -20,11 +20,11 @@ function activeFilter(raw: string): number | null {
 export class AssignmentsService {
   constructor(private readonly database: DatabaseService) {}
 
-  private seller(tenantId: number, sellerId: number): Row {
+  private async seller(tenantId: number, sellerId: number): Promise<Row> {
     if (!Number.isSafeInteger(sellerId) || sellerId < 1) {
       throw new BadRequestException("Selecione um representante comercial valido.");
     }
-    const seller = this.database.db.prepare("SELECT * FROM users WHERE id = ?").get(sellerId) as Row | undefined;
+    const seller = await this.database.db.prepare("SELECT * FROM users WHERE id = ?").get(sellerId) as Row | undefined;
     if (!seller) throw new NotFoundException("Usuario nao encontrado.");
     if (seller.role !== "seller" || Number(seller.tenant_id || 0) !== tenantId) {
       throw new BadRequestException("Selecione um representante comercial valido.");
@@ -32,13 +32,13 @@ export class AssignmentsService {
     return seller;
   }
 
-  list(user: PublicUser, kind: Kind, sellerId: number, term = "", active = "all") {
-    const seller = this.seller(user.tenant_id, sellerId);
+  async list(user: PublicUser, kind: Kind, sellerId: number, term = "", active = "all") {
+    const seller = await this.seller(user.tenant_id, sellerId);
     const cfg = config[kind];
     const flag = activeFilter(active);
     const like = `%${term.trim()}%`;
     const searches = cfg.search.map(col => `c.${col} LIKE ?`).join(" OR ");
-    const rows = this.database.db.prepare(`SELECT c.*,
+    const rows = await this.database.db.prepare(`SELECT c.*,
       EXISTS(SELECT 1 FROM ${cfg.link} link WHERE link.${cfg.id}=c.id AND link.seller_id=?) AS assigned
       FROM ${cfg.table} c WHERE c.tenant_id=? AND (? IS NULL OR c.active=?)
       AND (?='' OR ${searches}) ORDER BY c.${cfg.sort}`)
@@ -69,16 +69,16 @@ export class AssignmentsService {
       typeof input.assigned !== "boolean") {
       throw new BadRequestException("Informe identificadores validos e assigned booleano.");
     }
-    return this.database.transaction(() => {
-      this.seller(user.tenant_id, sellerId);
-      if (!this.database.db.prepare(`SELECT id FROM ${cfg.table} WHERE id=? AND tenant_id=?`)
+    return this.database.transaction(async () => {
+      await this.seller(user.tenant_id, sellerId);
+      if (!await this.database.db.prepare(`SELECT id FROM ${cfg.table} WHERE id=? AND tenant_id=?`)
         .get(id, user.tenant_id)) {
         throw new NotFoundException(kind === "customers" ? "Cliente nao encontrado." : "Empresa nao encontrada.");
       }
       if (input.assigned) {
-        this.database.db.prepare(`INSERT OR IGNORE INTO ${cfg.link} (${cfg.id}, seller_id) VALUES (?,?)`).run(id, sellerId);
+        await this.database.db.prepare(`INSERT OR IGNORE INTO ${cfg.link} (${cfg.id}, seller_id) VALUES (?,?)`).run(id, sellerId);
       } else {
-        this.database.db.prepare(`DELETE FROM ${cfg.link} WHERE ${cfg.id}=? AND seller_id=?`).run(id, sellerId);
+        await this.database.db.prepare(`DELETE FROM ${cfg.link} WHERE ${cfg.id}=? AND seller_id=?`).run(id, sellerId);
       }
       const noun = kind === "customers" ? "Cliente" : "Empresa";
       return { message: `${noun} ${input.assigned ? "associado" : "desvinculado"} ${input.assigned ? "ao" : "do"} representante comercial.` .replace("Empresa associado","Empresa associada").replace("Empresa desvinculado","Empresa desvinculada") };

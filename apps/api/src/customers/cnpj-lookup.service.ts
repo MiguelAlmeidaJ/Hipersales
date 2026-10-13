@@ -96,7 +96,7 @@ export class CnpjLookupService {
   async lookup(tenantId: number, value: string, excludeId?: number) {
     const digits = String(value ?? "").replace(/\D/g, "");
     if (digits.length !== 14) throw new BadRequestException("Informe um CNPJ valido.");
-    const customers = this.database.db.prepare("SELECT id, cnpj FROM customers WHERE tenant_id=?").all(tenantId) as {id:number;cnpj:string}[];
+    const customers = await this.database.db.prepare("SELECT id, cnpj FROM customers WHERE tenant_id=?").all(tenantId) as {id:number;cnpj:string}[];
     if (customers.some(item => item.id !== excludeId && item.cnpj.replace(/\D/g,"") === digits)) {
       throw new ConflictException("Ja existe esse CNPJ na nossa base.");
     }

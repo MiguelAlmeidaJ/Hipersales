@@ -59,10 +59,10 @@ export function rejectedProposalBody(seller:string,customer:string,cnpj:string) 
     "Atenciosamente,","Comunicacao HiperSales Web",
   ].join("\n");
 }
-function setting(db:DatabaseService["db"],tenantId:number,key:string):Row {
-  const local=db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND key=?")
+async function setting(db:DatabaseService["db"],tenantId:number,key:string):Promise<Row> {
+  const local=await db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND key=?")
     .get(tenantId,key) as {value:string}|undefined;
-  const global=local ?? db.prepare("SELECT value FROM system_settings WHERE key=?")
+  const global=local ?? await db.prepare("SELECT value FROM system_settings WHERE key=?")
     .get(key) as {value:string}|undefined;
   try {
     const parsed:unknown=JSON.parse(global?.value ?? "{}");
@@ -72,9 +72,9 @@ function setting(db:DatabaseService["db"],tenantId:number,key:string):Row {
 @Injectable()
 export class ProposalStatusNotificationsService {
   constructor(private readonly database:DatabaseService) {}
-  queue(tenantId:number,id:number,status:string):void {
+  async queue(tenantId:number,id:number,status:string):Promise<void> {
     const db=this.database.db;
-    const row=db.prepare(`SELECT p.*,u.name AS seller_name,u.email AS seller_email,
+    const row=await db.prepare(`SELECT p.*,u.name AS seller_name,u.email AS seller_email,
       COALESCE(NULLIF(u.communication_email,''),u.email) AS seller_contact_email,
       u.whatsapp_phone AS seller_whatsapp_phone,
       c.legal_name AS customer_name,c.trade_name AS customer_trade_name,c.cnpj,
@@ -91,28 +91,28 @@ export class ProposalStatusNotificationsService {
     };
     const sellerEmail=str(row.seller_contact_email||row.seller_email);
     const subjectBase=`${str(row.customer_name)} + ${str(row.cnpj)}`;
-    const enqueue=(kind:string,recipient:string,subject:string,body:string) => {
-      db.prepare(`INSERT INTO email_outbox
+    const enqueue=async (kind:string,recipient:string,subject:string,body:string) => {
+      await db.prepare(`INSERT INTO email_outbox
         (tenant_id,kind,recipients,subject,body,created_at) VALUES (?,?,?,?,?,?)`)
         .run(tenantId,kind,recipient,subject,body,new Date().toISOString());
     };
     if(status==="pedido_aprovado") {
-      if(sellerEmail) enqueue("status_update_seller",sellerEmail,
+      if(sellerEmail) await enqueue("status_update_seller",sellerEmail,
         `STATUS DO PEDIDO ${statusEmailSubject(status)} ${subjectBase}`,statusEmailBody(context));
-      enqueue("approved_order_backoffice","vendas@hipermixrepresentacoes.com.br",
-        `NOVO PEDIDO ${subjectBase}`,loadApprovedOrder(db,tenantId,id));
+      await enqueue("approved_order_backoffice","vendas@hipermixrepresentacoes.com.br",
+        `NOVO PEDIDO ${subjectBase}`,await loadApprovedOrder(db,tenantId,id));
     }
     if(status==="recusado") {
-      enqueue("rejected_proposal_seller",sellerEmail,`PROPOSTA RECUSADA ${subjectBase}`,
+      await enqueue("rejected_proposal_seller",sellerEmail,`PROPOSTA RECUSADA ${subjectBase}`,
         rejectedProposalBody(str(row.seller_name),str(row.customer_name),str(row.cnpj)));
     } else if(["em_producao","faturado","entregue"].includes(status)&&sellerEmail) {
-      enqueue("status_update_seller",sellerEmail,
+      await enqueue("status_update_seller",sellerEmail,
         `STATUS DO PEDIDO ${statusEmailSubject(status)} ${subjectBase}`,statusEmailBody(context));
     }
-    const whatsapp=setting(db,tenantId,"whatsapp");
+    const whatsapp=await setting(db,tenantId,"whatsapp");
     if(whatsapp.enabled===true) {
       const to=str(row.seller_whatsapp_phone||whatsapp.alert_phone||whatsapp.instance_id||whatsapp.connection_name||"whatsapp");
-      enqueue("status_whatsapp",`whatsapp:${to}`,"Status do pedido",statusWhatsappBody(context));
+      await enqueue("status_whatsapp",`whatsapp:${to}`,"Status do pedido",statusWhatsappBody(context));
     }
   }
 }

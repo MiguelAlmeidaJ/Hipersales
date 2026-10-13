@@ -55,39 +55,39 @@ export class GoalsService {
     }
   }
 
-  mine(user: PublicUser, year?: string, month?: string) {
+  async mine(user: PublicUser, year?: string, month?: string) {
     const period = this.period(year, month);
-    const seller = this.database.db
+    const seller = await this.database.db
       .prepare("SELECT id, name FROM users WHERE id = ? AND tenant_id = ? AND role = 'seller'")
       .get(user.id, user.tenant_id) as DbRow | undefined;
     if (!seller) throw new NotFoundException("Representante nao encontrado.");
-    return { seller, goals: this.performance(user.tenant_id, user.id, period.year, period.month) };
+    return { seller, goals: await this.performance(user.tenant_id, user.id, period.year, period.month) };
   }
 
-  admin(user: PublicUser, year?: string, month?: string) {
+  async admin(user: PublicUser, year?: string, month?: string) {
     const period = this.period(year, month);
-    const sellers = this.database.db
+    const sellers = await this.database.db
       .prepare(`SELECT id, name, email, communication_email, whatsapp_phone, active
         FROM users WHERE tenant_id = ? AND role = 'seller' ORDER BY active DESC, name`)
       .all(user.tenant_id) as DbRow[];
     return {
       year: period.year,
       month: period.month,
-      rows: sellers.map((seller) => ({
+      rows: await Promise.all(sellers.map(async (seller) => ({
         seller,
-        goals: this.performance(user.tenant_id, Number(seller.id), period.year, period.month),
-      })),
+        goals: await this.performance(user.tenant_id, Number(seller.id), period.year, period.month),
+      }))),
       reminder_days: REMINDER_DAYS,
     };
   }
 
   save(user: PublicUser, input: SaveGoalsRequest) {
     const period = this.period(input.year, input.month);
-    return this.database.transaction(() => {
+    return this.database.transaction(async () => {
       let saved = 0;
       let removed = 0;
       for (const row of input.goals) {
-        const seller = this.database.db
+        const seller = await this.database.db
           .prepare("SELECT 1 FROM users WHERE id = ? AND tenant_id = ? AND role = 'seller'")
           .get(row.seller_id, user.tenant_id);
         if (!seller) continue;
@@ -95,13 +95,13 @@ export class GoalsService {
         const customersGoal = nullableNumber(row.new_customers_goal, true);
         const positivationGoal = nullableNumber(row.customer_positivation_goal);
         if (salesGoal === null && customersGoal === null && positivationGoal === null) {
-          const result = this.database.db
+          const result = await this.database.db
             .prepare("DELETE FROM seller_goals WHERE tenant_id = ? AND seller_id = ? AND year = ? AND month = ?")
             .run(user.tenant_id, row.seller_id, period.year, period.month);
           removed += Number(result.changes);
           continue;
         }
-        this.database.db
+        await this.database.db
           .prepare(`INSERT INTO seller_goals
             (tenant_id, seller_id, year, month, sales_goal, new_customers_goal,
              customer_positivation_goal, updated_at)
@@ -131,13 +131,13 @@ export class GoalsService {
     });
   }
 
-  performance(tenantId: number, sellerId: number, year: number, month: number): GoalPerformance {
+  async performance(tenantId: number, sellerId: number, year: number, month: number): Promise<GoalPerformance> {
     const period = this.period(year, month);
-    const goals = (this.database.db
+    const goals = (await this.database.db
       .prepare(`SELECT sales_goal, new_customers_goal, customer_positivation_goal
         FROM seller_goals WHERE tenant_id = ? AND seller_id = ? AND year = ? AND month = ?`)
       .get(tenantId, sellerId, period.year, period.month) ?? {}) as DbRow;
-    const sales = this.database.db
+    const sales = await this.database.db
       .prepare(`SELECT COALESCE(SUM(order_totals.total), 0) AS total
         FROM proposals p
         LEFT JOIN (
@@ -149,17 +149,17 @@ export class GoalsService {
         WHERE p.tenant_id = ? AND p.seller_id = ? AND p.status <> 'recusado'
           AND p.created_at >= ? AND p.created_at < ?`)
       .get(tenantId, sellerId, period.start, period.end, tenantId, sellerId, period.start, period.end) as DbRow;
-    const newCustomers = this.database.db
+    const newCustomers = await this.database.db
       .prepare(`SELECT COUNT(*) AS total FROM registration_requests
         WHERE tenant_id = ? AND seller_id = ? AND status = 'aprovada'
           AND created_at >= ? AND created_at < ?`)
       .get(tenantId, sellerId, period.start, period.end) as DbRow;
-    const portfolio = this.database.db
+    const portfolio = await this.database.db
       .prepare(`SELECT COUNT(DISTINCT c.id) AS total FROM customer_sellers cs
         JOIN customers c ON c.id = cs.customer_id
         WHERE c.tenant_id = ? AND c.active = 1 AND cs.seller_id = ?`)
       .get(tenantId, sellerId) as DbRow;
-    const attended = this.database.db
+    const attended = await this.database.db
       .prepare(`SELECT COUNT(DISTINCT p.customer_id) AS total FROM proposals p
         JOIN customers c ON c.id = p.customer_id
         WHERE p.tenant_id = ? AND p.seller_id = ? AND c.active = 1

@@ -7,7 +7,7 @@ import { CustomersWriteService, type CustomerInput } from "./customers-write.ser
 type Lookup = Awaited<ReturnType<CnpjLookupService["lookup"]>>;
 
 /**
- * Keeps I/O outside SQLite write transactions.
+ * Keeps external I/O outside database write transactions.
  * Optional external enrichment must never overwrite explicit user input.
  */
 @Injectable()

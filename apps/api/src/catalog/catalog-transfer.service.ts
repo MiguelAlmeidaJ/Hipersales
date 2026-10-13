@@ -10,8 +10,8 @@ export class CatalogTransferService {
     private readonly catalog: CatalogService,
   ) {}
 
-  exportProducts(user: PublicUser, companyId = "", query = "", active = "all") {
-    const records = this.catalog.adminProducts(user, companyId, query, active).products;
+  async exportProducts(user: PublicUser, companyId = "", query = "", active = "all") {
+    const records = (await this.catalog.adminProducts(user, companyId, query, active)).products;
     const fields = ["company_id", "company_name", "code", "name", "unit", "price", "active"];
     const quote = (value: unknown) => {
       const text = String(value ?? "");
@@ -36,7 +36,7 @@ export class CatalogTransferService {
       throw new BadRequestException("Limite de 10000 itens por importacao.");
 
     const rows = input.rows as unknown[];
-    return this.database.transaction(() => {
+    return this.database.transaction(async () => {
       const db = this.database.db;
       const company = db.prepare("SELECT id FROM companies WHERE id=? AND tenant_id=?");
       const existing = db.prepare("SELECT id FROM products WHERE tenant_id=? AND company_id=? AND code=?");
@@ -50,7 +50,7 @@ export class CatalogTransferService {
         if (!value || typeof value !== "object" || Array.isArray(value)) continue;
         const row = value as Record<string, unknown>;
         const companyId = Number(row.company_id);
-        if (!Number.isSafeInteger(companyId) || companyId <= 0 || !company.get(companyId,user.tenant_id)) continue;
+        if (!Number.isSafeInteger(companyId) || companyId <= 0 || !await company.get(companyId,user.tenant_id)) continue;
         const code = String(row.code ?? "").trim();
         const name = String(row.name ?? "").trim();
         if (!code || !name) throw new BadRequestException("Informe code e name.");
@@ -58,8 +58,8 @@ export class CatalogTransferService {
         if (!Number.isFinite(price)) throw new BadRequestException("Preco invalido.");
         const unit = String(row.unit || "UN").trim() || "UN";
         const active = row.active === false || row.active === 0 || row.active === "0" || row.active === "false" ? 0 : 1;
-        const exists = Boolean(existing.get(user.tenant_id, companyId, code));
-        insert.run(user.tenant_id,companyId,code,name,unit,price,active);
+        const exists = Boolean(await existing.get(user.tenant_id, companyId, code));
+        await insert.run(user.tenant_id,companyId,code,name,unit,price,active);
         if (exists) updated++; else created++;
       }
       return { message: "Importacao concluida.", created, updated };

@@ -15,35 +15,35 @@ function activeFilter(value?: string): number | null {
 export class CatalogService {
   constructor(private readonly database: DatabaseService) {}
 
-  companies(user: PublicUser): { companies: DbRow[] } {
+  async companies(user: PublicUser): Promise<{ companies: DbRow[] }> {
     const db = this.database.db;
     const rows = user.role === "admin"
-      ? db.prepare("SELECT * FROM companies WHERE active = 1 AND tenant_id = ? ORDER BY name").all(user.tenant_id)
-      : db.prepare(`SELECT c.* FROM companies c
+      ? await db.prepare("SELECT * FROM companies WHERE active = 1 AND tenant_id = ? ORDER BY name").all(user.tenant_id)
+      : await db.prepare(`SELECT c.* FROM companies c
           JOIN company_sellers cs ON cs.company_id = c.id AND cs.seller_id = ?
           WHERE c.active = 1 AND c.tenant_id = ? ORDER BY c.name`).all(user.id, user.tenant_id);
     return { companies: rows as DbRow[] };
   }
 
-  products(user: PublicUser, companyId: number, term = ""): { products: DbRow[] } {
+  async products(user: PublicUser, companyId: number, term = ""): Promise<{ products: DbRow[] }> {
     if (!Number.isSafeInteger(companyId) || companyId < 0) throw new BadRequestException("Empresa invalida.");
     const db = this.database.db;
     if (user.role !== "admin") {
-      const assigned = db.prepare("SELECT 1 FROM company_sellers WHERE company_id = ? AND seller_id = ?")
+      const assigned = await db.prepare("SELECT 1 FROM company_sellers WHERE company_id = ? AND seller_id = ?")
         .get(companyId, user.id);
       if (!assigned) throw new ForbiddenException("Empresa nao associada ao representante comercial.");
     }
     const like = `%${term.trim()}%`;
-    const rows = db.prepare(`SELECT * FROM products
+    const rows = await db.prepare(`SELECT * FROM products
       WHERE active = 1 AND tenant_id = ? AND company_id = ? AND (code LIKE ? OR name LIKE ?)
       ORDER BY code`).all(user.tenant_id, companyId, like, like);
     return { products: rows as DbRow[] };
   }
 
-  adminCompanies(user: PublicUser, term = "", active = "all"): { companies: DbRow[] } {
+  async adminCompanies(user: PublicUser, term = "", active = "all"): Promise<{ companies: DbRow[] }> {
     const filter = activeFilter(active);
     const like = `%${term.trim()}%`;
-    const rows = this.database.db.prepare(`SELECT c.*, COUNT(p.id) AS product_count
+    const rows = await this.database.db.prepare(`SELECT c.*, COUNT(p.id) AS product_count
       FROM companies c
       LEFT JOIN products p ON p.company_id = c.id AND p.active = 1 AND p.tenant_id = ?
       WHERE c.tenant_id = ?
@@ -54,7 +54,7 @@ export class CatalogService {
     return { companies: rows as DbRow[] };
   }
 
-  adminProducts(user: PublicUser, companyId = "", term = "", active = "all"): { products: DbRow[] } {
+  async adminProducts(user: PublicUser, companyId = "", term = "", active = "all"): Promise<{ products: DbRow[] }> {
     const filter = activeFilter(active);
     let selected: number | null = null;
     if (companyId && companyId !== "0") {
@@ -62,7 +62,7 @@ export class CatalogService {
       if (!Number.isSafeInteger(selected) || selected <= 0) throw new BadRequestException("Empresa invalida.");
     }
     const like = `%${term.trim()}%`;
-    const rows = this.database.db.prepare(`SELECT p.*, c.name AS company_name
+    const rows = await this.database.db.prepare(`SELECT p.*, c.name AS company_name
       FROM products p JOIN companies c ON c.id = p.company_id AND c.tenant_id = p.tenant_id
       WHERE p.tenant_id = ?
         AND (? IS NULL OR p.company_id = ?)
@@ -72,27 +72,27 @@ export class CatalogService {
       .all(user.tenant_id, selected, selected, filter, filter, term.trim(), like, like, like);
     return { products: rows as DbRow[] };
   }
-  private companyExists(tenantId: number, companyId: number): void {
-    if (!this.database.db.prepare("SELECT id FROM companies WHERE id = ? AND tenant_id = ?").get(companyId, tenantId)) {
+  private async companyExists(tenantId: number, companyId: number): Promise<void> {
+    if (!await this.database.db.prepare("SELECT id FROM companies WHERE id = ? AND tenant_id = ?").get(companyId, tenantId)) {
       throw new NotFoundException("Empresa nao encontrada.");
     }
   }
 
-  createCompany(user: PublicUser, data: {name:string;legal_name?:string|null;active?:boolean}): {id:number;message:string} {
+  async createCompany(user: PublicUser, data: {name:string;legal_name?:string|null;active?:boolean}): Promise<{id:number;message:string}> {
     const name = String(data.name ?? "").trim();
     if (!name) throw new BadRequestException("Informe name.");
     try {
-      const row = this.database.db.prepare("INSERT INTO companies (tenant_id,name,legal_name,active) VALUES (?,?,?,?)")
+      const row = await this.database.db.prepare("INSERT INTO companies (tenant_id,name,legal_name,active) VALUES (?,?,?,?)")
         .run(user.tenant_id, name, data.legal_name ?? null, data.active === false ? 0 : 1);
       return {id:Number(row.lastInsertRowid),message:"Empresa cadastrada."};
     } catch { throw new ConflictException("Nao foi possivel cadastrar a empresa."); }
   }
 
-  updateCompany(user: PublicUser, id:number, data:{name:string;legal_name?:string|null;active?:boolean}): {id:number;message:string} {
+  async updateCompany(user: PublicUser, id:number, data:{name:string;legal_name?:string|null;active?:boolean}): Promise<{id:number;message:string}> {
     const name=String(data.name??"").trim();
     if(!name) throw new BadRequestException("Informe name.");
     try {
-      const row=this.database.db.prepare("UPDATE companies SET name=?,legal_name=?,active=? WHERE id=? AND tenant_id=?")
+      const row=await this.database.db.prepare("UPDATE companies SET name=?,legal_name=?,active=? WHERE id=? AND tenant_id=?")
         .run(name,data.legal_name??null,data.active===false?0:1,id,user.tenant_id);
       if(!row.changes) throw new NotFoundException("Empresa nao encontrada.");
     } catch(error) {
@@ -102,32 +102,32 @@ export class CatalogService {
     return {id,message:"Empresa atualizada."};
   }
 
-  deleteCompany(user: PublicUser, id: number): { message: string } {
-    return this.database.transaction(() => {
-      const company = this.database.db.prepare("SELECT id FROM companies WHERE id = ? AND tenant_id = ?")
+  deleteCompany(user: PublicUser, id: number): Promise<{ message: string }> {
+    return this.database.transaction(async () => {
+      const company = await this.database.db.prepare("SELECT id FROM companies WHERE id = ? AND tenant_id = ?")
         .get(id, user.tenant_id);
       if (!company) throw new NotFoundException("Empresa nao encontrada.");
 
-      const proposals = this.database.db.prepare("SELECT id FROM proposals WHERE company_id = ? AND tenant_id = ?")
+      const proposals = await this.database.db.prepare("SELECT id FROM proposals WHERE company_id = ? AND tenant_id = ?")
         .all(id, user.tenant_id) as Array<{ id: number }>;
       if (proposals.length > 0) {
         const placeholders = proposals.map(() => "?").join(",");
         const proposalIds = proposals.map((proposal) => Number(proposal.id));
-        this.database.db.prepare(`DELETE FROM proposal_items WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
-        this.database.db.prepare(`DELETE FROM proposal_events WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
-        this.database.db.prepare(`DELETE FROM proposals WHERE id IN (${placeholders})`).run(...proposalIds);
+        await this.database.db.prepare(`DELETE FROM proposal_items WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
+        await this.database.db.prepare(`DELETE FROM proposal_events WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
+        await this.database.db.prepare(`DELETE FROM proposals WHERE id IN (${placeholders})`).run(...proposalIds);
       }
 
-      this.database.db.prepare("DELETE FROM products WHERE company_id = ? AND tenant_id = ?").run(id, user.tenant_id);
-      this.database.db.prepare("DELETE FROM companies WHERE id = ? AND tenant_id = ?").run(id, user.tenant_id);
+      await this.database.db.prepare("DELETE FROM products WHERE company_id = ? AND tenant_id = ?").run(id, user.tenant_id);
+      await this.database.db.prepare("DELETE FROM companies WHERE id = ? AND tenant_id = ?").run(id, user.tenant_id);
       return { message: "Empresa excluida definitivamente." };
     });
   }
 
-  private productData(user:PublicUser,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}){
+  private async productData(user:PublicUser,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}){
     const companyId=Number(data.company_id);
     if(!Number.isSafeInteger(companyId)||companyId<=0) throw new BadRequestException("company_id invalido.");
-    this.companyExists(user.tenant_id,companyId);
+    await this.companyExists(user.tenant_id,companyId);
     const code=String(data.code??"").trim(), name=String(data.name??"").trim();
     if(!code||!name) throw new BadRequestException("Informe code e name.");
     const unit=String(data.unit||"UN").trim()||"UN", price=Number(data.price||0);
@@ -135,25 +135,25 @@ export class CatalogService {
     return {companyId,code,name,unit,price,active:data.active===false?0:1};
   }
 
-  createProduct(user:PublicUser,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
-    const p=this.productData(user,data);
+  async createProduct(user:PublicUser,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
+    const p=await this.productData(user,data);
     try {
-      const result=this.database.db.prepare(`INSERT INTO products (tenant_id,company_id,code,name,unit,price,active)
+      const result=await this.database.db.prepare(`INSERT INTO products (tenant_id,company_id,code,name,unit,price,active)
         VALUES (?,?,?,?,?,?,?) ON CONFLICT(company_id,code) DO UPDATE SET
         name=excluded.name,unit=excluded.unit,price=excluded.price,active=excluded.active`)
         .run(user.tenant_id,p.companyId,p.code,p.name,p.unit,p.price,p.active);
-      // SQLite last_insert_rowid is unreliable after an upsert conflict: resolve the canonical ID.
-      const row=this.database.db.prepare("SELECT id FROM products WHERE tenant_id=? AND company_id=? AND code=?")
+      // Resolve the canonical ID after either the insert or upsert branch.
+      const row=await this.database.db.prepare("SELECT id FROM products WHERE tenant_id=? AND company_id=? AND code=?")
         .get(user.tenant_id,p.companyId,p.code) as {id:number}|undefined;
       if(!row) throw new Error("Produto nao encontrado apos gravacao.");
       return {id:row.id,message:"Produto salvo."};
     } catch {throw new ConflictException("Nao foi possivel cadastrar o produto.");}
   }
 
-  updateProduct(user:PublicUser,id:number,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
-    const p=this.productData(user,data);
+  async updateProduct(user:PublicUser,id:number,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
+    const p=await this.productData(user,data);
     try {
-      const result=this.database.db.prepare(`UPDATE products SET company_id=?,code=?,name=?,unit=?,price=?,active=?
+      const result=await this.database.db.prepare(`UPDATE products SET company_id=?,code=?,name=?,unit=?,price=?,active=?
         WHERE id=? AND tenant_id=?`).run(p.companyId,p.code,p.name,p.unit,p.price,p.active,id,user.tenant_id);
       if(!result.changes) throw new NotFoundException("Produto nao encontrado.");
       return {id,message:"Produto atualizado."};
@@ -164,14 +164,14 @@ export class CatalogService {
   }
 
   deleteProduct(user:PublicUser,id:number) {
-    return this.database.transaction(()=>{
-      const row=this.database.db.prepare("SELECT id FROM products WHERE id=? AND tenant_id=?")
+    return this.database.transaction(async ()=>{
+      const row=await this.database.db.prepare("SELECT id FROM products WHERE id=? AND tenant_id=?")
         .get(id,user.tenant_id);
       if(!row) throw new NotFoundException("Produto nao encontrado.");
-      if(this.database.db.prepare("SELECT 1 FROM proposal_items WHERE product_id=? LIMIT 1").get(id)){
+      if(await this.database.db.prepare("SELECT 1 FROM proposal_items WHERE product_id=? LIMIT 1").get(id)){
         throw new ConflictException("Produto ja usado em pedido. Inative o produto para preservar o historico.");
       }
-      this.database.db.prepare("DELETE FROM products WHERE id=? AND tenant_id=?").run(id,user.tenant_id);
+      await this.database.db.prepare("DELETE FROM products WHERE id=? AND tenant_id=?").run(id,user.tenant_id);
       return {message:"Produto excluido."};
     });
   }

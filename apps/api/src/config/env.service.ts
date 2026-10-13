@@ -1,6 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 import { z } from "zod";
 
 const booleanFromEnv = z
@@ -8,12 +6,15 @@ const booleanFromEnv = z
   .default("false")
   .transform((value) => value === "true" || value === "1");
 
+const developmentDatabaseUrl = "postgresql://hipersales:hipersales@localhost:5432/hipersales";
+
 const environmentSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     HOST: z.string().default("0.0.0.0"),
     PORT: z.coerce.number().int().min(1).max(65_535).default(8000),
-    HYPERSALES_DB_PATH: z.string().optional(),
+    DATABASE_URL: z.string().min(1).default(developmentDatabaseUrl),
+    DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(100).default(10),
     HYPERSALES_SESSION_COOKIE: z.string().min(1).default("hypersales_session"),
     HYPERSALES_SESSION_TTL_SECONDS: z.coerce.number().int().min(300).default(43_200),
     HYPERSALES_COOKIE_SECURE: booleanFromEnv,
@@ -37,12 +38,14 @@ const environmentSchema = z
         message: "SameSite=None exige HYPERSALES_COOKIE_SECURE=true.",
       });
     }
+    if (value.NODE_ENV === "production" && value.DATABASE_URL === developmentDatabaseUrl) {
+      context.addIssue({
+        code: "custom",
+        path: ["DATABASE_URL"],
+        message: "DATABASE_URL segura e obrigatoria em producao.",
+      });
+    }
   });
-
-function repositoryRoot(): string {
-  const cwd = process.cwd();
-  return existsSync(resolve(cwd, "apps", "web")) ? cwd : resolve(cwd, "../..");
-}
 
 @Injectable()
 export class EnvService {
@@ -51,9 +54,8 @@ export class EnvService {
   readonly nodeEnv = this.values.NODE_ENV;
   readonly host = this.values.HOST;
   readonly port = this.values.PORT;
-  readonly databasePath = resolve(
-    this.values.HYPERSALES_DB_PATH ?? resolve(repositoryRoot(), "database", "hypersales.sqlite3"),
-  );
+  readonly databaseUrl = this.values.DATABASE_URL;
+  readonly databasePoolSize = this.values.DATABASE_POOL_SIZE;
   readonly sessionCookie = this.values.HYPERSALES_SESSION_COOKIE;
   readonly sessionTtlSeconds = this.values.HYPERSALES_SESSION_TTL_SECONDS;
   readonly cookieSecure = this.values.HYPERSALES_COOKIE_SECURE;

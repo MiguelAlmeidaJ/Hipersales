@@ -32,25 +32,25 @@ export class OccurrenceCreationService {
     if(!Number.isSafeInteger(customerId)||!Number.isSafeInteger(sellerId)||!reason||!description)
       throw new BadRequestException("Informe cliente, motivo e relato.");
     const attachments=decodeOccurrenceAttachments(input.attachments);
-    return this.database.transaction(()=>{
+    return this.database.transaction(async ()=>{
       const db=this.database.db,tenant=user.tenant_id;
-      if(user.role==="admin"&&!db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,tenant))
+      if(user.role==="admin"&&!await db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,tenant))
         throw new BadRequestException("Representante invalido.");
       if(user.role!=="admin"&&sellerId!==user.id) throw new ForbiddenException("Representante invalido.");
-      const customer=db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=? AND active=1").get(customerId,tenant) as Data|undefined;
+      const customer=await db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=? AND active=1").get(customerId,tenant) as Data|undefined;
       if(!customer) throw new BadRequestException("Cliente invalido.");
-      if(user.role!=="admin"&&!db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
+      if(user.role!=="admin"&&!await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
         throw new ForbiddenException("Cliente nao associado ao representante.");
-      const seller=db.prepare("SELECT name,email,communication_email FROM users WHERE id=? AND tenant_id=?").get(sellerId,tenant) as Data|undefined;
+      const seller=await db.prepare("SELECT name,email,communication_email FROM users WHERE id=? AND tenant_id=?").get(sellerId,tenant) as Data|undefined;
       const display=(v:unknown)=>String(v||"").trim()||"-";
       const now=new Date().toISOString();
-      const id=Number(db.prepare("INSERT INTO occurrences (tenant_id,seller_id,customer_id,reason,description,attachment_names,status,resolution,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)")
-        .run(tenant,sellerId,customerId,reason,description,JSON.stringify(attachments.map(a=>a.filename)),"aberta","",now,now).lastInsertRowid);
-      db.prepare("INSERT INTO occurrence_events (occurrence_id,tenant_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?,?)")
+      const id=Number((await db.prepare("INSERT INTO occurrences (tenant_id,seller_id,customer_id,reason,description,attachment_names,status,resolution,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)")
+        .run(tenant,sellerId,customerId,reason,description,JSON.stringify(attachments.map(a=>a.filename)),"aberta","",now,now)).lastInsertRowid);
+      await db.prepare("INSERT INTO occurrence_events (occurrence_id,tenant_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?,?)")
         .run(id,tenant,"aberta","Ocorrencia aberta","Registro enviado e aguardando verificacao da retaguarda.",sellerId,now);
       const insert=db.prepare("INSERT INTO occurrence_attachments (occurrence_id,tenant_id,filename,mimetype,content,created_at) VALUES (?,?,?,?,?,?)");
-      for(const a of attachments) insert.run(id,tenant,a.filename,a.mimetype,a.content,now);
-      db.prepare("INSERT INTO email_outbox (tenant_id,kind,recipients,subject,body,created_at) VALUES (?,?,?,?,?,?)")
+      for(const a of attachments) await insert.run(id,tenant,a.filename,a.mimetype,a.content,now);
+      await db.prepare("INSERT INTO email_outbox (tenant_id,kind,recipients,subject,body,created_at) VALUES (?,?,?,?,?,?)")
         .run(tenant,"occurrence_created","vendas@hipermixrepresentacoes.com.br,thallesmachadocomercial@gmail.com",
           "NOVA OCORRENCIA "+String(customer.legal_name||"")+" "+String(customer.cnpj||""),
           [

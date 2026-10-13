@@ -31,8 +31,8 @@ export class CustomersWriteService {
     return { name, cnpj, digits };
   }
 
-  private assertUnique(tenantId: number, digits: string, excludeId = 0) {
-    const rows = this.database.db.prepare(
+  private async assertUnique(tenantId: number, digits: string, excludeId = 0) {
+    const rows = await this.database.db.prepare(
       "SELECT id, cnpj FROM customers WHERE tenant_id = ? AND id <> ?",
     ).all(tenantId, excludeId) as { id: number; cnpj: string }[];
     if (rows.some((row) => digitsOnly(row.cnpj) === digits)) {
@@ -42,12 +42,12 @@ export class CustomersWriteService {
 
   create(user: PublicUser, input: CustomerInput) {
     const { name, cnpj, digits } = this.validate(input);
-    return this.database.transaction(() => {
-      this.assertUnique(user.tenant_id, digits);
+    return this.database.transaction(async () => {
+      await this.assertUnique(user.tenant_id, digits);
       const { phone, email, address, state_registration } = customerContact(input);
       const payload = JSON.stringify({ ...input, phone, email, _lookup: input._lookup ?? {} });
       try {
-        const result = this.database.db.prepare(`INSERT INTO customers
+        const result = await this.database.db.prepare(`INSERT INTO customers
           (tenant_id, legal_name, trade_name, cnpj, state_registration, address, phone, email,
            form_payload, active, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
@@ -64,12 +64,12 @@ export class CustomersWriteService {
 
   update(user: PublicUser, customerId: number, input: CustomerInput) {
     const { name, cnpj, digits } = this.validate(input);
-    return this.database.transaction(() => {
-      const existing = this.database.db.prepare(
+    return this.database.transaction(async () => {
+      const existing = await this.database.db.prepare(
         "SELECT id, form_payload FROM customers WHERE id=? AND tenant_id=?",
       ).get(customerId, user.tenant_id) as {id:number; form_payload:string}|undefined;
       if (!existing) throw new NotFoundException("Cliente nao encontrado.");
-      this.assertUnique(user.tenant_id, digits, customerId);
+      await this.assertUnique(user.tenant_id, digits, customerId);
       let previous: Record<string, unknown> = {};
       try {
         const parsed: unknown = JSON.parse(existing.form_payload || "{}");
@@ -80,7 +80,7 @@ export class CustomersWriteService {
       const { phone, email, address, state_registration } = customerContact(input);
       const payload = JSON.stringify({ ...previous, ...input, phone, email });
       try {
-        this.database.db.prepare(`UPDATE customers SET legal_name=?, trade_name=?, cnpj=?,
+        await this.database.db.prepare(`UPDATE customers SET legal_name=?, trade_name=?, cnpj=?,
           state_registration=?, address=?, phone=?, email=?, form_payload=?, active=?
           WHERE id=? AND tenant_id=?`).run(
           name, input.trade_name ?? null, cnpj, state_registration,
@@ -95,20 +95,20 @@ export class CustomersWriteService {
   }
 
   remove(user: PublicUser, customerId: number) {
-    return this.database.transaction(() => {
+    return this.database.transaction(async () => {
       const db = this.database.db;
-      if (!db.prepare("SELECT id FROM customers WHERE id=? AND tenant_id=?")
+      if (!await db.prepare("SELECT id FROM customers WHERE id=? AND tenant_id=?")
         .get(customerId, user.tenant_id)) {
         throw new NotFoundException("Cliente nao encontrado.");
       }
-      if (db.prepare("SELECT 1 FROM proposals WHERE customer_id=? AND tenant_id=? LIMIT 1")
+      if (await db.prepare("SELECT 1 FROM proposals WHERE customer_id=? AND tenant_id=? LIMIT 1")
         .get(customerId, user.tenant_id)) {
         throw new ConflictException(
           "Cliente ja possui pedido. Inative o cliente para preservar o historico.",
         );
       }
-      db.prepare("DELETE FROM customer_sellers WHERE customer_id=?").run(customerId);
-      db.prepare("DELETE FROM customers WHERE id=? AND tenant_id=?").run(
+      await db.prepare("DELETE FROM customer_sellers WHERE customer_id=?").run(customerId);
+      await db.prepare("DELETE FROM customers WHERE id=? AND tenant_id=?").run(
         customerId, user.tenant_id,
       );
       return { message: "Cliente excluido." };

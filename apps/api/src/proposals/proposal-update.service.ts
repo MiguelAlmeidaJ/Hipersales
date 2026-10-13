@@ -53,9 +53,9 @@ export class ProposalUpdateService {
   update(user:PublicUser,id:number,data:Data) {
     if(!Number.isSafeInteger(id)||id<1||!data||typeof data!=="object"||Array.isArray(data))
       throw new BadRequestException("Pedido invalido.");
-    return this.database.transaction(()=>{
+    return this.database.transaction(async ()=>{
       const db=this.database.db;
-      const previous=db.prepare("SELECT * FROM proposals WHERE id=? AND tenant_id=?")
+      const previous=await db.prepare("SELECT * FROM proposals WHERE id=? AND tenant_id=?")
         .get(id,user.tenant_id) as Data|undefined;
       if(!previous) throw new NotFoundException("Proposta nao encontrada.");
       const oldStatus=String(previous.status||"");
@@ -86,23 +86,23 @@ export class ProposalUpdateService {
           const productId=Number(row.product_id),quantity=Number(row.quantity),price=Number(row.negotiated_price);
           if(!Number.isSafeInteger(productId)||productId<1||!Number.isFinite(quantity)||quantity<=0||!Number.isFinite(price)||price<0)
             throw new BadRequestException("Quantidade e preco dos itens devem ser validos.");
-          if(!db.prepare("SELECT id FROM products WHERE id=? AND tenant_id=? AND company_id=? AND active=1")
+          if(!await db.prepare("SELECT id FROM products WHERE id=? AND tenant_id=? AND company_id=? AND active=1")
             .get(productId,user.tenant_id,Number(previous.company_id)))
             throw new BadRequestException("Produto invalido para a empresa do pedido.");
           normalizedItems.push({productId,quantity,price});
         }
       }
-      db.prepare(`UPDATE proposals SET ${columns.map(k=>k+"=?").join(",")},updated_at=? WHERE id=? AND tenant_id=?`)
+      await db.prepare(`UPDATE proposals SET ${columns.map(k=>k+"=?").join(",")},updated_at=? WHERE id=? AND tenant_id=?`)
         .run(...columns.map(k=>patch[k] as string|number|null),new Date().toISOString(),id,user.tenant_id);
       if(items!==undefined){
-        db.prepare("DELETE FROM proposal_items WHERE proposal_id=?").run(id);
+        await db.prepare("DELETE FROM proposal_items WHERE proposal_id=?").run(id);
         const insert=db.prepare("INSERT INTO proposal_items (proposal_id,product_id,quantity,negotiated_price) VALUES (?,?,?,?)");
-        for(const item of normalizedItems) insert.run(id,item.productId,item.quantity,item.price);
+        for(const item of normalizedItems) await insert.run(id,item.productId,item.quantity,item.price);
       }
       if(status!==oldStatus) {
-        db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
+        await db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
           .run(id,status,labels[status],String(data.admin_notes||""),user.id,new Date().toISOString());
-        this.notifications.queue(user.tenant_id,id,status);
+        await this.notifications.queue(user.tenant_id,id,status);
       }
       return {message:status!==oldStatus?"Status atualizado.":"Pedido atualizado."};
     });
