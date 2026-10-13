@@ -22,7 +22,7 @@
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:ps": "docker compose ps",
-    "pm2:reload": "pm2 startOrReload ecosystem.config.cjs",
+    "pm2:up": "pm2 startOrReload ecosystem.config.cjs --update-env",
     "build:database": "pnpm --filter @hipersales/database generate && pnpm --filter @hipersales/database build",
     "prisma:validate": "pnpm --filter @hipersales/database validate"
   },
