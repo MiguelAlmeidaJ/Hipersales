@@ -4,12 +4,13 @@ Backend NestJS/TypeScript, PostgreSQL + Prisma, frontend Next.js e integração 
 
 ## Estrutura
 
-- `apps/api`: API NestJS e migrations Prisma 7 (fonte oficial do banco)
+- `apps/api`: API NestJS (consome `@hipersales/database`)
 - `apps/web`: frontend Next.js
 - `packages/contracts`: contratos Zod/TypeScript compartilhados
+- `packages/database`: schema único Prisma 7, migrations e Prisma Client compartilhado
 - `infra/docker`: infraestrutura Docker
 
-`packages/database` contém um pacote antigo com Prisma 6 e **não faz parte do workspace ativo**. Não rode migrations nele.
+**Fonte única do banco:** `packages/database/prisma/schema.prisma`. As migrations também ficam em `packages/database/prisma/migrations`, e a configuração da conexão em `packages/database/prisma.config.ts`. Não crie schemas adicionais nas aplicações.
 
 ## Primeira instalação
 
@@ -32,8 +33,10 @@ Configure os arquivos .env conforme as instruções da API antes de rodar Prisma
 | `pnpm dev:api` | Inicia apenas a API |
 | `pnpm dev:web` | Inicia apenas o Next.js |
 | `pnpm build` | Compila contratos, API e Web |
-| `pnpm build:api` | Compila contratos e API |
+| `pnpm build:api` | Compila contratos, pacote database e API |
 | `pnpm build:web` | Compila contratos e Web |
+| `pnpm build:database` | Gera Prisma Client e compila o pacote compartilhado |
+| `pnpm prisma:validate` | Valida o schema central |
 | `pnpm typecheck` | Verifica API e Web |
 | `pnpm test` | Testes da API |
 | `pnpm prisma:generate` | Gera cliente Prisma da API |
