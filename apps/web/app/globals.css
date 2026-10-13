@@ -470,3 +470,32 @@
   .app-header-title { font-size: 17px; }
   .app-content { padding-top: 18px; }
 }
+
+/* Responsive dashboard: fluid canvas without cramped KPI values. */
+@layer components {
+  .app-main { min-width: 0; }
+  .app-content {
+    width: 100%;
+    max-width: 1920px;
+    margin-inline: auto;
+    padding-inline: clamp(16px, 2.1vw, 40px);
+  }
+  .dashboard-view { width: 100%; min-width: 0; }
+  .dashboard-view > div, .dashboard-view > section, .dashboard-view > form { min-width: 0; }
+  .dashboard-view input, .dashboard-view select { min-width: 0; width: 100%; }
+}
+@media (min-width: 1800px) {
+  .app-sidebar.nav-side { width: 274px; }
+  .app-sidebar.nav-side.is-collapsed { width: 76px; }
+  .app-content { max-width: 2100px; }
+}
+@media (max-width: 767px) {
+  .app-header { gap: 8px; }
+  .app-header-actions { flex-shrink: 0; gap: 7px; }
+  .app-content { padding-inline: 14px; }
+  .app-account-popover { right: 0; max-width: calc(100vw - 28px); }
+}
+@media (max-width: 420px) {
+  .app-header-title { font-size: 15px; }
+  .app-header .app-breadcrumb { font-size: 10px; }
+}
