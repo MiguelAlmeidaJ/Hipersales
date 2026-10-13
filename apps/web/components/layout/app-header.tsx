@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FiChevronDown, FiKey, FiLogOut, FiShield, FiUser, FiX } from "react-icons/fi";
+import { FiChevronDown, FiDownload, FiKey, FiLogOut, FiShield, FiUser, FiX } from "react-icons/fi";
 import PasswordChange from "@/components/auth/password-change";
 import { api, type SessionUser } from "@/lib/api";
+
+type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
 
 type HeaderProps = {
   title: string;
@@ -14,6 +16,10 @@ type HeaderProps = {
 };
 
 export default function AppHeader({ title, user, busy, onLogout, onUserChange }: HeaderProps) {
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [installed, setInstalled] = useState(false);
+  const [installHelp, setInstallHelp] = useState(false);
+  const [installBusy, setInstallBusy] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -41,6 +47,42 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
     };
   }, []);
 
+  useEffect(() => {
+    const standalone = window.matchMedia("(display-mode: standalone)").matches ||
+      ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
+    setInstalled(standalone);
+    function beforeInstall(event: Event) {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPromptEvent);
+    }
+    function afterInstall() {
+      setInstalled(true);
+      setInstallHelp(false);
+      setInstallPrompt(null);
+    }
+    window.addEventListener("beforeinstallprompt", beforeInstall);
+    window.addEventListener("appinstalled", afterInstall);
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+      void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    }
+    return () => {
+      window.removeEventListener("beforeinstallprompt", beforeInstall);
+      window.removeEventListener("appinstalled", afterInstall);
+    };
+  }, []);
+
+  async function installApp() {
+    if (!installPrompt) { setInstallHelp(value => !value); return; }
+    setInstallBusy(true);
+    try {
+      await installPrompt.prompt();
+      await installPrompt.userChoice;
+      setInstallPrompt(null);
+    } finally {
+      setInstallBusy(false);
+    }
+  }
+
   async function onPasswordChanged() {
     const result = await api<{ user: SessionUser }>("/api/me");
     onUserChange(result.user);
@@ -58,6 +100,21 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
       </div>
 
       <div className="app-header-actions">
+        {!installed && (
+          <div className="relative">
+            <button type="button" onClick={installApp} disabled={installBusy}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#cde4f4] bg-[#edf5fc] px-3 text-xs font-bold text-[#073c96] transition hover:bg-[#dfedfa] disabled:opacity-60"
+              aria-label="Instalar aplicativo HiperSales">
+              <FiDownload size={16} /><span className="hidden sm:inline">Instalar app</span>
+            </button>
+            {installHelp && (
+              <div role="status" className="absolute right-0 top-[calc(100%+10px)] z-50 w-[min(85vw,310px)] rounded-xl border border-[#e4ebf0] bg-white p-4 text-xs leading-relaxed text-slate-600 shadow-xl">
+                No iPhone, use Compartilhar → Adicionar à Tela de Início. No computador ou Android, procure Instalar app no menu do navegador. A instalação requer HTTPS ou localhost.
+                <button type="button" className="mt-3 block font-bold text-[#0767b4]" onClick={() => setInstallHelp(false)}>Fechar</button>
+              </div>
+            )}
+          </div>
+        )}
         <div className="hidden items-center gap-2 border-r border-slate-200 pr-4 lg:flex">
           <span className="size-2 rounded-full bg-[#07a970]" aria-hidden="true" />
           <span className="text-xs font-medium text-slate-500">Painel comercial</span>
