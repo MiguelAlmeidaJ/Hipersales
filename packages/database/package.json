@@ -4,14 +4,26 @@
   "private": true,
   "scripts": {
     "generate": "prisma generate",
+    "migrate": "prisma migrate deploy",
     "validate": "prisma validate",
     "format": "prisma format",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "6.19.0"
+    "@prisma/client": "^7.10.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "pg": "^8.16.3",
+    "dotenv": "^17.2.3"
   },
   "devDependencies": {
-    "prisma": "6.19.0"
-  }
+    "prisma": "^7.10.0",
+    "typescript": "^6.0.3",
+    "@types/node": "^24.10.0",
+    "@types/pg": "^8.15.5"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts"
 }
