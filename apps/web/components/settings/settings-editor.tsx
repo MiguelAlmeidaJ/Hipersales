@@ -48,6 +48,29 @@ export default function SettingsEditor() {
   function update(section: "smtp" | "whatsapp", key: string, value: string | boolean) {
     setSettings((s) => ({ ...s, [section]: { ...(s[section] || {}), [key]: value } }));
   }
+  async function connectWhatsapp() {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await api<{ message?: string; whatsapp?: Record<string, unknown> }>("/api/admin/settings/whatsapp/connect", {
+        method: "POST",
+        body: JSON.stringify(settings.whatsapp || {}),
+      });
+      if (result.whatsapp) {
+        setSettings(previous => ({ ...previous, whatsapp: { ...(previous.whatsapp || {}), ...result.whatsapp } }));
+      }
+      setNotice(result.message || "Solicitação de conexão enviada.");
+      if (!result.whatsapp?.qr_image_url && !result.whatsapp?.qr_payload) {
+        setError("A Evolution API respondeu sem QR Code. Verifique se a instância está conectada ou consulte os logs da integração.");
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Não foi possível gerar o QR Code.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function action(endpoint: `/api/${string}`, data: unknown) {
     setBusy(true);
     setError("");
@@ -200,7 +223,7 @@ export default function SettingsEditor() {
             className="rounded-lg border px-4 py-2"
             onClick={() => {
               if (window.confirm("Iniciar uma nova conexão WhatsApp?"))
-                void action("/api/admin/settings/whatsapp/connect", settings.whatsapp || {});
+                void connectWhatsapp();
             }}
           >
             Conectar / gerar QR
@@ -239,7 +262,7 @@ export default function SettingsEditor() {
             />
           )}
         {Boolean(settings.whatsapp?.qr_payload) && (
-          <p className="text-xs text-slate-500">QR disponível para conexão com o WhatsApp.</p>
+          <p className="text-xs text-slate-500">Código de pareamento recebido da Evolution API. Se a imagem não aparecer, gere um novo QR ou verifique os logs da integração.</p>
         )}
       </form>
       <WorkflowSettings />
