@@ -79,7 +79,7 @@ function Ranking({ items }: { items: Rank[] }) {
         items.map((item, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 rounded-xl border border-[#e4ebf0] bg-white px-3 py-3 transition-colors hover:bg-[#f8fbfe]"
+            className="flex min-w-0 flex-wrap items-center gap-3 rounded-xl border border-[#e4ebf0] bg-white px-3 py-3 transition-colors hover:bg-[#f8fbfe]"
           >
             <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#edf5fc] text-sm font-extrabold text-[#073c96]">
               {i + 1}
@@ -88,7 +88,7 @@ function Ranking({ items }: { items: Rank[] }) {
               <p className="truncate text-sm font-bold text-[#111111]">{item.name}</p>
               <p className="text-xs text-slate-500">{number(item.orders)} pedido(s)</p>
             </div>
-            <strong className="shrink-0 text-right text-sm font-extrabold tabular-nums text-[#111111]">{money(item.total)}</strong>
+            <strong className="min-w-0 text-right text-xs font-extrabold tabular-nums text-[#111111] sm:text-sm [overflow-wrap:anywhere]">{money(item.total)}</strong>
           </div>
         ))
       ) : (
@@ -178,7 +178,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
       ]
     : [];
   return (
-    <section className="space-y-6 pb-8">
+    <section className="dashboard-view min-w-0 space-y-6 pb-8">
       <header className="flex flex-wrap items-center justify-between gap-5 border-b border-[#e4ebf0] pb-5">
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#073c96]">
@@ -211,7 +211,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
               <FiRefreshCw size={14} className={loading ? "animate-spin" : ""}/> Atualizar
             </button>
           </div>
-          <div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-[2fr_1.2fr_1fr_1fr_auto]">
+          <div className="grid min-w-0 items-end gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-[minmax(210px,2fr)_minmax(140px,1fr)_minmax(145px,1fr)_minmax(145px,1fr)_auto]">
             <label className="grid gap-1 text-xs font-semibold text-slate-600">
               Buscar
               <input
@@ -254,7 +254,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                 onChange={(e) => setTo(e.target.value)}
               />
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 sm:col-span-2 xl:col-span-4 2xl:col-span-1 2xl:flex-nowrap">
               <button
                 type="button"
                 onClick={clear}
@@ -294,10 +294,10 @@ export default function DashboardView({ user }: { user: SessionUser }) {
       )}
       {admin && data && (
         <div className={loading ? "pointer-events-none space-y-5 opacity-60" : "space-y-5"}>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             {metrics.map(([label, value, help], i) => (
               <article
-                className={`${card} relative overflow-hidden border-t-[3px] transition-shadow hover:shadow-[0_10px_30px_rgba(16,50,83,.09)]`}
+                className={`${card} min-w-0 relative overflow-hidden border-t-[3px] transition-shadow hover:shadow-[0_10px_30px_rgba(16,50,83,.09)]`}
                 style={{
                   borderTopColor: ["#0767b4", "#009ad6", "#07a970", "#76bd3d", "#eab52b"][i],
                 }}
@@ -307,15 +307,15 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                 <p className="text-[11px] font-bold tracking-[.02em] text-slate-500">
                   {label}
                 </p>
-                <p className="mt-2 break-words text-[clamp(1.15rem,1.7vw,1.6rem)] font-black tracking-tight tabular-nums text-[#111111]">
+                <p className="mt-2 text-[clamp(1.15rem,1.55vw,1.65rem)] font-black tracking-tight tabular-nums text-[#111111] [overflow-wrap:anywhere]">
                   {value}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">{help}</p>
               </article>
             ))}
           </div>
-          <div className="grid gap-5 xl:grid-cols-2">
-            <section className={card}>
+          <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+            <section className={`${card} min-w-0`}>
               <Heading kicker="Pedidos" title="Status do funil" />
               <div className="space-y-4">
                 {data.statuses.map((row) => (
@@ -348,17 +348,17 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                 )}
               </div>
             </section>
-            <section className={card}>
+            <section className={`${card} min-w-0`}>
               <Heading kicker="Empresas" title="Ranking de empresas" />
               <Ranking items={data.company_ranking} />
             </section>
           </div>
-          <div className="grid gap-5 xl:grid-cols-2">
-            <section className={card}>
+          <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+            <section className={`${card} min-w-0`}>
               <Heading kicker="Representantes" title="Ranking do time comercial" />
               <Ranking items={data.seller_ranking} />
             </section>
-            <section className={card}>
+            <section className={`${card} min-w-0`}>
               <Heading kicker="Últimos pedidos" title="Atividade recente" />
               <div className="space-y-2">
                 {data.recent_orders.slice(0, 5).map((order) => (
@@ -377,7 +377,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                         {order.company_name} · {names[order.status] || order.status}
                       </p>
                     </div>
-                    <strong className="shrink-0 text-xs text-[#111111]">
+                    <strong className="text-right text-xs text-[#111111] [overflow-wrap:anywhere]">
                       {money(order.total)}
                     </strong>
                   </div>
@@ -388,7 +388,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
               </div>
             </section>
           </div>
-          <section className={card}>
+          <section className={`${card} min-w-0`}>
             <Heading kicker="Produtos" title="Produtos mais vendidos" />
             <div className="space-y-2">
               {data.top_products.map((product, i) => (
@@ -413,7 +413,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
               )}
             </div>
           </section>
-          <section className={card}>
+          <section className={`${card} min-w-0`}>
             <Heading kicker="Pedidos" title="Últimos pedidos" />
             <div className="overflow-x-auto rounded-xl border border-[#e4ebf0]">
               <table className="w-full min-w-[700px] text-left text-sm">
