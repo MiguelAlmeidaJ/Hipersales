@@ -42,6 +42,8 @@ suite("PostgreSQL API homologation", () => {
     await pool.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public");
     const migration = await readFile(resolve(import.meta.dirname, "../prisma/migrations/20261013100000_init_postgresql/migration.sql"), "utf8");
     await pool.query(migration);
+    const outboxMigration = await readFile(resolve(import.meta.dirname, "../prisma/migrations/20261013110000_outbox_lease/migration.sql"), "utf8");
+    await pool.query(outboxMigration);
     const tenant = await pool.query(
       "INSERT INTO tenants (name,slug,status,created_at) VALUES ($1,$2,'active',NOW()) RETURNING id",
       ["Tenant PostgreSQL", "postgres-test"],
