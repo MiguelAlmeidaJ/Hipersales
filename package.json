@@ -24,7 +24,10 @@
     "infra:ps": "docker compose ps",
     "pm2:up": "pm2 startOrReload ecosystem.config.cjs --update-env",
     "build:database": "pnpm --filter @hipersales/database generate && pnpm --filter @hipersales/database build",
-    "prisma:validate": "pnpm --filter @hipersales/database validate"
+    "prisma:validate": "pnpm --filter @hipersales/database validate",
+    "prisma:validate:sqlserver": "pnpm --filter @hipersales/database validate:sqlserver",
+    "prisma:generate:sqlserver": "pnpm --filter @hipersales/database generate:sqlserver",
+    "prisma:migrate:sqlserver:dev": "pnpm --filter @hipersales/database migrate:sqlserver:dev"
   },
   "engines": {
     "node": ">=22"
