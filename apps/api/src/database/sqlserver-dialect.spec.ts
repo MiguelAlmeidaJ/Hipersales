@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toSqlServerSelect } from "./sqlserver-dialect.js";
+import { bindSqlServerParameters, toSqlServerSelect } from "./sqlserver-dialect.js";
 
 describe("SQL Server legacy query translation", () => {
   it("converts a simple LIMIT to TOP", () => {
@@ -16,5 +16,24 @@ describe("SQL Server legacy query translation", () => {
   });
   it("refuses unsupported OFFSET pagination", () => {
     expect(() => toSqlServerSelect("SELECT * FROM users LIMIT 10 OFFSET 20")).toThrow();
+  });
+});
+
+describe("SQL Server safe parameter binding", () => {
+  it("binds parameter values without injecting into SQL", () => {
+    const value = "'; DROP TABLE users;--";
+    expect(bindSqlServerParameters("SELECT * FROM users WHERE email = ?", [value])).toEqual({
+      sql: "SELECT * FROM users WHERE email = @p0",
+      bindings: [{ name: "p0", value }],
+    });
+  });
+  it("ignores question marks inside literal strings and comments", () => {
+    const query = "SELECT '?' AS question, id FROM users WHERE id = ? -- ?";
+    expect(bindSqlServerParameters(query, [42]).sql)
+      .toBe("SELECT '?' AS question, id FROM users WHERE id = @p0 -- ?");
+  });
+  it("rejects missing and extra parameters", () => {
+    expect(() => bindSqlServerParameters("SELECT * FROM users WHERE id = ?", [])).toThrow();
+    expect(() => bindSqlServerParameters("SELECT * FROM users", [12])).toThrow();
   });
 });
