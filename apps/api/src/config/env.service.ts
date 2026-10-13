@@ -14,6 +14,7 @@ const environmentSchema = z
     HOST: z.string().default("0.0.0.0"),
     PORT: z.coerce.number().int().min(1).max(65_535).default(8000),
     DATABASE_URL: z.string().min(1).default(developmentDatabaseUrl),
+    SQLSERVER_DATABASE_URL: z.string().default(""),
     DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(100).default(10),
     HYPERSALES_SESSION_COOKIE: z.string().min(1).default("hypersales_session"),
     HYPERSALES_SESSION_TTL_SECONDS: z.coerce.number().int().min(300).default(43_200),
@@ -55,6 +56,7 @@ export class EnvService {
   readonly host = this.values.HOST;
   readonly port = this.values.PORT;
   readonly databaseUrl = this.values.DATABASE_URL;
+  readonly sqlserverDatabaseUrl = this.values.SQLSERVER_DATABASE_URL;
   readonly databasePoolSize = this.values.DATABASE_POOL_SIZE;
   readonly sessionCookie = this.values.HYPERSALES_SESSION_COOKIE;
   readonly sessionTtlSeconds = this.values.HYPERSALES_SESSION_TTL_SECONDS;
