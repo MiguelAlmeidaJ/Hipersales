@@ -88,7 +88,7 @@
   .nav-side nav {
     @apply my-4 flex flex-col gap-1;
   }
-  .nav-side nav button {
+  .nav-side:not(.app-sidebar) nav button {
     @apply flex w-full items-center whitespace-nowrap rounded-xl border border-transparent px-3 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-white/10;
   }
   .nav-side nav button.selected {
