@@ -30,6 +30,11 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState("");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const endpoint = kind === "companies" ? "/api/admin/companies" : "/api/admin/products";
   async function reload() {
     const data = await api<{ companies?: Item[]; products?: Item[] }>(endpoint);
@@ -137,10 +142,20 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
       setBusy(false);
     }
   }
+  const filtered = records.filter(item => {
+    const searchable = [item.name, item.legal_name, item.code, item.id].join(" ").toLocaleLowerCase("pt-BR");
+    const active = item.active === true || item.active === 1;
+    return searchable.includes(query.trim().toLocaleLowerCase("pt-BR")) &&
+      (stateFilter === "all" || (stateFilter === "active" ? active : !active)) &&
+      (kind !== "products" || !companyFilter || String(item.company_id) === companyFilter);
+  });
+  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, pages);
+  const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   return (
-    <section className="tile">
-      <h2>{kind === "companies" ? "Empresas" : "Produtos"}</h2>
-      <form onSubmit={submit} className="editor-form">
+    <section className="min-w-0 space-y-5">
+      <div><h2 className="text-xl font-extrabold text-slate-900">{kind === "companies" ? "Empresas" : "Produtos"}</h2><p className="mt-1 text-sm text-slate-500">Gerencie o catálogo, consulte registros e filtre por situação.</p></div>
+      <form onSubmit={submit} className="editor-form rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-sm">
         <label>
           Nome
           <input
@@ -225,7 +240,21 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
-      <div className="table-wrap">
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-[#e4ebf0] bg-white p-4 sm:grid-cols-2 xl:grid-cols-4">
+        <label className="grid min-w-0 gap-1 text-xs font-semibold text-slate-600">Buscar
+          <input type="search" value={query} onChange={e => {setQuery(e.target.value);setPage(1);}} placeholder={kind === "companies" ? "Nome ou razão social" : "Nome, código ou ID"} className="w-full min-w-0 rounded-lg border border-slate-200 p-2.5 text-sm"/>
+        </label>
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">Situação
+          <select value={stateFilter} onChange={e => {setStateFilter(e.target.value);setPage(1);}} className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm"><option value="all">Todos</option><option value="active">Ativos</option><option value="inactive">Inativos</option></select>
+        </label>
+        {kind === "products" && <label className="grid gap-1 text-xs font-semibold text-slate-600">Empresa
+          <select value={companyFilter} onChange={e => {setCompanyFilter(e.target.value);setPage(1);}} className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm"><option value="">Todas as empresas</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select>
+        </label>}
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">Por página
+          <select value={pageSize} onChange={e => {setPageSize(Number(e.target.value));setPage(1);}} className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm">{[10,20,50,100].map(n => <option key={n} value={n}>{n} por página</option>)}</select>
+        </label>
+      </div>
+      <div className="table-wrap rounded-2xl border border-[#e4ebf0] bg-white p-3 shadow-sm">
         <table>
           <thead>
             <tr>
@@ -242,7 +271,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             </tr>
           </thead>
           <tbody>
-            {records.map((x) => (
+            {visible.map((x) => (
               <tr key={x.id}>
                 <td>{x.id}</td>
                 <td>{x.name}</td>
@@ -270,9 +299,11 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                 </td>
               </tr>
             ))}
+            {!visible.length && <tr><td colSpan={kind === "products" ? 6 : 4} className="p-8 text-center text-sm text-slate-500">Nenhum registro encontrado.</td></tr>}
           </tbody>
         </table>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500"><span>{filtered.length} registro(s) · Página {currentPage} de {pages}</span><div className="flex gap-2"><button type="button" disabled={currentPage <= 1} onClick={() => setPage(currentPage-1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button type="button" disabled={currentPage >= pages} onClick={() => setPage(currentPage+1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Próxima</button></div></div>
     </section>
   );
 }
