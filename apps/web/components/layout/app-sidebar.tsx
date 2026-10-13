@@ -34,7 +34,7 @@ export default function AppSidebar({ user, items, activeId, open, onClose }: Sid
       <aside id="app-navigation" className={`nav-side app-sidebar ${open ? "is-open" : ""}`}>
         <Link href="/app/painel" className="app-brand" onClick={onClose} aria-label="HiperSales — ir para o painel">
           <Image
-            src="/assets/logoweb_fundoescuro.png"
+            src="/assets/logo_Hipersalesweb.png"
             width={240}
             height={120}
             alt="HiperSales"
