@@ -8,18 +8,18 @@ Python já foi removido.
 API e Web são executados pelo PM2, nunca pelo Docker Compose. Na raiz do repositório:
 
 ```bash
-npm ci
-npm ci --prefix apps/web
-npm run build:api
-npm run build --prefix apps/web
+pnpm install
+pnpm install
+pnpm build:api
+pnpm build:web --prefix apps/web
 pm2 startOrReload ecosystem.config.cjs
 ```
 
 Para desenvolvimento, execute a API e o frontend em terminais separados:
 
 ```bash
-npm run dev --workspace @hipersales/api
-npm run dev --prefix apps/web
+pnpm dev:api
+pnpm dev:web --prefix apps/web
 ```
 
 Abra `http://localhost:3000`. O frontend consome a API pelas rotas `/api/*`.
@@ -29,8 +29,8 @@ Abra `http://localhost:3000`. O frontend consome a API pelas rotas `/api/*`.
 ```bash
 npm run check:contracts --prefix apps/web
 npm run audit:legacy --prefix apps/web
-npm run typecheck --prefix apps/web
-npm run build --prefix apps/web
+pnpm typecheck --prefix apps/web
+pnpm build:web --prefix apps/web
 ```
 
 Os componentes ficam agrupados por responsabilidade em `components/`: infraestrutura
