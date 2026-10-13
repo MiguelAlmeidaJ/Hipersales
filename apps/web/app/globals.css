@@ -435,3 +435,38 @@
   .app-sidebar.is-collapsed .app-brand { flex: 1; }
   .app-sidebar.is-collapsed .app-menu-link { justify-content: flex-start; }
 }
+
+/* Refined workspace header and account navigation. */
+@layer components {
+  .app-header {
+    min-height: 82px;
+    padding-block: 16px;
+    gap: 20px;
+    box-shadow: 0 1px 0 rgb(15 23 42 / 0.035);
+  }
+  .app-header-title {
+    margin-top: 5px;
+    font-size: 19px;
+    line-height: 1.35;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+  .app-breadcrumb { font-size: 11px; letter-spacing: 0.015em; }
+  .app-account-popover {
+    top: calc(100% + 10px);
+    right: 0;
+    width: min(92vw, 350px);
+    max-height: min(75vh, 600px);
+    overflow-y: auto;
+    border-radius: 16px;
+    border-color: #e4ebf0;
+    padding: 16px;
+    box-shadow: 0 18px 48px rgb(30 54 77 / 0.16);
+  }
+  .app-content { padding-top: 28px; }
+}
+@media (max-width: 767px) {
+  .app-header { min-height: 74px; padding-right: 1rem; padding-left: 1rem; }
+  .app-header-title { font-size: 17px; }
+  .app-content { padding-top: 18px; }
+}

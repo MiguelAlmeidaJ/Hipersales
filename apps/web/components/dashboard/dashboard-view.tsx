@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
+import { FiActivity, FiArrowUpRight, FiBriefcase, FiClock, FiDollarSign, FiFilter, FiRefreshCw, FiSearch, FiShoppingBag, FiUsers, FiX } from "react-icons/fi";
 import { api, type SessionUser } from "@/lib/api";
 type Rank = { name: string; orders: number; total: number };
 type Product = { name: string; company: string; quantity: number; total: number };
@@ -51,7 +52,7 @@ const colors: Record<string, string> = {
   entregue: "#76bd3d",
 };
 const card =
-  "rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-[0_5px_20px_rgba(45,15,60,.045)]";
+  "rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-[0_6px_24px_rgba(16,50,83,.035)]";
 function Heading({
   kicker,
   title,
@@ -78,7 +79,7 @@ function Ranking({ items }: { items: Rank[] }) {
         items.map((item, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 rounded-xl border border-[#e4ebf0] px-3 py-3"
+            className="flex items-center gap-3 rounded-xl border border-[#e4ebf0] bg-white px-3 py-3 transition-colors hover:bg-[#f8fbfe]"
           >
             <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#edf5fc] text-sm font-extrabold text-[#073c96]">
               {i + 1}
@@ -87,7 +88,7 @@ function Ranking({ items }: { items: Rank[] }) {
               <p className="truncate text-sm font-bold text-[#111111]">{item.name}</p>
               <p className="text-xs text-slate-500">{number(item.orders)} pedido(s)</p>
             </div>
-            <strong className="shrink-0 text-sm text-[#111111]">{money(item.total)}</strong>
+            <strong className="shrink-0 text-right text-sm font-extrabold tabular-nums text-[#111111]">{money(item.total)}</strong>
           </div>
         ))
       ) : (
@@ -102,7 +103,8 @@ export default function DashboardView({ user }: { user: SessionUser }) {
     [data, setData] = useState<Executive | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
-    [revision, setRevision] = useState(0);
+    [revision, setRevision] = useState(0),
+    [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [search, setSearch] = useState(""),
     [status, setStatus] = useState(""),
     [from, setFrom] = useState(""),
@@ -122,7 +124,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
     if (admin) {
       api<Executive>(url)
         .then((v) => {
-          if (active) setData(v);
+          if (active) { setData(v); setLastUpdated(new Date()); }
         })
         .catch((e) => {
           if (active) setError(e instanceof Error ? e.message : "Falha ao carregar painel");
@@ -133,7 +135,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
     } else {
       api<SellerOverview>("/api/dashboard")
         .then((v) => {
-          if (active) setOverview(v);
+          if (active) { setOverview(v); setLastUpdated(new Date()); }
         })
         .catch((e) => {
           if (active) setError(e instanceof Error ? e.message : "Falha ao carregar indicadores");
@@ -176,28 +178,26 @@ export default function DashboardView({ user }: { user: SessionUser }) {
       ]
     : [];
   return (
-    <section className="space-y-5 pb-8">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+    <section className="space-y-6 pb-8">
+      <header className="flex flex-wrap items-center justify-between gap-5 border-b border-[#e4ebf0] pb-5">
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#073c96]">
             Dashboard
           </p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-[#111111]">
+          <h2 className="mt-1 text-[clamp(1.65rem,2.3vw,2.15rem)] font-black tracking-tight text-[#111111]">
             Painel executivo
-          </h1>
+          </h2>
           <p className="mt-1 text-sm text-slate-500">
             Visão consolidada de pedidos, carteira, catálogo e operação comercial.
           </p>
         </div>
-        <span className="rounded-xl border border-[#cde4f4] bg-white px-4 py-2 text-xs font-bold text-[#073c96]">
-          HiperMix Representações
-        </span>
+        <div className="flex flex-wrap items-center gap-3"><span className="inline-flex items-center gap-2 rounded-xl border border-[#d9e7f2] bg-white px-3 py-2.5 text-xs font-semibold text-[#073c96]"><FiBriefcase size={15}/> HiperMix Representações</span><span className="inline-flex items-center gap-1.5 text-xs text-slate-500"><FiClock size={14}/>{lastUpdated ? `Atualizado às ${lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Aguardando atualização"}</span></div>
       </header>
       {admin && (
         <form onSubmit={submit} className={card}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-extrabold text-[#111111]">Visão da operação</h2>
+              <h2 className="flex items-center gap-2 text-lg font-extrabold text-[#111111]"><FiFilter size={17} className="text-[#0767b4]"/> Filtros da operação</h2>
               <p className="text-sm text-slate-500">
                 Encontre pedidos e analise os indicadores do período.
               </p>
@@ -205,9 +205,10 @@ export default function DashboardView({ user }: { user: SessionUser }) {
             <button
               type="button"
               onClick={() => setRevision((x) => x + 1)}
-              className="rounded-lg border border-[#cde4f4] bg-white px-3 py-2 text-xs font-bold text-[#073c96]"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#cde4f4] bg-white px-3 py-2.5 text-xs font-bold text-[#073c96] transition hover:bg-[#edf5fc] disabled:opacity-50"
+              disabled={loading}
             >
-              ↻ Atualizar
+              <FiRefreshCw size={14} className={loading ? "animate-spin" : ""}/> Atualizar
             </button>
           </div>
           <div className="grid items-end gap-3 md:grid-cols-2 xl:grid-cols-[2fr_1.2fr_1fr_1fr_auto]">
@@ -257,15 +258,15 @@ export default function DashboardView({ user }: { user: SessionUser }) {
               <button
                 type="button"
                 onClick={clear}
-                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
               >
-                Limpar
+                <FiX size={14}/> Limpar
               </button>
               <button
                 disabled={loading}
-                className="rounded-lg bg-[#49135c] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0767b4] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#073c96] disabled:opacity-50"
               >
-                Filtrar
+                <FiSearch size={15}/> Filtrar
               </button>
             </div>
           </div>
@@ -293,19 +294,20 @@ export default function DashboardView({ user }: { user: SessionUser }) {
       )}
       {admin && data && (
         <div className={loading ? "pointer-events-none space-y-5 opacity-60" : "space-y-5"}>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {metrics.map(([label, value, help], i) => (
               <article
-                className={`${card} border-t-[3px]`}
+                className={`${card} relative overflow-hidden border-t-[3px] transition-shadow hover:shadow-[0_10px_30px_rgba(16,50,83,.09)]`}
                 style={{
-                  borderTopColor: ["#5b2772", "#0891b2", "#16a34a", "#d97706", "#ef4444"][i],
+                  borderTopColor: ["#0767b4", "#009ad6", "#07a970", "#76bd3d", "#eab52b"][i],
                 }}
                 key={label}
               >
-                <p className="text-[11px] font-extrabold uppercase tracking-[.08em] text-slate-500">
+                <div className="mb-3 flex items-center justify-between"><span className="grid size-9 place-items-center rounded-xl bg-[#edf5fc] text-[#0767b4]">{[<FiDollarSign key="revenue"/>,<FiActivity key="ticket"/>,<FiUsers key="customers"/>,<FiShoppingBag key="products"/>,<FiClock key="pending"/>][i]}</span><FiArrowUpRight size={15} className="text-slate-300"/></div>
+                <p className="text-[11px] font-bold tracking-[.02em] text-slate-500">
                   {label}
                 </p>
-                <p className="mt-3 break-words text-2xl font-black tracking-tight text-[#111111]">
+                <p className="mt-2 break-words text-[clamp(1.15rem,1.7vw,1.6rem)] font-black tracking-tight tabular-nums text-[#111111]">
                   {value}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">{help}</p>
@@ -362,9 +364,9 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                 {data.recent_orders.slice(0, 5).map((order) => (
                   <div
                     key={order.id}
-                    className="flex items-center gap-3 rounded-lg border border-slate-100 px-3 py-3"
+                    className="flex items-center gap-3 rounded-xl border border-[#e4ebf0] px-3 py-3 transition hover:bg-[#f8fbfe]"
                   >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#edf5fc] font-bold text-[#0767b4]">
+                    <span className="shrink-0 rounded-lg bg-[#edf5fc] px-2.5 py-2 text-xs font-bold text-[#0767b4]">
                       #{order.order_number || order.id}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -392,7 +394,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
               {data.top_products.map((product, i) => (
                 <div
                   key={i}
-                  className="flex flex-wrap items-center gap-3 rounded-xl border border-[#eee8f2] bg-[#fcfafd] p-4"
+                  className="flex flex-wrap items-center gap-3 rounded-xl border border-[#e4ebf0] bg-[#fafcff] p-4 transition hover:bg-[#edf5fc]"
                 >
                   <span className="grid size-8 place-items-center rounded-lg bg-[#e4f3fc] text-sm font-bold text-[#073c96]">
                     {i + 1}
@@ -413,9 +415,9 @@ export default function DashboardView({ user }: { user: SessionUser }) {
           </section>
           <section className={card}>
             <Heading kicker="Pedidos" title="Últimos pedidos" />
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-[#e4ebf0]">
               <table className="w-full min-w-[700px] text-left text-sm">
-                <thead className="bg-[#faf6fb] text-xs text-slate-600">
+                <thead className="sticky top-0 bg-[#f5f9fc] text-xs text-slate-600">
                   <tr>
                     {["Pedido", "Cliente / Empresa", "Status", "Valor", "Data"].map((x) => (
                       <th className="px-4 py-3" key={x}>
@@ -426,7 +428,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                 </thead>
                 <tbody>
                   {data.recent_orders.map((row) => (
-                    <tr key={row.id} className="border-t border-slate-100">
+                    <tr key={row.id} className="border-t border-slate-100 transition hover:bg-[#f8fbfe]">
                       <td className="px-4 py-3 font-bold">#{row.order_number || row.id}</td>
                       <td className="px-4 py-3">
                         <p className="font-bold">{row.customer_name}</p>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { FiChevronDown, FiKey, FiLogOut, FiShield, FiUser, FiX } from "react-icons/fi";
 import PasswordChange from "@/components/auth/password-change";
 import { api, type SessionUser } from "@/lib/api";
 
@@ -14,62 +15,86 @@ type HeaderProps = {
 
 export default function AppHeader({ title, user, busy, onLogout, onUserChange }: HeaderProps) {
   const [accountOpen, setAccountOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const roleLabel = user.is_dev ? "Desenvolvedor" : user.role === "admin" ? "Administrador" : "Representante";
+  const initials = user.name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "HS";
+
+  useEffect(() => {
+    function onPointerDown(event: PointerEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setAccountOpen(false);
+        setPasswordOpen(false);
+      }
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setAccountOpen(false);
+        setPasswordOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
 
   async function onPasswordChanged() {
     const result = await api<{ user: SessionUser }>("/api/me");
     onUserChange(result.user);
+    setPasswordOpen(false);
     setAccountOpen(false);
   }
 
   return (
     <header className="top app-header">
       <div className="min-w-0">
-        <p className="app-breadcrumb">
-          HiperMix <span className="mx-1 text-slate-300">/</span> {title}
-        </p>
+        <nav aria-label="Caminho da página" className="app-breadcrumb">
+          <span>HiperMix</span><span className="mx-2 text-slate-300">/</span><span className="text-slate-600">{title}</span>
+        </nav>
         <h1 className="app-header-title">{title}</h1>
       </div>
 
       <div className="app-header-actions">
-        <span className="hidden text-sm font-medium text-slate-600 lg:inline">{user.name}</span>
-        {user.is_dev && (
-          <span className="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-800">
-            Dev
-          </span>
-        )}
-        <div className="relative">
-          <button
-            type="button"
-            className="app-account-button"
-            aria-expanded={accountOpen}
-            aria-haspopup="dialog"
-            onClick={() => setAccountOpen((value) => !value)}
-          >
-            Minha conta <span aria-hidden="true">{accountOpen ? "⌃" : "⌄"}</span>
+        <div className="hidden items-center gap-2 border-r border-slate-200 pr-4 lg:flex">
+          <span className="size-2 rounded-full bg-[#07a970]" aria-hidden="true" />
+          <span className="text-xs font-medium text-slate-500">Painel comercial</span>
+        </div>
+        <div ref={menuRef} className="relative">
+          <button type="button" className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-left shadow-sm transition hover:border-[#a8cde8] hover:bg-[#f7fbff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0767b4]"
+            aria-expanded={accountOpen} aria-haspopup="dialog" aria-controls="app-account-menu"
+            onClick={() => { setAccountOpen(value => !value); setPasswordOpen(false); }}>
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#e5f2fb] text-xs font-extrabold text-[#073c96]">{initials}</span>
+            <span className="hidden min-w-0 flex-col sm:flex">
+              <span className="max-w-32 truncate text-xs font-bold text-[#111111]">{user.name}</span>
+              <span className="text-[11px] text-slate-500">{roleLabel}</span>
+            </span>
+            {user.is_dev && <span className="hidden rounded-md bg-[#eef2ff] px-1.5 py-1 text-[10px] font-bold text-[#073c96] lg:inline">DEV</span>}
+            <FiChevronDown size={15} className={`text-slate-500 transition-transform ${accountOpen ? "rotate-180" : ""}`} />
           </button>
+
           {accountOpen && (
-            <div role="dialog" aria-label="Configurações da conta" className="app-account-popover">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-slate-900">{user.name}</p>
-                  <p className="text-xs text-slate-500">Segurança da conta</p>
+            <div id="app-account-menu" role="dialog" aria-label="Menu da conta" className="app-account-popover">
+              <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#e5f2fb] text-sm font-black text-[#073c96]">{initials}</span>
+                  <div className="min-w-0"><p className="truncate text-sm font-bold text-[#111111]">{user.name}</p><p className="flex items-center gap-1 text-xs text-slate-500"><FiShield size={12}/>{roleLabel}</p></div>
                 </div>
-                <button
-                  type="button"
-                  aria-label="Fechar"
-                  className="rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100"
-                  onClick={() => setAccountOpen(false)}
-                >
-                  ×
-                </button>
+                <button type="button" aria-label="Fechar menu" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100" onClick={() => {setAccountOpen(false);setPasswordOpen(false);}}><FiX size={17}/></button>
               </div>
-              <PasswordChange onSuccess={onPasswordChanged} />
+              <div className="mt-3 space-y-1">
+                <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-500"><FiUser size={15}/> Minha conta</div>
+                <button type="button" className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#073c96] hover:bg-[#edf5fc]" aria-expanded={passwordOpen} onClick={() => setPasswordOpen(value => !value)}><span className="flex items-center gap-2"><FiKey size={16}/> Alterar minha senha</span><FiChevronDown size={14} className={passwordOpen ? "rotate-180" : ""}/></button>
+                {passwordOpen && <div className="rounded-xl bg-slate-50 p-3"><PasswordChange onSuccess={onPasswordChanged}/></div>}
+              </div>
+              <div className="mt-3 border-t border-slate-100 pt-3">
+                <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50" disabled={busy} onClick={onLogout}><FiLogOut size={16}/> Sair da conta</button>
+              </div>
             </div>
           )}
         </div>
-        <button type="button" className="app-logout-button" disabled={busy} onClick={onLogout}>
-          Sair
-        </button>
       </div>
     </header>
   );
