@@ -96,14 +96,21 @@ export class IntegrationsService {
     if (old && old !== instance) await this.evolution("DELETE", `/instance/delete/${encodeURIComponent(old)}`, undefined, true);
     await this.evolution("DELETE", `/instance/delete/${encodeURIComponent(instance)}`, undefined, true);
     const created = await this.evolution("POST", "/instance/create", { instanceName: instance, qrcode: true, integration: "WHATSAPP-BAILEYS" });
-    let qrcode = (created.qrcode && typeof created.qrcode === "object" ? created.qrcode : {}) as Row;
+    const qrFrom = (response: Row): Row =>
+      response.qrcode && typeof response.qrcode === "object" ? response.qrcode as Row : response;
+    let qrcode = qrFrom(created);
     if (!qrcode.base64 && !qrcode.code) {
-      const connected = await this.evolution("GET", `/instance/connect/${encodeURIComponent(instance)}`);
-      qrcode = (connected.qrcode && typeof connected.qrcode === "object" ? connected.qrcode : connected) as Row;
+      const connection = await this.evolution("GET", `/instance/connect/${encodeURIComponent(instance)}`);
+      qrcode = qrFrom(connection);
+    }
+    const qrImage = String(qrcode.base64 ?? qrcode.qr_image_url ?? "");
+    const qrPayload = String(qrcode.code ?? qrcode.pairingCode ?? "");
+    if (!qrImage && !qrPayload) {
+      throw new BadGatewayException("A Evolution API criou a instância, mas não retornou o QR Code. Verifique a versão da Evolution API e o estado da instância.");
     }
     const webhook = await this.configureWebhook(user.tenant_id, instance);
     const value = { ...current, enabled: true, provider: "evolution", connected: false, instance_id: instance,
-      qr_payload: String(qrcode.code ?? ""), qr_image_url: String(qrcode.base64 ?? ""),
+      qr_payload: qrPayload, qr_image_url: qrImage,
       qr_token: randomBytes(24).toString("base64url"), last_qr_at: new Date().toISOString(), connected_at: null,
       last_error: webhook.error ? String(webhook.message ?? "Falha ao configurar webhook do WhatsApp.") : "" };
     await this.settings.write(user.tenant_id, "whatsapp", value);
