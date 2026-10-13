@@ -35,9 +35,8 @@ export class SettingsService {
   }
 
   async write(tenantId: number, key: SettingsSection, value: unknown): Promise<void> {
-    await this.database.db.prepare(`INSERT INTO tenant_settings (tenant_id,key,value,updated_at) VALUES (?,?,?,?)
-      ON CONFLICT(tenant_id,key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at`)
-      .run(tenantId, key, JSON.stringify(value), new Date().toISOString());
+    const updated = await this.database.db.prepare("UPDATE tenant_settings SET value=? WHERE tenant_id=? AND key=?").run(JSON.stringify(value), tenantId, key);
+    if (!updated.changes) await this.database.db.prepare("INSERT INTO tenant_settings (tenant_id,key,value,updated_at) VALUES (?,?,?,?)").run(tenantId, key, JSON.stringify(value), new Date().toISOString());
   }
 
   async get(user: PublicUser) {
