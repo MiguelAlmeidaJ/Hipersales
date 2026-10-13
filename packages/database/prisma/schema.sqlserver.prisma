@@ -257,7 +257,7 @@ model EmailOutbox {
   kind       String
   recipients String
   subject    String
-  body       String
+  body       String @db.NVarChar(Max)
   attempts   Int       @default(0)
   sentAt     DateTime? @map("sent_at") @db.DateTime2
   claimedUntil DateTime? @map("claimed_until") @db.DateTime2
@@ -354,7 +354,7 @@ model SystemSetting {
 model TenantSetting {
   tenantId Int      @map("tenant_id")
   key      String
-  value    String
+  value    String @db.NVarChar(Max)
   updatedAt DateTime @default(now()) @map("updated_at") @db.DateTime2
   tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
