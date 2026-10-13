@@ -1,17 +1,14 @@
 # Operação Docker
 
-O Docker Compose provisiona somente infraestrutura: PostgreSQL, Redis e Evolution API.
-A API NestJS e o frontend Next.js não possuem Dockerfile e são executados pelo PM2.
+O Compose provisiona SQL Server para o HiperSales, PostgreSQL e Redis exclusivos
+da Evolution API, além da própria Evolution. API NestJS e frontend Next.js são
+executados pelo PM2.
 
 1. Copie `.env.example` para `.env` e configure chaves e senhas.
-2. Configure `HYPERSALES_PUBLIC_URL` com a URL HTTPS pública da API.
+2. Configure `HYPERSALES_PUBLIC_URL` e `SQLSERVER_DATABASE_URL`.
 3. Valide com `docker compose config`.
-4. Inicie a infraestrutura com `docker compose up -d`.
-5. Verifique com `docker compose ps` e `docker compose logs -f evolution postgres redis`.
+4. Inicie com `docker compose up -d`.
+5. Verifique com `docker compose ps` e os logs dos serviços.
 
-A Evolution fica vinculada a `127.0.0.1:8081`. Os bancos e o Redis não publicam portas
-no Compose principal. O serviço `hipersales-postgres` está provisionado para a futura
-migrations do banco comercial; a API usa PostgreSQL por meio do Prisma.
-
-Não execute `docker compose down -v` quando houver dados que precisem ser preservados.
-Os volumes da Evolution guardam banco, cache e sessões do WhatsApp.
+Não execute `docker compose down -v` quando houver dados a preservar. Os volumes
+guardam o banco HiperSales, o banco/cache da Evolution e sessões do WhatsApp.

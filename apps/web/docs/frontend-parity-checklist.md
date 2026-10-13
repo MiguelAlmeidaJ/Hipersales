@@ -27,4 +27,4 @@ A execução dos testes locais será feita quando a migração funcional termina
 - [ ] Confirmar que não existem mais links necessários para `/legacy`.
 
 ## Regra para a etapa 6
-Não remover `apps/web/app.js`, `apps/web/modules`, `apps/web/styles.css`, assets compartilhados, rewrites ou `/legacy` antes de todas as verificações críticas acima estarem aprovadas. O backend opera em PostgreSQL/Prisma.
+Não remover `apps/web/app.js`, `apps/web/modules`, `apps/web/styles.css`, assets compartilhados, rewrites ou `/legacy` antes de todas as verificações críticas acima estarem aprovadas. O backend opera em SQL Server/Prisma.

@@ -10,15 +10,11 @@
     "studio": "prisma studio",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "validate:sqlserver": "prisma validate --config prisma.sqlserver.config.ts",
-    "generate:sqlserver": "prisma generate --config prisma.sqlserver.config.ts",
-    "migrate:sqlserver:dev": "prisma migrate dev --config prisma.sqlserver.config.ts",
-    "smoke:sqlserver": "node scripts/smoke_sqlserver.mjs"
+    "smoke": "node scripts/smoke_database.mjs",
+    "test:database:create": "node scripts/create_test_database.mjs"
   },
   "dependencies": {
     "@prisma/client": "^7.10.0",
-    "@prisma/adapter-pg": "^7.10.0",
-    "pg": "^8.16.3",
     "dotenv": "^17.2.3",
     "@prisma/adapter-mssql": "^7.10.0",
     "mssql": "^11.0.1"
@@ -27,7 +23,6 @@
     "prisma": "^7.10.0",
     "typescript": "^6.0.3",
     "@types/node": "^24.10.0",
-    "@types/pg": "^8.15.5",
     "@types/mssql": "^9.1.8"
   },
   "type": "module",

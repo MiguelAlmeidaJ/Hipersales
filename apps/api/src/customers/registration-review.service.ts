@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { customerAddress, customerText } from "./customer-fields.js";
 import { ApprovalNotificationsService } from "./approval-notifications.service.js";
 
@@ -14,7 +14,7 @@ const cnpjDigits = (v: unknown) => String(v ?? "").replace(/\D/g, "");
 
 @Injectable()
 export class RegistrationReviewService {
-  constructor(private readonly database: DatabaseService, private readonly notifications: ApprovalNotificationsService) {}
+  constructor(private readonly database: DatabaseRepository, private readonly notifications: ApprovalNotificationsService) {}
 
   review(user: PublicUser, id: number, data: Data) {
     if (!Number.isSafeInteger(id) || id <= 0 || !data || typeof data !== "object" || Array.isArray(data))
@@ -92,7 +92,8 @@ export class RegistrationReviewService {
             );
           customerId = Number(result.lastInsertRowid);
         }
-        await db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)")
+        if (!await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?")
+          .get(customerId,Number(original.seller_id))) await db.prepare("INSERT INTO customer_sellers (customer_id,seller_id) VALUES (?,?)")
           .run(customerId,Number(original.seller_id));
         if (original.status !== "aprovada") await this.notifications.queue(user.tenant_id,id,status);
       }

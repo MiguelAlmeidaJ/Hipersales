@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { ProposalStatusNotificationsService } from "./proposal-status-notifications.service.js";
 
 type Data = Record<string, unknown>;
@@ -49,7 +49,7 @@ export function normalizeProposalStatus(status:unknown,previous:string) {
  */
 @Injectable()
 export class ProposalUpdateService {
-  constructor(private readonly database:DatabaseService, private readonly notifications:ProposalStatusNotificationsService) {}
+  constructor(private readonly database:DatabaseRepository, private readonly notifications:ProposalStatusNotificationsService) {}
   update(user:PublicUser,id:number,data:Data) {
     if(!Number.isSafeInteger(id)||id<1||!data||typeof data!=="object"||Array.isArray(data))
       throw new BadRequestException("Pedido invalido.");

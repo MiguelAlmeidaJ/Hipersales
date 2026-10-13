@@ -1,5 +1,5 @@
 import { Injectable, type OnApplicationBootstrap, type OnApplicationShutdown } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { EnvService } from "../config/env.service.js";
 import { GoalsService } from "../goals/goals.service.js";
 import { SettingsService } from "../settings/settings.service.js";
@@ -11,7 +11,7 @@ const REMINDER_DAYS = new Set([10, 15, 20, 25, 27, 28, 29, 30]);
 export class ScheduledJobsService implements OnApplicationBootstrap, OnApplicationShutdown {
   private timer?: NodeJS.Timeout;
   private running = false;
-  constructor(private readonly database: DatabaseService, private readonly env: EnvService,
+  constructor(private readonly database: DatabaseRepository, private readonly env: EnvService,
     private readonly goals: GoalsService, private readonly settings: SettingsService) {}
   onApplicationBootstrap(): void {
     if (process.env.NODE_ENV === "test" || process.env.HIPERSALES_SCHEDULED_JOBS === "false") return;
@@ -36,24 +36,29 @@ export class ScheduledJobsService implements OnApplicationBootstrap, OnApplicati
     .run(tenant,kind,to,subject,body,new Date().toISOString());}
   private async weekly(tenant:number,now:Date):Promise<number>{
     const key=now.toISOString().slice(0,10); const existing=await this.database.db.prepare(
-      "SELECT value FROM tenant_settings WHERE tenant_id=? AND key='weekly_reports_last_week'").get(tenant) as {value:string}|undefined;
+      "SELECT value FROM tenant_settings WHERE tenant_id=? AND [key]='weekly_reports_last_week'").get(tenant) as {value:string}|undefined;
     if(existing?.value===JSON.stringify(key)) return 0;
     const total=await this.database.db.prepare(`SELECT COUNT(DISTINCT p.id) orders,COALESCE(SUM(pi.quantity*pi.negotiated_price),0) revenue
-      FROM proposals p LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE p.tenant_id=? AND p.created_at>=datetime('now','-7 days')`).get(tenant) as Row;
+      FROM proposals p LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE p.tenant_id=? AND p.created_at>=DATEADD(day,-7,SYSUTCDATETIME())`).get(tenant) as Row;
     const admins=await this.database.db.prepare(`SELECT COALESCE(NULLIF(communication_email,''),email) recipient FROM users
       WHERE tenant_id=? AND role='admin' AND active=1`).all(tenant) as Row[];
     for(const admin of admins) if(admin.recipient) await this.enqueue(tenant,"weekly_manager_report",String(admin.recipient),"Relatorio semanal gerencial",
       `Pedidos nos ultimos 7 dias: ${total.orders||0}\nFaturamento: ${Number(total.revenue||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}`);
-    await this.database.db.prepare(`INSERT INTO tenant_settings (tenant_id,key,value,updated_at) VALUES (?,?,?,?)
-      ON CONFLICT(tenant_id,key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at`)
-      .run(tenant,"weekly_reports_last_week",JSON.stringify(key),new Date().toISOString()); return admins.length;
+    const value=JSON.stringify(key),updatedAt=new Date().toISOString();
+    const updated=await this.database.db.prepare("UPDATE tenant_settings SET value=?,updated_at=? WHERE tenant_id=? AND [key]=?")
+      .run(value,updatedAt,tenant,"weekly_reports_last_week");
+    if(!updated.changes) await this.database.db.prepare("INSERT INTO tenant_settings (tenant_id,[key],value,updated_at) VALUES (?,?,?,?)")
+      .run(tenant,"weekly_reports_last_week",value,updatedAt); return admins.length;
   }
   private async reminders(tenant:number,year:number,month:number,day:number):Promise<number>{
     const sellers=await this.database.db.prepare(`SELECT id,name,email,communication_email,whatsapp_phone FROM users
       WHERE tenant_id=? AND role='seller' AND active=1`).all(tenant) as Row[];
     const whatsapp=await this.settings.read(tenant,"whatsapp") as Row; let sent=0;
     for(const seller of sellers){const p=await this.goals.performance(tenant,Number(seller.id),year,month); if(!p.has_goals) continue;
-      const claim=await this.database.db.prepare(`INSERT OR IGNORE INTO seller_goal_reminders
+      const alreadySent=await this.database.db.prepare(`SELECT 1 FROM seller_goal_reminders
+        WHERE tenant_id=? AND seller_id=? AND year=? AND month=? AND day=?`).get(tenant,Number(seller.id),year,month,day);
+      if(alreadySent) continue;
+      const claim=await this.database.db.prepare(`INSERT INTO seller_goal_reminders
         (tenant_id,seller_id,year,month,day,sent_at) VALUES (?,?,?,?,?,?)`).run(tenant,Number(seller.id),year,month,day,new Date().toISOString());
       if(!claim.changes) continue; const body=[`Meta comercial ${month}/${year} - ${seller.name}`,
         `Vendas: ${p.sales.realized} de ${p.sales.goal??"sem meta"}`,`Novos clientes: ${p.new_customers.realized} de ${p.new_customers.goal??"sem meta"}`,

@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type Row=Record<string,unknown>;
 const str=(v:unknown)=>String(v??"");
@@ -12,7 +12,7 @@ export function occurrenceStatus(value:unknown):string{
 }
 @Injectable()
 export class OccurrencesService {
-  constructor(private readonly database:DatabaseService){}
+  constructor(private readonly database:DatabaseRepository){}
   async list(user:PublicUser){
     await this.cleanupExpiredAttachments(user.tenant_id);
     const db=this.database.db;

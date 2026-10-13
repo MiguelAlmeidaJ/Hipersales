@@ -1,6 +1,6 @@
 # HiperSales — monorepo pnpm
 
-Backend NestJS/TypeScript, PostgreSQL + Prisma, frontend Next.js e integração Evolution API.
+Backend NestJS/TypeScript, SQL Server + Prisma, frontend Next.js e integração Evolution API.
 
 ## Estrutura
 
@@ -10,7 +10,7 @@ Backend NestJS/TypeScript, PostgreSQL + Prisma, frontend Next.js e integração 
 - `packages/database`: schema único Prisma 7, migrations e Prisma Client compartilhado
 - `infra/docker`: infraestrutura Docker
 
-**Fonte única do banco:** `packages/database/prisma/schema.prisma`. As migrations também ficam em `packages/database/prisma/migrations`, e a configuração da conexão em `packages/database/prisma.config.ts`. Não crie schemas adicionais nas aplicações.
+**Fonte única do banco:** `packages/database/prisma/schema.prisma`. As migrations ficam em `packages/database/prisma/migrations`, e a configuração da conexão em `packages/database/prisma.config.ts`. Não crie schemas adicionais nas aplicações.
 
 ## Primeira instalação
 
@@ -59,6 +59,6 @@ pnpm pm2:reload
 
 Preserve o `.env` e faça backup do banco antes de migrations em produção. Depois que o lockfile for versionado, use `pnpm install --frozen-lockfile`.
 
-O Docker Compose executa PostgreSQL, Evolution API e Redis. API em 127.0.0.1:8000, Web em 127.0.0.1:3000 e Evolution em 127.0.0.1:8081. Use proxy reverso TLS e não exponha PostgreSQL/Redis/Evolution publicamente.
+O Docker Compose executa SQL Server para o HiperSales e PostgreSQL + Redis para a Evolution API. API em 127.0.0.1:8000, Web em 127.0.0.1:3000 e Evolution em 127.0.0.1:8081. Use proxy reverso TLS e não exponha bancos, Redis ou Evolution publicamente.
 
 Os endpoints `/api/*` e os dados persistidos permanecem intactos.

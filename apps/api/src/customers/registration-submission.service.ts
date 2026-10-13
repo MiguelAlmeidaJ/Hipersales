@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { CnpjLookupService } from "./cnpj-lookup.service.js";
 import { customerAddress, customerText } from "./customer-fields.js";
 
@@ -14,7 +14,7 @@ export type RegistrationInput = Record<string, unknown> & {
 @Injectable()
 export class RegistrationSubmissionService {
   constructor(
-    private readonly database: DatabaseService,
+    private readonly database: DatabaseRepository,
     private readonly lookup: CnpjLookupService,
   ) {}
 

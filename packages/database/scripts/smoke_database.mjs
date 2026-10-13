@@ -4,7 +4,7 @@ import sql from "mssql";
 
 loadEnv({ path: resolve(import.meta.dirname, "../../../.env") });
 
-function parsePrismaSqlServerUrl(value) {
+function parseDatabaseUrl(value) {
   if (!value?.startsWith("sqlserver://")) throw new Error("Defina SQLSERVER_DATABASE_URL em .env.");
   // Connection properties may be braced to contain ; and =.
   const raw = value.slice("sqlserver://".length);
@@ -64,7 +64,7 @@ const expected = {
 
 let pool;
 try {
-  pool = await sql.connect(parsePrismaSqlServerUrl(process.env.SQLSERVER_DATABASE_URL));
+  pool = await sql.connect(parseDatabaseUrl(process.env.SQLSERVER_DATABASE_URL));
   const rows = await pool.request().query(
     "SELECT name FROM sys.tables WHERE schema_id = SCHEMA_ID('dbo')"
   );
@@ -83,6 +83,10 @@ try {
     console.error("ATENCAO: foreign keys desabilitadas ou nao confiaveis:", constraints.recordset[0].total);
     process.exitCode = 1;
   }
+  const migrationTable = await pool.request().query(
+    "SELECT COUNT_BIG(*) AS total FROM sys.tables WHERE schema_id=SCHEMA_ID('dbo') AND name='_prisma_migrations'"
+  );
+  console.log("_prisma_migrations".padEnd(24), Number(migrationTable.recordset[0].total) ? "PRESENTE" : "AUSENTE");
 } catch (error) {
   console.error("Falha SQL Server:", error.message);
   process.exitCode = 1;

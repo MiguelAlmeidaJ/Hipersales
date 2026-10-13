@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { ProposalNotificationService } from "./proposal-notification.service.js";
 
 type Item = {product_id:number;quantity:number;negotiated_price:number};
@@ -24,7 +24,7 @@ function discountOn(value:string|undefined) {
 }
 @Injectable()
 export class ProposalCreationService {
-  constructor(private readonly database:DatabaseService, private readonly notifications:ProposalNotificationService){}
+  constructor(private readonly database:DatabaseRepository, private readonly notifications:ProposalNotificationService){}
 
   create(user:PublicUser,data:Input) {
     if(!["admin","seller"].includes(user.role)) throw new ForbiddenException("Envio de proposta indisponivel para este usuario.");
@@ -81,7 +81,8 @@ export class ProposalCreationService {
       for(const item of items) await insertItem.run(proposalId,item.id,item.quantity,item.price);
       await db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
         .run(proposalId,"em_analise","Em analise","Proposta enviada para analise.",sellerId,now);
-      if(user.role==="admin") await db.prepare("INSERT OR IGNORE INTO customer_sellers (customer_id,seller_id) VALUES (?,?)").run(customerId,sellerId);
+      if(user.role==="admin" && !await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
+        await db.prepare("INSERT INTO customer_sellers (customer_id,seller_id) VALUES (?,?)").run(customerId,sellerId);
       await this.notifications.queueNewProposal(user.tenant_id,proposalId);
       return {id:proposalId,order_number:orderNumber,status:"em_analise",company_id:companyId,
         customer_id:customerId,message:user.role==="admin"?"Pedido criado pelo admin.":"Proposta enviada para analise."};

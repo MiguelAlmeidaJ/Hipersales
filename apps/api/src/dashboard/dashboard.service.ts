@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { normalizeProposalTimeline } from "../proposals/proposals.service.js";
 
 interface DashboardFilters {
@@ -28,7 +28,7 @@ function validDate(value: string): boolean {
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async adminSummary(user: PublicUser) {
     const db = this.database.db;
@@ -124,10 +124,10 @@ export class DashboardService {
     const where = ["p.tenant_id = ?"];
     const parameters: Array<string | number> = [tenantId];
     if (filters.status) { where.push("p.status = ?"); parameters.push(filters.status); }
-    if (filters.date_from) { where.push("p.created_at::date >= ?::date"); parameters.push(filters.date_from); }
-    if (filters.date_to) { where.push("p.created_at::date <= ?::date"); parameters.push(filters.date_to); }
+    if (filters.date_from) { where.push("CAST(p.created_at AS date) >= CAST(? AS date)"); parameters.push(filters.date_from); }
+    if (filters.date_to) { where.push("CAST(p.created_at AS date) <= CAST(? AS date)"); parameters.push(filters.date_to); }
     if (filters.q) {
-      where.push(`(c.legal_name LIKE ? OR co.name LIKE ? OR CAST(p.order_number AS TEXT) LIKE ? OR EXISTS
+      where.push(`(c.legal_name LIKE ? OR co.name LIKE ? OR CAST(p.order_number AS nvarchar(max)) LIKE ? OR EXISTS
         (SELECT 1 FROM proposal_items pi JOIN products pr ON pr.id = pi.product_id
          WHERE pi.proposal_id = p.id AND pr.name LIKE ?))`);
       parameters.push(...Array(4).fill(`%${filters.q}%`));
@@ -136,11 +136,11 @@ export class DashboardService {
     const base = `FROM proposals p
       JOIN customers c ON c.id = p.customer_id AND c.tenant_id = p.tenant_id
       JOIN companies co ON co.id = p.company_id AND co.tenant_id = p.tenant_id
+      LEFT JOIN (SELECT proposal_id,SUM(quantity*negotiated_price) total FROM proposal_items GROUP BY proposal_id) amounts
+        ON amounts.proposal_id=p.id
       WHERE ${predicate}`;
     const totals = await this.database.db
-      .prepare(`SELECT COUNT(*) AS orders, COALESCE(SUM(
-        (SELECT SUM(pi.quantity * pi.negotiated_price) FROM proposal_items pi WHERE pi.proposal_id = p.id)
-        ), 0) AS revenue ${base}`)
+      .prepare(`SELECT COUNT(*) AS orders, COALESCE(SUM(COALESCE(amounts.total,0)),0) AS revenue ${base}`)
       .get(...parameters) as DbRow;
     const orders = Number(totals.orders ?? 0);
     const revenue = Number(totals.revenue ?? 0);
@@ -157,34 +157,35 @@ export class DashboardService {
       .prepare(`SELECT p.status AS status, COUNT(*) AS total ${base} GROUP BY p.status ORDER BY total DESC`)
       .all(...parameters) as DbRow[];
     const companyRanking = await this.database.db
-      .prepare(`SELECT co.name AS name, COUNT(*) AS orders,
-        COALESCE(SUM((SELECT SUM(pi.quantity * pi.negotiated_price) FROM proposal_items pi WHERE pi.proposal_id = p.id)), 0) AS total
-        ${base} GROUP BY co.id, co.name ORDER BY total DESC LIMIT 5`)
+      .prepare(`SELECT TOP (5) co.name AS name, COUNT(*) AS orders,
+        COALESCE(SUM(COALESCE(amounts.total,0)),0) AS total
+        ${base} GROUP BY co.id, co.name ORDER BY total DESC`)
       .all(...parameters) as DbRow[];
     const sellerRanking = await this.database.db
-      .prepare(`SELECT u.name AS name, COUNT(*) AS orders,
-        COALESCE(SUM((SELECT SUM(pi.quantity * pi.negotiated_price) FROM proposal_items pi WHERE pi.proposal_id = p.id)), 0) AS total
+      .prepare(`SELECT TOP (5) u.name AS name, COUNT(*) AS orders,
+        COALESCE(SUM(COALESCE(amounts.total,0)),0) AS total
         FROM proposals p
         JOIN customers c ON c.id = p.customer_id AND c.tenant_id = p.tenant_id
         JOIN companies co ON co.id = p.company_id AND co.tenant_id = p.tenant_id
         JOIN users u ON u.id = p.seller_id AND u.tenant_id = p.tenant_id
-        WHERE ${predicate} GROUP BY u.id, u.name ORDER BY total DESC LIMIT 5`)
+        LEFT JOIN (SELECT proposal_id,SUM(quantity*negotiated_price) total FROM proposal_items GROUP BY proposal_id) amounts
+          ON amounts.proposal_id=p.id
+        WHERE ${predicate} GROUP BY u.id, u.name ORDER BY total DESC`)
       .all(...parameters) as DbRow[];
     const topProducts = await this.database.db
-      .prepare(`SELECT pr.name AS name, co.name AS company, SUM(pi.quantity) AS quantity,
+      .prepare(`SELECT TOP (5) pr.name AS name, co.name AS company, SUM(pi.quantity) AS quantity,
         SUM(pi.quantity * pi.negotiated_price) AS total
         FROM proposals p
         JOIN customers c ON c.id = p.customer_id AND c.tenant_id = p.tenant_id
         JOIN companies co ON co.id = p.company_id AND co.tenant_id = p.tenant_id
         JOIN proposal_items pi ON pi.proposal_id = p.id
         JOIN products pr ON pr.id = pi.product_id AND pr.tenant_id = p.tenant_id
-        WHERE ${predicate} GROUP BY pr.id, pr.name, co.name ORDER BY total DESC LIMIT 5`)
+        WHERE ${predicate} GROUP BY pr.id, pr.name, co.name ORDER BY total DESC`)
       .all(...parameters) as DbRow[];
     const recentOrders = await this.database.db
-      .prepare(`SELECT p.id, p.order_number, c.legal_name AS customer_name, co.name AS company_name,
-        p.status, p.created_at, COALESCE((SELECT SUM(pi.quantity * pi.negotiated_price)
-        FROM proposal_items pi WHERE pi.proposal_id = p.id), 0) AS total
-        ${base} ORDER BY p.created_at DESC, p.id DESC LIMIT 7`)
+      .prepare(`SELECT TOP (7) p.id, p.order_number, c.legal_name AS customer_name, co.name AS company_name,
+        p.status, p.created_at, COALESCE(amounts.total,0) AS total
+        ${base} ORDER BY p.created_at DESC, p.id DESC`)
       .all(...parameters) as DbRow[];
     return {
       tenant,

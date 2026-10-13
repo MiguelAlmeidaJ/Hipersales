@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type Row = Record<string, unknown>;
 const statusRank: Record<string, number> = {
@@ -24,7 +24,7 @@ export function normalizeProposalTimeline(events: Row[]): Row[] {
 
 @Injectable()
 export class ProposalsService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async list(user: PublicUser) {
     const db = this.database.db;

@@ -1,36 +1,18 @@
 services:
-  # Banco principal de destino do Hipersales. Durante a migracao,
-  # PostgreSQL antigo permanece disponivel para nao interromper a API.
-  hipersales-sqlserver:
+  # Banco principal do HiperSales.
+  database:
     image: mcr.microsoft.com/mssql/server:2022-latest
     restart: unless-stopped
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
-      MSSQL_SA_PASSWORD: ${HIPERSALES_SQLSERVER_SA_PASSWORD:?Configure_HIPERSALES_SQLSERVER_SA_PASSWORD}
+      MSSQL_SA_PASSWORD: ${HIPERSALES_DATABASE_ADMIN_PASSWORD:-${HIPERSALES_SQLSERVER_SA_PASSWORD:?Configure_HIPERSALES_DATABASE_ADMIN_PASSWORD}}
     ports:
       - "127.0.0.1:14333:1433"
     volumes:
-      - hipersales_sqlserver:/var/opt/mssql
+      - hipersales_database:/var/opt/mssql
     shm_size: "1gb"
     mem_limit: 3g
-
-  hipersales-postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: hipersales
-      POSTGRES_USER: hipersales
-      POSTGRES_PASSWORD: ${HIPERSALES_DB_PASSWORD:?Configure_HIPERSALES_DB_PASSWORD}
-    ports:
-      - "127.0.0.1:5432:5432"
-    volumes:
-      - hipersales_postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hipersales -d hipersales"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
   evolution:
     image: evoapicloud/evolution-api:v2.2.3
@@ -85,8 +67,8 @@ services:
       retries: 10
 
 volumes:
-  hipersales_sqlserver:
-  hipersales_postgres:
+  hipersales_database:
+    name: hipermix_hipersales_sqlserver
   evolution_postgres:
   evolution_redis:
   evolution_instances:

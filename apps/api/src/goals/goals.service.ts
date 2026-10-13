@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { GoalPerformance, PublicUser, SaveGoalsRequest } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { EnvService } from "../config/env.service.js";
 
 type DbRow = Record<string, unknown>;
@@ -45,7 +45,7 @@ function nullableNumber(value: unknown, integer = false): number | null {
 @Injectable()
 export class GoalsService {
   constructor(
-    private readonly database: DatabaseService,
+    private readonly database: DatabaseRepository,
     private readonly env: EnvService,
   ) {
     try {
@@ -101,25 +101,18 @@ export class GoalsService {
           removed += Number(result.changes);
           continue;
         }
-        await this.database.db
-          .prepare(`INSERT INTO seller_goals
-            (tenant_id, seller_id, year, month, sales_goal, new_customers_goal,
-             customer_positivation_goal, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(tenant_id, seller_id, year, month) DO UPDATE SET
-              sales_goal = excluded.sales_goal,
-              new_customers_goal = excluded.new_customers_goal,
-              customer_positivation_goal = excluded.customer_positivation_goal,
-              updated_at = excluded.updated_at`)
-          .run(
-            user.tenant_id,
-            row.seller_id,
-            period.year,
-            period.month,
-            salesGoal,
-            customersGoal,
-            positivationGoal,
-            new Date().toISOString(),
+        const updatedAt = new Date().toISOString();
+        const updated = await this.database.db.prepare(`UPDATE seller_goals SET
+          sales_goal=?,new_customers_goal=?,customer_positivation_goal=?,updated_at=?
+          WHERE tenant_id=? AND seller_id=? AND year=? AND month=?`).run(
+          salesGoal,customersGoal,positivationGoal,updatedAt,
+          user.tenant_id,row.seller_id,period.year,period.month,
+        );
+        if (!updated.changes) await this.database.db.prepare(`INSERT INTO seller_goals
+          (tenant_id,seller_id,year,month,sales_goal,new_customers_goal,customer_positivation_goal,updated_at)
+          VALUES (?,?,?,?,?,?,?,?)`).run(
+            user.tenant_id,row.seller_id,period.year,period.month,
+            salesGoal,customersGoal,positivationGoal,updatedAt,
           );
         saved += 1;
       }

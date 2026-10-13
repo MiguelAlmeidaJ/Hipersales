@@ -1,5 +1,5 @@
 import { Injectable, type OnApplicationBootstrap, type OnApplicationShutdown } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { IntegrationsService } from "./integrations.service.js";
 
 interface OutboxRow {
@@ -15,7 +15,7 @@ export class OutboxProcessorService implements OnApplicationBootstrap, OnApplica
   private timer?: NodeJS.Timeout;
   private running = false;
 
-  constructor(private readonly database: DatabaseService, private readonly integrations: IntegrationsService) {}
+  constructor(private readonly database: DatabaseRepository, private readonly integrations: IntegrationsService) {}
 
   onApplicationBootstrap(): void {
     if (process.env.NODE_ENV === "test" || process.env.HIPERSALES_OUTBOX_WORKER === "false") return;
@@ -31,25 +31,9 @@ export class OutboxProcessorService implements OnApplicationBootstrap, OnApplica
     this.running = true;
     let sent = 0;
     try {
-      // An atomic UPDATE/RETURNING and SKIP LOCKED prevent concurrent workers from
-      // claiming the same row. Expired leases recover abandoned messages.
-      const rows = await this.database.query(`WITH next_messages AS (
-        SELECT id FROM email_outbox
-        WHERE recipients NOT LIKE 'whatsapp:%'
-          AND sent_at IS NULL
-          AND COALESCE(attempts,0) < 5
-          AND (claimed_until IS NULL OR claimed_until < NOW())
-        ORDER BY id
-        FOR UPDATE SKIP LOCKED
-        LIMIT 10
-      )
-      UPDATE email_outbox AS outbox
-      SET attempts=COALESCE(outbox.attempts,0)+1,
-          claimed_until=NOW()+INTERVAL '5 minutes',
-          error=NULL
-      FROM next_messages
-      WHERE outbox.id=next_messages.id
-      RETURNING outbox.id,outbox.tenant_id,outbox.recipients,outbox.subject,outbox.body`) as unknown as OutboxRow[];
+      // UPDLOCK + READPAST claim rows atomically across concurrent SQL Server workers.
+      // Expired leases recover messages left behind by an interrupted process.
+      const rows = await this.database.claimEmailOutbox(10) as OutboxRow[];
       for (const row of rows) {
         try {
           await this.integrations.sendEmail(row.tenant_id, row);

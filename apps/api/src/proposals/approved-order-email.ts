@@ -1,4 +1,4 @@
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type Row = Record<string, unknown>;
 const value=(v:unknown)=>String(v??"");
@@ -46,7 +46,7 @@ export function approvedOrderBody(p:Row,items:Row[]):string {
     "","Atenciosamente,","Comunicacao HiperSales Web");
   return lines.join("\n");
 }
-export async function loadApprovedOrder(db:DatabaseService["db"],tenantId:number,id:number) {
+export async function loadApprovedOrder(db:DatabaseRepository["db"],tenantId:number,id:number) {
   const row=await db.prepare(`SELECT p.*,u.name AS seller_name,c.legal_name AS customer_name,
     c.cnpj,c.address,co.name AS company_name FROM proposals p
     JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id

@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type Data = Record<string,unknown>;
 export function decodeOccurrenceAttachments(value:unknown) {
@@ -24,7 +24,7 @@ export function decodeOccurrenceAttachments(value:unknown) {
 }
 @Injectable()
 export class OccurrenceCreationService {
-  constructor(private readonly database:DatabaseService){}
+  constructor(private readonly database:DatabaseRepository){}
   create(user:PublicUser,input:Data) {
     if(!["seller","admin"].includes(user.role)) throw new ForbiddenException("Permissao negada.");
     const customerId=Number(input.customer_id),sellerId=Number(input.seller_id||user.id);

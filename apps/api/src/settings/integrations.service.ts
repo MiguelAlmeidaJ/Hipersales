@@ -2,7 +2,7 @@ import { BadGatewayException, BadRequestException, ForbiddenException, Injectabl
 import type { PublicUser } from "@hipersales/contracts";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import nodemailer from "nodemailer";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { EnvService } from "../config/env.service.js";
 import { SettingsService } from "./settings.service.js";
 
@@ -18,7 +18,7 @@ function errorMessage(error: unknown): string {
 
 @Injectable()
 export class IntegrationsService {
-  constructor(private readonly database: DatabaseService, private readonly env: EnvService, private readonly settings: SettingsService) {}
+  constructor(private readonly database: DatabaseRepository, private readonly env: EnvService, private readonly settings: SettingsService) {}
 
   verifyInternalToken(provided: string): void {
     const expected = this.env.whatsappInternalToken;
@@ -155,8 +155,8 @@ export class IntegrationsService {
   }
 
   async pendingMessages() {
-    const rows = await this.database.db.prepare(`SELECT id,tenant_id,kind,recipients,subject,body,attempts,created_at FROM email_outbox
-      WHERE recipients LIKE 'whatsapp:%' AND sent_at IS NULL AND COALESCE(attempts,0)<5 ORDER BY id LIMIT 10`).all() as Row[];
+    const rows = await this.database.db.prepare(`SELECT TOP (10) id,tenant_id,kind,recipients,subject,body,attempts,created_at FROM email_outbox
+      WHERE recipients LIKE 'whatsapp:%' AND sent_at IS NULL AND COALESCE(attempts,0)<5 ORDER BY id`).all() as Row[];
     const groups = await Promise.all(rows.map(async (row) => {
       let phone = String(row.recipients ?? "").replace(/^whatsapp:/, "").replace(/\D/g, "");
       if (phone && !phone.startsWith("55") && phone.length >= 10 && phone.length <= 11) phone = `55${phone}`;
@@ -194,7 +194,8 @@ export class IntegrationsService {
     const result = await this.evolution("POST", `/message/sendText/${encodeURIComponent(instance)}`,
       { number: remote, text: String(whatsapp.unavailable_reply_message || "") }, true);
     if (result.error) return false;
-    await this.database.db.prepare(`INSERT OR IGNORE INTO whatsapp_auto_replies
+    if (!await this.database.db.prepare("SELECT 1 FROM whatsapp_auto_replies WHERE tenant_id=? AND instance_id=? AND message_id=?")
+      .get(tenantId,instance,id)) await this.database.db.prepare(`INSERT INTO whatsapp_auto_replies
       (tenant_id,instance_id,message_id,remote_jid,replied_at) VALUES (?,?,?,?,?)`)
       .run(tenantId, instance, id, remote, new Date().toISOString());
     return true;

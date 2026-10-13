@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException, BadRequestException, NotFoundException, ConflictException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type DbRow = Record<string, unknown>;
 
@@ -13,7 +13,7 @@ function activeFilter(value?: string): number | null {
 
 @Injectable()
 export class CatalogService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async companies(user: PublicUser): Promise<{ companies: DbRow[] }> {
     const db = this.database.db;
@@ -43,13 +43,13 @@ export class CatalogService {
   async adminCompanies(user: PublicUser, term = "", active = "all"): Promise<{ companies: DbRow[] }> {
     const filter = activeFilter(active);
     const like = `%${term.trim()}%`;
-    const rows = await this.database.db.prepare(`SELECT c.*, COUNT(p.id) AS product_count
+    const rows = await this.database.db.prepare(`SELECT c.*,
+      (SELECT COUNT(*) FROM products p WHERE p.company_id=c.id AND p.active=1 AND p.tenant_id=?) AS product_count
       FROM companies c
-      LEFT JOIN products p ON p.company_id = c.id AND p.active = 1 AND p.tenant_id = ?
       WHERE c.tenant_id = ?
         AND (? IS NULL OR c.active = ?)
         AND (? = '' OR c.name LIKE ? OR c.legal_name LIKE ?)
-      GROUP BY c.id ORDER BY c.name`)
+      ORDER BY c.name`)
       .all(user.tenant_id, user.tenant_id, filter, filter, term.trim(), like, like);
     return { companies: rows as DbRow[] };
   }
@@ -119,6 +119,7 @@ export class CatalogService {
       }
 
       await this.database.db.prepare("DELETE FROM products WHERE company_id = ? AND tenant_id = ?").run(id, user.tenant_id);
+      await this.database.db.prepare("DELETE FROM company_sellers WHERE company_id = ?").run(id);
       await this.database.db.prepare("DELETE FROM companies WHERE id = ? AND tenant_id = ?").run(id, user.tenant_id);
       return { message: "Empresa excluida definitivamente." };
     });
@@ -174,7 +175,7 @@ export class CatalogService {
       const row=await this.database.db.prepare("SELECT id FROM products WHERE id=? AND tenant_id=?")
         .get(id,user.tenant_id);
       if(!row) throw new NotFoundException("Produto nao encontrado.");
-      if(await this.database.db.prepare("SELECT 1 FROM proposal_items WHERE product_id=? LIMIT 1").get(id)){
+      if(await this.database.db.prepare("SELECT TOP (1) 1 FROM proposal_items WHERE product_id=?").get(id)){
         throw new ConflictException("Produto ja usado em pedido. Inative o produto para preservar o historico.");
       }
       await this.database.db.prepare("DELETE FROM products WHERE id=? AND tenant_id=?").run(id,user.tenant_id);

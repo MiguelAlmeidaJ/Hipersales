@@ -7,18 +7,19 @@ import type {
   UsersResponse,
 } from "@hipersales/contracts";
 import { hashPassword } from "../auth/password.js";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import {
   normalizeUsername,
   normalizeWhatsappPhone,
   toPublicUser,
   USER_SELECT,
+  USER_SELECT_ONE,
   type UserRow,
 } from "./user.mapper.js";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async list(actor: PublicUser): Promise<UsersResponse> {
     const rows = await this.database.db
@@ -82,9 +83,9 @@ export class UsersService {
       }
       if (row.role === "admin" && row.active && (!active || role !== "admin")) {
         const otherAdmin = await this.database.db
-          .prepare(`SELECT 1 FROM users
+          .prepare(`SELECT TOP (1) 1 FROM users
             WHERE tenant_id = ? AND id <> ? AND role = 'admin' AND active = 1
-              AND COALESCE(is_super_admin, 0) = 0 LIMIT 1`)
+              AND COALESCE(is_super_admin, 0) = 0`)
           .get(actor.tenant_id, userId);
         if (!otherAdmin) throw new ConflictException("Mantenha ao menos um administrador ativo.");
       }
@@ -154,8 +155,8 @@ export class UsersService {
 
   private async getTenantUserRow(tenantId: number, userId: number): Promise<UserRow> {
     const row = await this.database.db
-      .prepare(`${USER_SELECT}
-        WHERE u.id = ? AND u.tenant_id = ? AND COALESCE(u.is_super_admin, 0) = 0 LIMIT 1`)
+      .prepare(`${USER_SELECT_ONE}
+        WHERE u.id = ? AND u.tenant_id = ? AND COALESCE(u.is_super_admin, 0) = 0`)
       .get(userId, tenantId) as UserRow | undefined;
     if (!row) throw new NotFoundException("Usuario nao encontrado.");
     return row;

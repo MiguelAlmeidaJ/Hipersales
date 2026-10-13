@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { customerContact } from "./customer-fields.js";
 
 export type CustomerInput = {
@@ -19,7 +19,7 @@ const digitsOnly = (value: string) => value.replace(/\D/g, "").slice(0, 14);
 
 @Injectable()
 export class CustomersWriteService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   private validate(input: CustomerInput) {
     const name = String(input?.legal_name ?? "").trim();
@@ -101,7 +101,7 @@ export class CustomersWriteService {
         .get(customerId, user.tenant_id)) {
         throw new NotFoundException("Cliente nao encontrado.");
       }
-      if (await db.prepare("SELECT 1 FROM proposals WHERE customer_id=? AND tenant_id=? LIMIT 1")
+      if (await db.prepare("SELECT TOP (1) 1 FROM proposals WHERE customer_id=? AND tenant_id=?")
         .get(customerId, user.tenant_id)) {
         throw new ConflictException(
           "Cliente ja possui pedido. Inative o cliente para preservar o historico.",

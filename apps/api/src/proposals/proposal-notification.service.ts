@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type ProposalMailRow = {
   seller_name:string;
@@ -23,7 +23,7 @@ export function proposalEmailBody(row: ProposalMailRow): string {
 
 @Injectable()
 export class ProposalNotificationService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async queueNewProposal(tenantId:number, proposalId:number):Promise<void> {
     const db=this.database.db;

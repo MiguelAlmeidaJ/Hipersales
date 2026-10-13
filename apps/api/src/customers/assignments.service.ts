@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type Kind = "customers" | "companies";
 type Row = Record<string, unknown>;
@@ -18,7 +18,7 @@ function activeFilter(raw: string): number | null {
 
 @Injectable()
 export class AssignmentsService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   private async seller(tenantId: number, sellerId: number): Promise<Row> {
     if (!Number.isSafeInteger(sellerId) || sellerId < 1) {
@@ -39,7 +39,7 @@ export class AssignmentsService {
     const like = `%${term.trim()}%`;
     const searches = cfg.search.map(col => `c.${col} LIKE ?`).join(" OR ");
     const rows = await this.database.db.prepare(`SELECT c.*,
-      EXISTS(SELECT 1 FROM ${cfg.link} link WHERE link.${cfg.id}=c.id AND link.seller_id=?) AS assigned
+      CASE WHEN EXISTS(SELECT 1 FROM ${cfg.link} link WHERE link.${cfg.id}=c.id AND link.seller_id=?) THEN 1 ELSE 0 END AS assigned
       FROM ${cfg.table} c WHERE c.tenant_id=? AND (? IS NULL OR c.active=?)
       AND (?='' OR ${searches}) ORDER BY c.${cfg.sort}`)
       .all(sellerId, user.tenant_id, flag, flag, term.trim(), ...cfg.search.map(() => like)) as Row[];
@@ -76,7 +76,8 @@ export class AssignmentsService {
         throw new NotFoundException(kind === "customers" ? "Cliente nao encontrado." : "Empresa nao encontrada.");
       }
       if (input.assigned) {
-        await this.database.db.prepare(`INSERT OR IGNORE INTO ${cfg.link} (${cfg.id}, seller_id) VALUES (?,?)`).run(id, sellerId);
+        const linked = await this.database.db.prepare(`SELECT 1 FROM ${cfg.link} WHERE ${cfg.id}=? AND seller_id=?`).get(id,sellerId);
+        if (!linked) await this.database.db.prepare(`INSERT INTO ${cfg.link} (${cfg.id}, seller_id) VALUES (?,?)`).run(id, sellerId);
       } else {
         await this.database.db.prepare(`DELETE FROM ${cfg.link} WHERE ${cfg.id}=? AND seller_id=?`).run(id, sellerId);
       }

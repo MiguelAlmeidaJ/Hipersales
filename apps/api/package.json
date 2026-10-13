@@ -21,7 +21,6 @@
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
     "@nestjs/throttler": "^6.7.1",
-    "@prisma/adapter-pg": "^7.10.0",
     "@types/nodemailer": "^8.0.2",
     "@types/pdfkit": "^0.17.6",
     "cookie-parser": "^1.4.7",
@@ -29,13 +28,11 @@
     "helmet": "^8.3.0",
     "nodemailer": "^10.0.16",
     "pdfkit": "^0.20.2",
-    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "zod": "^4.6.5",
     "@hipersales/database": "workspace:*",
-    "@prisma/adapter-mssql": "^7.10.0",
-    "mssql": "^11.0.1"
+    "@prisma/adapter-mssql": "^7.10.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.2",
@@ -43,12 +40,12 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.0",
-    "@types/pg": "^8.15.5",
     "@types/supertest": "^6.0.3",
     "supertest": "^7.3.1",
     "typescript": "^6.0.3",
     "vitest": "^5.0.3",
-    "@types/mssql": "^9.1.8"
+    "@types/mssql": "^9.1.8",
+    "mssql": "^11.0.1"
   },
   "engines": {
     "node": ">=22"

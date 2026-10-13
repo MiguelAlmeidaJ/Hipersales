@@ -6,17 +6,17 @@ import type {
   PublicUser,
 } from "@hipersales/contracts";
 import { randomBytes } from "node:crypto";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { EnvService } from "../config/env.service.js";
 import { hashPassword, verifyPassword } from "./password.js";
-import { normalizeUsername, toPublicUser, USER_SELECT, type UserRow } from "../users/user.mapper.js";
+import { normalizeUsername, toPublicUser, USER_SELECT_ONE, type UserRow } from "../users/user.mapper.js";
 
 @Injectable()
 export class AuthService {
   private readonly dummyPasswordHash = hashPassword(randomBytes(24).toString("base64url"));
 
   constructor(
-    private readonly database: DatabaseService,
+    private readonly database: DatabaseRepository,
     private readonly env: EnvService,
   ) {}
 
@@ -37,7 +37,7 @@ export class AuthService {
   async login(input: LoginRequest): Promise<{ token: string; user: PublicUser }> {
     const username = normalizeUsername(input.username || input.email || "");
     const row = await this.database.db
-      .prepare(`${USER_SELECT} WHERE u.email = ? AND u.active = 1 LIMIT 1`)
+      .prepare(`${USER_SELECT_ONE} WHERE u.email = ? AND u.active = 1`)
       .get(username) as UserRow | undefined;
 
     const valid = verifyPassword(input.password, row?.password_hash ?? this.dummyPasswordHash);
@@ -63,10 +63,9 @@ export class AuthService {
   async findSessionUser(token: string): Promise<PublicUser | null> {
     const row = await this.database.db
       .prepare(
-        `${USER_SELECT}
+        `${USER_SELECT_ONE}
          JOIN sessions s ON s.user_id = u.id
-         WHERE s.token = ? AND s.expires_at >= ? AND u.active = 1
-         LIMIT 1`,
+         WHERE s.token = ? AND s.expires_at >= ? AND u.active = 1`,
       )
       .get(token, Math.floor(Date.now() / 1000)) as UserRow | undefined;
     return row ? toPublicUser(row) : null;
@@ -78,7 +77,7 @@ export class AuthService {
     input: ChangePasswordRequest,
   ): Promise<ChangePasswordResponse> {
     const row = await this.database.db
-      .prepare(`${USER_SELECT} WHERE u.id = ? AND u.active = 1 LIMIT 1`)
+      .prepare(`${USER_SELECT_ONE} WHERE u.id = ? AND u.active = 1`)
       .get(user.id) as UserRow | undefined;
     if (!row) throw new UnauthorizedException("Sessao expirada. Faca login novamente.");
 

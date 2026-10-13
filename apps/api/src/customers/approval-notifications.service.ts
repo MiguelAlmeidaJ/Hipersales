@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type Dict = Record<string, unknown>;
 const dict = (input: unknown): Dict =>
@@ -18,13 +18,13 @@ export function appendApprovalNotice(body: string, notice: string): string {
 
 @Injectable()
 export class ApprovalNotificationsService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   private async setting(tenantId: number, name: string): Promise<Dict> {
     const db = this.database.db;
-    const tenant = await db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND key=?")
+    const tenant = await db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND [key]=?")
       .get(tenantId, name) as {value:string}|undefined;
-    const global = tenant ?? await db.prepare("SELECT value FROM system_settings WHERE key=?")
+    const global = tenant ?? await db.prepare("SELECT value FROM system_settings WHERE [key]=?")
       .get(name) as {value:string}|undefined;
     if (!global) return {};
     try { return dict(JSON.parse(global.value)); } catch { return {}; }

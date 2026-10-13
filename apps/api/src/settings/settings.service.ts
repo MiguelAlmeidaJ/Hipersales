@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import type { PublicUser, SettingsSection, UpdateSettingsRequest } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { DEFAULT_SETTINGS, PLACEHOLDERS, STATUS_LABELS } from "./settings.constants.js";
 
 type JsonObject = Record<string, unknown>;
@@ -23,20 +23,20 @@ function boolean(value: unknown, fallback = false): boolean {
 
 @Injectable()
 export class SettingsService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async read(tenantId: number, key: SettingsSection): Promise<unknown> {
-    const tenant = await this.database.db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND key=?")
+    const tenant = await this.database.db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND [key]=?")
       .get(tenantId, key) as { value: string } | undefined;
-    const system = tenant ? undefined : await this.database.db.prepare("SELECT value FROM system_settings WHERE key=?")
+    const system = tenant ? undefined : await this.database.db.prepare("SELECT value FROM system_settings WHERE [key]=?")
       .get(key) as { value: string } | undefined;
     try { return JSON.parse(tenant?.value ?? system?.value ?? JSON.stringify(DEFAULT_SETTINGS[key])); }
     catch { return structuredClone(DEFAULT_SETTINGS[key]); }
   }
 
   async write(tenantId: number, key: SettingsSection, value: unknown): Promise<void> {
-    const updated = await this.database.db.prepare("UPDATE tenant_settings SET value=? WHERE tenant_id=? AND key=?").run(JSON.stringify(value), tenantId, key);
-    if (!updated.changes) await this.database.db.prepare("INSERT INTO tenant_settings (tenant_id,key,value,updated_at) VALUES (?,?,?,?)").run(tenantId, key, JSON.stringify(value), new Date().toISOString());
+    const updated = await this.database.db.prepare("UPDATE tenant_settings SET value=? WHERE tenant_id=? AND [key]=?").run(JSON.stringify(value), tenantId, key);
+    if (!updated.changes) await this.database.db.prepare("INSERT INTO tenant_settings (tenant_id,[key],value,updated_at) VALUES (?,?,?,?)").run(tenantId, key, JSON.stringify(value), new Date().toISOString());
   }
 
   async get(user: PublicUser) {

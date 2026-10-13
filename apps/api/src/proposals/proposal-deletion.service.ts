@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 @Injectable()
 export class ProposalDeletionService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   delete(user: PublicUser, id: number): Promise<{ message: string }> {
     if (!Number.isSafeInteger(id) || id <= 0) {

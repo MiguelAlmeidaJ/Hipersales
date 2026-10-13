@@ -26,6 +26,8 @@ export const USER_SELECT = `
   LEFT JOIN tenants t ON t.id = u.tenant_id
 `;
 
+export const USER_SELECT_ONE = USER_SELECT.replace(/\bSELECT\b/i, "SELECT TOP (1)");
+
 export function normalizeUsername(value: string): string {
   const normalized = value.trim().toLowerCase();
   return normalized.includes("@") ? normalized.split("@", 1)[0]! : normalized;

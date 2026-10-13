@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
 import PDFDocument from "pdfkit";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 type Row = Record<string, unknown>;
 type Line = { label: string; value: unknown };
@@ -17,7 +17,7 @@ function safeDate(value: unknown): string {
 
 @Injectable()
 export class DocumentsService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   private pdf(title: string, subtitle: string, sections: Array<{ title: string; lines: Line[] }>): Promise<Buffer> {
     return new Promise((resolve, reject) => {
@@ -87,7 +87,7 @@ export class DocumentsService {
     const rows = await this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,co.name company_name,
       COALESCE(SUM(pi.quantity*pi.negotiated_price),0) total FROM proposals p JOIN companies co ON co.id=p.company_id
       LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE p.customer_id=? AND p.tenant_id=?
-      GROUP BY p.id ORDER BY p.created_at DESC`).all(customerId, user.tenant_id) as Row[];
+      GROUP BY p.order_number,p.status,p.created_at,co.name ORDER BY p.created_at DESC`).all(customerId, user.tenant_id) as Row[];
     const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
     const buffer = await this.pdf(`Desempenho - ${customer.legal_name}`, `Gerado em ${safeDate(new Date().toISOString())}`, [
       { title: "Cliente", lines: [{ label: "Razao social", value: customer.legal_name }, { label: "CNPJ", value: customer.cnpj },
@@ -107,13 +107,13 @@ export class DocumentsService {
       if (query[key]) { const value = Number(query[key]); if (!Number.isSafeInteger(value) || value < 1) throw new BadRequestException("Filtro invalido."); where.push(`${column}=?`); params.push(value); }
     }
     if (query.status) { where.push("p.status=?"); params.push(query.status); }
-    if (query.date_from) { where.push("p.created_at::date>=?::date"); params.push(query.date_from); }
-    if (query.date_to) { where.push("p.created_at::date<=?::date"); params.push(query.date_to); }
+    if (query.date_from) { where.push("CAST(p.created_at AS date)>=CAST(? AS date)"); params.push(query.date_from); }
+    if (query.date_to) { where.push("CAST(p.created_at AS date)<=CAST(? AS date)"); params.push(query.date_to); }
     const rows = await this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,u.name seller_name,c.legal_name customer_name,
       co.name company_name,COALESCE(SUM(pi.quantity*pi.negotiated_price),0) total FROM proposals p
       JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id JOIN companies co ON co.id=p.company_id
       LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE ${where.join(" AND ")}
-      GROUP BY p.id ORDER BY p.created_at DESC`).all(...params) as Row[];
+      GROUP BY p.order_number,p.status,p.created_at,u.name,c.legal_name,co.name ORDER BY p.created_at DESC`).all(...params) as Row[];
     const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
     return this.pdf(`Relatorio - ${type.replaceAll("_", " ")}`, `${rows.length} registros | Total ${money(total)}`, [
       { title: "Pedidos", lines: rows.map((row) => ({ label: `#${row.order_number} - ${row.customer_name}`,

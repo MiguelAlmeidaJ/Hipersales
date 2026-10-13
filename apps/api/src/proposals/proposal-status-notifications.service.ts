@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { loadApprovedOrder } from "./approved-order-email.js";
 
 type Row = Record<string, unknown>;
@@ -59,10 +59,10 @@ export function rejectedProposalBody(seller:string,customer:string,cnpj:string) 
     "Atenciosamente,","Comunicacao HiperSales Web",
   ].join("\n");
 }
-async function setting(db:DatabaseService["db"],tenantId:number,key:string):Promise<Row> {
-  const local=await db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND key=?")
+async function setting(db:DatabaseRepository["db"],tenantId:number,key:string):Promise<Row> {
+  const local=await db.prepare("SELECT value FROM tenant_settings WHERE tenant_id=? AND [key]=?")
     .get(tenantId,key) as {value:string}|undefined;
-  const global=local ?? await db.prepare("SELECT value FROM system_settings WHERE key=?")
+  const global=local ?? await db.prepare("SELECT value FROM system_settings WHERE [key]=?")
     .get(key) as {value:string}|undefined;
   try {
     const parsed:unknown=JSON.parse(global?.value ?? "{}");
@@ -71,7 +71,7 @@ async function setting(db:DatabaseService["db"],tenantId:number,key:string):Prom
 }
 @Injectable()
 export class ProposalStatusNotificationsService {
-  constructor(private readonly database:DatabaseService) {}
+  constructor(private readonly database:DatabaseRepository) {}
   async queue(tenantId:number,id:number,status:string):Promise<void> {
     const db=this.database.db;
     const row=await db.prepare(`SELECT p.*,u.name AS seller_name,u.email AS seller_email,

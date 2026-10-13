@@ -1,6 +1,6 @@
 # API HiperSales
 
-Backend NestJS/TypeScript com PostgreSQL e Prisma 7. O schema, as migrations e o Prisma Client pertencem ao pacote compartilhado `packages/database`.
+Backend NestJS/TypeScript com SQL Server e Prisma 7. O schema, as migrations e o Prisma Client pertencem ao pacote compartilhado `packages/database`.
 
 ## Desenvolvimento
 
@@ -16,13 +16,13 @@ pnpm test:api
 pnpm dev:api
 ```
 
-Configure `DATABASE_URL` para o PostgreSQL. A aplicação aplica acesso assíncrono, transações e normalização dos resultados por meio do repositório Prisma em `src/database`.
+Configure `SQLSERVER_DATABASE_URL` para o banco. Services acessam somente o `DatabaseRepository`, que centraliza consultas parametrizadas, transações e normalização sobre o Prisma Client.
 
 Em um banco novo, configure `HYPERSALES_BOOTSTRAP_ADMIN_EMAIL` e `HYPERSALES_BOOTSTRAP_ADMIN_PASSWORD` (mínimo de 12 caracteres). O administrador inicial é criado uma única vez e deve trocar a senha no primeiro acesso.
 
-## Testes PostgreSQL
+## Testes de banco
 
-A suíte de homologação integrada requer `TEST_DATABASE_URL` apontando exclusivamente para um banco cujo nome termine em `_test` ou `_validation`. O schema desse banco é recriado durante os testes. As pipelines já provisionam `hipersales_test`.
+A suíte de homologação integrada requer `TEST_DATABASE_URL` apontando exclusivamente para um banco cujo nome termine em `_test` ou `_validation`. A pipeline provisiona e migra `hipersales_test` antes dos testes.
 
 ## Módulos
 

@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 
 @Injectable()
 export class RegistrationRequestsService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async list(user: PublicUser) {
     const rows = await this.database.db.prepare(`

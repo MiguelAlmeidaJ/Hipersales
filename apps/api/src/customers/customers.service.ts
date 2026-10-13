@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import type { PublicUser } from "@hipersales/contracts";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { customerAddress, customerField, customerText } from "./customer-fields.js";
 
 type CustomerRow = Record<string, unknown>;
@@ -29,7 +29,7 @@ function filterActive(input: string): number | null {
 
 @Injectable()
 export class CustomersService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async list(user: PublicUser, term = "") {
     const like = `%${term.trim()}%`;
@@ -49,12 +49,12 @@ export class CustomersService {
     const like = `%${term.trim()}%`;
     const filter = filterActive(active);
     const rows = await this.database.db.prepare(`SELECT c.*,
-      (SELECT u.name FROM customer_sellers cs JOIN users u ON u.id=cs.seller_id
-       WHERE cs.customer_id=c.id ORDER BY cs.seller_id LIMIT 1) AS seller_name,
-      (SELECT COALESCE(NULLIF(u.communication_email,''),u.email) FROM customer_sellers cs
-       JOIN users u ON u.id=cs.seller_id WHERE cs.customer_id=c.id ORDER BY cs.seller_id LIMIT 1) AS seller_email,
+      (SELECT TOP (1) u.name FROM customer_sellers cs JOIN users u ON u.id=cs.seller_id
+       WHERE cs.customer_id=c.id ORDER BY cs.seller_id) AS seller_name,
+      (SELECT TOP (1) COALESCE(NULLIF(u.communication_email,''),u.email) FROM customer_sellers cs
+       JOIN users u ON u.id=cs.seller_id WHERE cs.customer_id=c.id ORDER BY cs.seller_id) AS seller_email,
       (SELECT COUNT(*) FROM customer_sellers cs WHERE cs.customer_id=c.id) AS seller_count,
-      (SELECT group_concat(u.name,', ') FROM customer_sellers cs JOIN users u ON u.id=cs.seller_id
+      (SELECT STRING_AGG(u.name,', ') FROM customer_sellers cs JOIN users u ON u.id=cs.seller_id
        WHERE cs.customer_id=c.id) AS seller_names
       FROM customers c WHERE c.tenant_id=? AND (? IS NULL OR c.active=?)
       AND (?='' OR c.legal_name LIKE ? OR c.trade_name LIKE ? OR c.cnpj LIKE ? OR c.phone LIKE ?)

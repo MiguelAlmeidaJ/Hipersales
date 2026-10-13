@@ -1,5 +1,5 @@
 import { BadGatewayException, BadRequestException, ConflictException, Injectable } from "@nestjs/common";
-import { DatabaseService } from "../database/database.service.js";
+import { DatabaseRepository } from "../database/database.repository.js";
 import { customerText } from "./customer-fields.js";
 
 type Data = Record<string, unknown>;
@@ -91,7 +91,7 @@ export function normalizeLookup(digits: string, source: Data) {
 
 @Injectable()
 export class CnpjLookupService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseRepository) {}
 
   async lookup(tenantId: number, value: string, excludeId?: number) {
     const digits = String(value ?? "").replace(/\D/g, "");

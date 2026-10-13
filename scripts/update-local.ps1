@@ -1,4 +1,4 @@
-# Atualiza o codigo local sem alterar a base PostgreSQL.
+# Atualiza o codigo local sem alterar a base SQL Server.
 $ErrorActionPreference = "Stop"
 if (-not (Test-Path ".git")) { throw "Execute na raiz do clone Hipersales." }
 if (git status --porcelain) { throw "Existem alteracoes locais. Salve/commite antes de atualizar." }

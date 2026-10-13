@@ -1,36 +1,16 @@
-/**
- * Transitional translator for the legacy SQLite-shaped SQL statements.
- * It is deliberately fail-closed for unsupported mutations, rather than
- * silently issuing an incorrect T-SQL statement.
- */
-export function toSqlServerSelect(source: string): string {
-  let sql = source.trim().replace(/;$/, "");
-  if (!/^SELECT\b/i.test(sql)) throw new Error("Only SELECT is supported by the SQL Server bridge.");
-  if (/\b(?:ILIKE|ON\s+CONFLICT|RETURNING|INSERT|UPDATE|DELETE|PRAGMA|sqlite_master)\b/i.test(sql)) {
-    throw new Error("Unsupported SQL syntax in SQL Server bridge.");
-  }
-  sql = sql
-    .replace(/datetime\s*\(\s*'now'\s*,\s*'-7 days'\s*\)/gi, "DATEADD(day, -7, SYSUTCDATETIME())")
-    .replace(/\bgroup_concat\s*\(([^,]+),\s*'([^']*)'\s*\)/gi, "STRING_AGG($1, '$2')")
-    .replace(/\b(?:CURRENT_TIMESTAMP)\b/gi, "SYSUTCDATETIME()");
-  // SQL Server supports TOP for SELECT ... LIMIT N with no OFFSET.
-  const limit = /\s+LIMIT\s+(\d+)\s*$/i.exec(sql);
-  if (limit) {
-    sql = sql.slice(0, limit.index);
-    sql = sql.replace(/^SELECT\s+/i, "SELECT TOP (" + limit[1] + ") ");
-  }
-  if (/\bLIMIT\b|\bOFFSET\b/i.test(sql)) throw new Error("Pagination requires explicit T-SQL conversion.");
-  // Preserve ? placeholders; they are bound by the SQL Server driver, not interpolated.
-  // For a full migration this will be integrated into the parameterized request layer.
-  return sql;
+export function prepareSelect(source: string): string {
+  const statement = source.trim().replace(/;$/, "");
+  if (!/^SELECT\b/i.test(statement)) throw new Error("Only SELECT statements are accepted by query().");
+  if (statement.includes(";")) throw new Error("Multiple SQL statements are not allowed.");
+  return statement;
 }
 
 /**
- * Bind legacy positional placeholders into SQL Server named parameters.
+ * Bind positional placeholders into driver named parameters.
  * Quotes, bracket identifiers and SQL comments are skipped; malformed
  * statements fail closed. Values must be bound separately by the driver.
  */
-export function bindSqlServerParameters(statement: string, values: readonly unknown[]): {
+export function bindParameters(statement: string, values: readonly unknown[]): {
   sql: string;
   bindings: ReadonlyArray<{ name: string; value: unknown }>;
 } {
@@ -48,7 +28,7 @@ export function bindSqlServerParameters(statement: string, values: readonly unkn
       else if (c === "/" && next === "*") { state = "block"; sql += c; continue; }
       else if (c === "?") {
         if (index >= values.length) throw new Error("Not enough SQL parameters.");
-        sql += "@p" + index++;
+        sql += "@P" + ++index;
         continue;
       }
     } else if (state === "single" && c === "'") {
@@ -68,5 +48,5 @@ export function bindSqlServerParameters(statement: string, values: readonly unkn
   if (state === "single" || state === "double" || state === "bracket" || state === "block") {
     throw new Error("Unterminated SQL token.");
   }
-  return { sql, bindings: values.map((value, i) => ({ name: "p" + i, value })) };
+  return { sql, bindings: values.map((value, i) => ({ name: "P" + (i + 1), value })) };
 }
