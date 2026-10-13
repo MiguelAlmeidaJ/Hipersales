@@ -9,11 +9,11 @@
     "typecheck": "tsc --noEmit",
     "check:contracts": "node scripts/check-contracts.mjs",
     "audit:legacy": "node scripts/check-legacy-removal.mjs",
-    "format": "npx --yes prettier@3.6.2 --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\"",
-    "format:check": "npx --yes prettier@3.6.2 --check \"components/layout/**/*.tsx\" \"components/auth/**/*.tsx\" \"components/modules/**/*.tsx\""
+    "format": "prettier --write \"app/**/*.{ts,tsx,css}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"components/layout/**/*.tsx\" \"components/auth/**/*.tsx\" \"components/modules/**/*.tsx\""
   },
   "dependencies": {
-    "@hipersales/contracts": "file:../../packages/contracts",
+    "@hipersales/contracts": "workspace:*",
     "next": "^16.4.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -26,6 +26,7 @@
     "@types/react-dom": "^19.2.0",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.1.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "prettier": "3.6.2"
   }
 }
