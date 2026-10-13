@@ -157,7 +157,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const navigation = visibleModules(user?.role ?? "seller");
   const requestedModule = getModuleFromPath(pathname);
-  const selectedModule = navigation.find((item) => item.id === requestedModule?.id);
+  const portfolioRoute = /^\/app\/usuario\/\d+\/carteira\/?$/.test(pathname);
+  const selectedModule = navigation.find((item) => item.id === (portfolioRoute ? "users" : requestedModule?.id));
 
   return (
     <div className={`workspace app-frame ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
