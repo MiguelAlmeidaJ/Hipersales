@@ -7,15 +7,15 @@ ROOT = Path(__file__).resolve().parents[3]
 paths = [ROOT / "apps/api/src/database/database.service.ts"]
 paths += sorted((ROOT / "apps/api/src").rglob("*.ts"))
 patterns = {
-    "PostgreSQL placeholders ($1...)": r"\\$[1-9][0-9]*",
-    "ILIKE": r"\\bILIKE\\b",
-    "ON CONFLICT": r"\\bON\\s+CONFLICT\\b",
-    "RETURNING": r"\\bRETURNING\\b",
-    "INTERVAL": r"\\bINTERVAL\\b",
-    "PostgreSQL casting (::type)": r"::(?:text|timestamp|int|numeric|uuid)\\b",
-    "PostgreSQL BOOLEAN literals": r"\\b(?:TRUE|FALSE)\\b",
-    "PostgreSQL aggregations": r"\\bstring_agg\\s*\\(",
-    "SQLite placeholders (?)": r"\\?",
+    "PostgreSQL placeholders ($1...)": r"\$[1-9][0-9]*",
+    "ILIKE": r"\bILIKE\b",
+    "ON CONFLICT": r"\bON\s+CONFLICT\b",
+    "RETURNING": r"\bRETURNING\b",
+    "INTERVAL": r"\bINTERVAL\b",
+    "PostgreSQL casting (::type)": r"::(?:text|timestamp|int|numeric|uuid)\b",
+    "PostgreSQL BOOLEAN literals": r"\b(?:TRUE|FALSE)\b",
+    "PostgreSQL aggregations": r"\bstring_agg\s*\(",
+    "SQLite placeholders (?)": r"\?",
 }
 
 print("SQL Server migration audit (heuristic; comments and strings may be counted)")
