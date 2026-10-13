@@ -14,7 +14,7 @@ datasource db {
 model Tenant {
   id                    Int                  @id @default(autoincrement())
   name                  String
-  slug                  String               @unique
+  slug                  String               @unique @db.NVarChar(191)
   status                String               @default("active")
   ownerEmail            String?              @map("owner_email")
   createdAt             DateTime             @default(now()) @map("created_at") @db.DateTime2(6)
@@ -40,7 +40,7 @@ model User {
   id                 Int                  @id @default(autoincrement())
   tenantId           Int?                 @map("tenant_id")
   name               String
-  email              String               @unique
+  email              String               @unique @db.NVarChar(191)
   communicationEmail String?              @map("communication_email")
   whatsappPhone      String?              @map("whatsapp_phone")
   passwordHash       String               @map("password_hash")
@@ -68,7 +68,7 @@ model User {
 }
 
 model Session {
-  token     String   @id
+  token     String   @id @db.NVarChar(191)
   userId    Int      @map("user_id")
   expiresAt BigInt   @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime2(6)
@@ -97,7 +97,7 @@ model Company {
 model Customer {
   id                Int              @id @default(autoincrement())
   tenantId          Int              @map("tenant_id")
-  legalName         String           @map("legal_name")
+  legalName         String           @map("legal_name") @db.NVarChar(191)
   tradeName         String?          @map("trade_name")
   cnpj              String
   stateRegistration String?          @map("state_registration")
@@ -171,7 +171,7 @@ model RegistrationRequest {
   email             String?
   notes             String?
   formPayload       String?  @map("form_payload")
-  status            String   @default("pendente")
+  status            String   @default("pendente") @db.NVarChar(191)
   createdAt         DateTime @default(now()) @map("created_at") @db.DateTime2(6)
   tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   seller            User     @relation(fields: [sellerId], references: [id], onDelete: NoAction)
@@ -200,7 +200,7 @@ model Proposal {
   discountOn           String?         @map("discount_on")
   paymentTerms         String          @map("payment_terms")
   notes                String?
-  status               String          @default("em_analise")
+  status               String          @default("em_analise") @db.NVarChar(191)
   adminNotes           String?         @map("admin_notes")
   deliveryForecast     String?         @map("delivery_forecast")
   industryOrderNumber  String?         @map("industry_order_number")
@@ -273,8 +273,8 @@ model EmailOutbox {
 
 model WhatsappAutoReply {
   tenantId  Int      @map("tenant_id")
-  instanceId String  @map("instance_id")
-  messageId String   @map("message_id")
+  instanceId String  @map("instance_id") @db.NVarChar(191)
+  messageId String   @map("message_id") @db.NVarChar(191)
   remoteJid String   @map("remote_jid")
   repliedAt DateTime @map("replied_at") @db.DateTime2(6)
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -292,7 +292,7 @@ model Occurrence {
   reason          String
   description     String
   attachmentNames String?                @map("attachment_names")
-  status          String                 @default("aberta")
+  status          String                 @default("aberta") @db.NVarChar(191)
   resolution      String?
   resolvedAt      DateTime?              @map("resolved_at") @db.DateTime2(6)
   createdAt       DateTime               @default(now()) @map("created_at") @db.DateTime2(6)
@@ -344,7 +344,7 @@ model OccurrenceEvent {
 }
 
 model SystemSetting {
-  key       String   @id
+  key       String   @id @db.NVarChar(191)
   value     String
   updatedAt DateTime @default(now()) @map("updated_at") @db.DateTime2(6)
 
