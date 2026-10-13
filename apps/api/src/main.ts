@@ -21,7 +21,7 @@ async function bootstrap(): Promise<void> {
 
   expressApp.set("trust proxy", env.trustProxy);
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(express.json({ limit: "5mb", strict: true }));
+  app.use(express.json({ limit: "36mb", strict: true }));
   app.use(express.urlencoded({ extended: false, limit: "256kb" }));
   app.use(cookieParser());
   app.useGlobalFilters(new ApiExceptionFilter());
