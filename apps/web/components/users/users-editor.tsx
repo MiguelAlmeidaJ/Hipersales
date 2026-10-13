@@ -201,7 +201,7 @@ export default function UsersEditor() {
             {error}
           </p>
         )}
-      </form></div>
+      </form></div>}
       {/* User directory and filters are rendered above the dialog. */}
       {assignmentSeller && (
         <div className="mt-5">
