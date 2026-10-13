@@ -175,8 +175,7 @@ model RegistrationRequest {
   createdAt         DateTime @default(now()) @map("created_at") @db.DateTime2
   tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   seller            User     @relation(fields: [sellerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@unique([tenantId, orderNumber])
+  // Unicidade de order_number nao nulo aplicada por indice filtrado SQL Server (veja docs/sqlserver-filtered-uniques.sql).
   @@index([tenantId, sellerId, status, createdAt])
   @@map("registration_requests")
 }
@@ -213,8 +212,7 @@ model Proposal {
   customer             Customer        @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   items                ProposalItem[]
   events               ProposalEvent[]
-
-  @@unique([tenantId, orderNumber])
+  // Unicidade de order_number nao nulo aplicada por indice filtrado SQL Server (veja docs/sqlserver-filtered-uniques.sql).
   @@index([tenantId, sellerId, status, createdAt])
   @@index([tenantId, companyId, createdAt])
   @@index([tenantId, customerId, createdAt])
