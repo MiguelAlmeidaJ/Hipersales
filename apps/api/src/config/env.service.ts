@@ -15,6 +15,7 @@ const environmentSchema = z
     PORT: z.coerce.number().int().min(1).max(65_535).default(8000),
     DATABASE_URL: z.string().min(1).default(developmentDatabaseUrl),
     SQLSERVER_DATABASE_URL: z.string().default(""),
+    HIPERSALES_DATABASE_PROVIDER: z.enum(["postgresql", "sqlserver"]).default("postgresql"),
     DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(100).default(10),
     HYPERSALES_SESSION_COOKIE: z.string().min(1).default("hypersales_session"),
     HYPERSALES_SESSION_TTL_SECONDS: z.coerce.number().int().min(300).default(43_200),
@@ -39,6 +40,9 @@ const environmentSchema = z
         message: "SameSite=None exige HYPERSALES_COOKIE_SECURE=true.",
       });
     }
+    if (value.HIPERSALES_DATABASE_PROVIDER === "sqlserver" && !value.SQLSERVER_DATABASE_URL) {
+      context.addIssue({ code: "custom", path: ["SQLSERVER_DATABASE_URL"], message: "SQLSERVER_DATABASE_URL obrigatoria para SQL Server." });
+    }
     if (value.NODE_ENV === "production" && value.DATABASE_URL === developmentDatabaseUrl) {
       context.addIssue({
         code: "custom",
@@ -57,6 +61,7 @@ export class EnvService {
   readonly port = this.values.PORT;
   readonly databaseUrl = this.values.DATABASE_URL;
   readonly sqlserverDatabaseUrl = this.values.SQLSERVER_DATABASE_URL;
+  readonly databaseProvider = this.values.HIPERSALES_DATABASE_PROVIDER;
   readonly databasePoolSize = this.values.DATABASE_POOL_SIZE;
   readonly sessionCookie = this.values.HYPERSALES_SESSION_COOKIE;
   readonly sessionTtlSeconds = this.values.HYPERSALES_SESSION_TTL_SECONDS;
