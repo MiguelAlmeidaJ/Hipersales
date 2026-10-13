@@ -5,6 +5,7 @@ import { EnvService } from "../config/env.service.js";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  private readonly enabled: boolean;
   constructor(env: EnvService) {
     const adapter = new PrismaPg({
       connectionString: env.databaseUrl,
@@ -13,13 +14,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       max: env.databasePoolSize,
     });
     super({ adapter });
+    this.enabled = env.databaseProvider === "postgresql";
   }
 
   async onModuleInit(): Promise<void> {
-    await this.$connect();
+    if (this.enabled) await this.$connect();
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.$disconnect();
+    if (this.enabled) await this.$disconnect();
   }
 }
