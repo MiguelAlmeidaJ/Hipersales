@@ -9,7 +9,10 @@
     "format": "prisma format",
     "studio": "prisma studio",
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "validate:sqlserver": "prisma validate --config prisma.sqlserver.config.ts",
+    "generate:sqlserver": "prisma generate --config prisma.sqlserver.config.ts",
+    "migrate:sqlserver:dev": "prisma migrate dev --config prisma.sqlserver.config.ts"
   },
   "dependencies": {
     "@prisma/client": "^7.10.0",
