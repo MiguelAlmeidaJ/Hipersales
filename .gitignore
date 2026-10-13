@@ -11,6 +11,7 @@ node_modules/
 .node_modules.corrupt/
 **/dist/
 apps/api/src/generated/prisma/
+packages/database/src/generated/prisma/
 database/
 !apps/api/src/database/
 !apps/api/src/database/**
