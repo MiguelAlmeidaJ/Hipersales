@@ -7,11 +7,11 @@ Backend NestJS/TypeScript com PostgreSQL e Prisma. O legado Python e o runtime S
 Na raiz do repositório:
 
 ```bash
-npm ci
-npm run prisma:migrate --workspace @hipersales/api
-npm run build:api
-npm run test:api
-npm run dev --workspace @hipersales/api
+pnpm install
+pnpm prisma:migrate
+pnpm build:api
+pnpm test:api
+pnpm dev:api
 ```
 
 Configure `DATABASE_URL` para o PostgreSQL. A aplicação aplica acesso assíncrono, transações e normalização dos resultados por meio do repositório Prisma em `src/database`.
