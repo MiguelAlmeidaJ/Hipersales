@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
-import { FiEdit2, FiPlus, FiSearch, FiX } from "react-icons/fi";
-import SellerAssignments from "./seller-assignments";
+import Link from "next/link";
+import { FiEdit2, FiBriefcase, FiPlus, FiSearch, FiX } from "react-icons/fi";
 type User = {
   id: number;
   name: string;
@@ -34,7 +34,6 @@ export default function UsersEditor() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
-  const [assignmentSeller, setAssignmentSeller] = useState<User | null>(null);
   async function refresh() {
     const r = await api<{ users: User[] }>("/api/admin/users");
     setItems(r.users || []);
@@ -122,10 +121,17 @@ export default function UsersEditor() {
             <thead className="bg-[#f5f9fc] text-xs text-slate-600"><tr><th className="p-3">Nome</th><th className="p-3">Login</th><th className="p-3">Perfil</th><th className="p-3">Situação</th><th className="p-3">Ações</th></tr></thead>
             <tbody>
               {visible.map(u => <tr key={u.id} className="border-t border-slate-100 hover:bg-[#f8fbfe]">
-                <td className="p-3 font-semibold text-slate-900">{u.name}</td><td className="p-3 text-slate-600">{u.email}</td>
+                <td className="p-3 font-semibold text-slate-900"><div className="flex items-center gap-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#edf5fc] text-xs font-bold text-[#073c96]">{u.name.slice(0,1).toUpperCase()}</span><span className="truncate">{u.name}</span></div></td><td className="p-3 text-slate-600">{u.email}</td>
                 <td className="p-3"><span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{u.role === "admin" ? "Administrador" : "Representante"}</span></td>
                 <td className="p-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${u.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{u.active ? "Ativo" : "Inativo"}</span></td>
-                <td className="p-3"><div className="flex items-center gap-3">{!u.is_super_admin && <><button type="button" onClick={() => edit(u)} className="inline-flex items-center gap-1 text-[#0767b4] hover:underline"><FiEdit2 size={13}/>Editar</button>{u.role === "seller" && <button type="button" onClick={() => setAssignmentSeller(u)} className="text-[#0767b4] hover:underline">Carteira</button>}</>}</div></td>
+                <td className="p-3"><div className="flex items-center gap-1.5">
+                  {!u.is_super_admin && (
+                    <button type="button" title={`Editar ${u.name}`} aria-label={`Editar ${u.name}`} onClick={() => edit(u)} className="grid size-9 place-items-center rounded-lg border border-transparent text-[#0767b4] transition hover:border-[#cde4f4] hover:bg-[#edf5fc]"><FiEdit2 size={16}/></button>
+                  )}
+                  {u.role === "seller" && (
+                    <Link href={`/app/usuario/${u.id}/carteira`} title={`Gerenciar carteira de ${u.name}`} aria-label={`Gerenciar carteira de ${u.name}`} className="grid size-9 place-items-center rounded-lg border border-transparent text-[#0767b4] no-underline transition hover:border-[#cde4f4] hover:bg-[#edf5fc] hover:no-underline"><FiBriefcase size={17}/></Link>
+                  )}
+                </div></td>
               </tr>)}
               {!visible.length && <tr><td colSpan={5} className="p-10 text-center text-sm text-slate-500">Nenhum usuário encontrado.</td></tr>}
             </tbody>
@@ -203,22 +209,7 @@ export default function UsersEditor() {
         )}
       </form></div>}
       {/* User directory and filters are rendered above the dialog. */}
-      {assignmentSeller && (
-        <div className="mt-5">
-          <button
-            type="button"
-            className="mb-3 rounded-lg border px-3 py-2"
-            onClick={() => setAssignmentSeller(null)}
-          >
-            Fechar carteira
-          </button>
-          <SellerAssignments
-            key={assignmentSeller.id}
-            sellerId={assignmentSeller.id}
-            sellerName={assignmentSeller.name}
-          />
-        </div>
-      )}
+
     </section>
   );
 }
