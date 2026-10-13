@@ -63,7 +63,7 @@ export class SqlServerReadService implements OnModuleDestroy {
     };
   }
 
-  private async connection(): Promise<sql.ConnectionPool> {
+  async connection(): Promise<sql.ConnectionPool> {
     if (this.pool?.connected) return this.pool;
     if (!this.connecting) {
       const pool = new sql.ConnectionPool(this.parseConnection());
