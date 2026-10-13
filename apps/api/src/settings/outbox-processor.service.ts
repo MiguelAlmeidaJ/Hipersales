@@ -31,20 +31,33 @@ export class OutboxProcessorService implements OnApplicationBootstrap, OnApplica
     this.running = true;
     let sent = 0;
     try {
-      const rows = await this.database.db.prepare(`SELECT id,tenant_id,recipients,subject,body FROM email_outbox
-        WHERE recipients NOT LIKE 'whatsapp:%' AND sent_at IS NULL AND COALESCE(attempts,0)<5
-        ORDER BY id LIMIT 10`).all() as unknown as OutboxRow[];
+      // An atomic UPDATE/RETURNING and SKIP LOCKED prevent concurrent workers from
+      // claiming the same row. Expired leases recover abandoned messages.
+      const rows = await this.database.query(`WITH next_messages AS (
+        SELECT id FROM email_outbox
+        WHERE recipients NOT LIKE 'whatsapp:%'
+          AND sent_at IS NULL
+          AND COALESCE(attempts,0) < 5
+          AND (claimed_until IS NULL OR claimed_until < NOW())
+        ORDER BY id
+        FOR UPDATE SKIP LOCKED
+        LIMIT 10
+      )
+      UPDATE email_outbox AS outbox
+      SET attempts=COALESCE(outbox.attempts,0)+1,
+          claimed_until=NOW()+INTERVAL '5 minutes',
+          error=NULL
+      FROM next_messages
+      WHERE outbox.id=next_messages.id
+      RETURNING outbox.id,outbox.tenant_id,outbox.recipients,outbox.subject,outbox.body`) as unknown as OutboxRow[];
       for (const row of rows) {
-        const claimed = await this.database.db.prepare(`UPDATE email_outbox SET attempts=COALESCE(attempts,0)+1,error=NULL
-          WHERE id=? AND sent_at IS NULL AND COALESCE(attempts,0)<5`).run(row.id);
-        if (!claimed.changes) continue;
         try {
           await this.integrations.sendEmail(row.tenant_id, row);
-          await this.database.db.prepare("UPDATE email_outbox SET sent_at=?,error=NULL WHERE id=?").run(new Date().toISOString(), row.id);
+          await this.database.db.prepare("UPDATE email_outbox SET sent_at=?,claimed_until=NULL,error=NULL WHERE id=?").run(new Date().toISOString(), row.id);
           sent++;
         } catch (error) {
           const message = (error instanceof Error ? error.message : String(error)).slice(0, 2000);
-          await this.database.db.prepare("UPDATE email_outbox SET error=? WHERE id=?").run(message, row.id);
+          await this.database.db.prepare("UPDATE email_outbox SET claimed_until=NULL,error=? WHERE id=?").run(message, row.id);
         }
       }
       return sent;
