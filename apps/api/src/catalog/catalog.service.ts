@@ -138,10 +138,16 @@ export class CatalogService {
   async createProduct(user:PublicUser,data:{company_id:number;code:string;name:string;unit?:string;price?:number;active?:boolean}) {
     const p=await this.productData(user,data);
     try {
-      const result=await this.database.db.prepare(`INSERT INTO products (tenant_id,company_id,code,name,unit,price,active)
-        VALUES (?,?,?,?,?,?,?) ON CONFLICT(company_id,code) DO UPDATE SET
-        name=excluded.name,unit=excluded.unit,price=excluded.price,active=excluded.active`)
-        .run(user.tenant_id,p.companyId,p.code,p.name,p.unit,p.price,p.active);
+      await this.database.transaction(async () => {
+        const updated = await this.database.db.prepare(
+          "UPDATE products SET name=?,unit=?,price=?,active=? WHERE tenant_id=? AND company_id=? AND code=?",
+        ).run(p.name,p.unit,p.price,p.active,user.tenant_id,p.companyId,p.code);
+        if (!updated.changes) {
+          await this.database.db.prepare(
+            "INSERT INTO products (tenant_id,company_id,code,name,unit,price,active) VALUES (?,?,?,?,?,?,?)",
+          ).run(user.tenant_id,p.companyId,p.code,p.name,p.unit,p.price,p.active);
+        }
+      });
       // Resolve the canonical ID after either the insert or upsert branch.
       const row=await this.database.db.prepare("SELECT id FROM products WHERE tenant_id=? AND company_id=? AND code=?")
         .get(user.tenant_id,p.companyId,p.code) as {id:number}|undefined;
