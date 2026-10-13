@@ -43,15 +43,15 @@ const names: Record<string, string> = {
   entregue: "Pedido entregue",
 };
 const colors: Record<string, string> = {
-  em_analise: "#eab308",
-  pedido_aprovado: "#22c55e",
+  em_analise: "#eab52b",
+  pedido_aprovado: "#07a970",
   recusado: "#f43f5e",
-  em_producao: "#0ea5e9",
-  faturado: "#6366f1",
-  entregue: "#0d9488",
+  em_producao: "#009ad6",
+  faturado: "#073c96",
+  entregue: "#76bd3d",
 };
 const card =
-  "rounded-2xl border border-[#e7dfea] bg-white p-5 shadow-[0_5px_20px_rgba(45,15,60,.045)]";
+  "rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-[0_5px_20px_rgba(45,15,60,.045)]";
 function Heading({
   kicker,
   title,
@@ -63,10 +63,10 @@ function Heading({
 }) {
   return (
     <div className="mb-5">
-      <p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-violet-800">
+      <p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[#073c96]">
         {kicker}
       </p>
-      <h2 className="mt-1 text-xl font-extrabold text-[#281136]">{title}</h2>
+      <h2 className="mt-1 text-xl font-extrabold text-[#111111]">{title}</h2>
       {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
     </div>
   );
@@ -78,16 +78,16 @@ function Ranking({ items }: { items: Rank[] }) {
         items.map((item, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 rounded-xl border border-[#ece7f0] px-3 py-3"
+            className="flex items-center gap-3 rounded-xl border border-[#e4ebf0] px-3 py-3"
           >
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-violet-50 text-sm font-extrabold text-violet-800">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#edf5fc] text-sm font-extrabold text-[#073c96]">
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-[#281136]">{item.name}</p>
+              <p className="truncate text-sm font-bold text-[#111111]">{item.name}</p>
               <p className="text-xs text-slate-500">{number(item.orders)} pedido(s)</p>
             </div>
-            <strong className="shrink-0 text-sm text-[#281136]">{money(item.total)}</strong>
+            <strong className="shrink-0 text-sm text-[#111111]">{money(item.total)}</strong>
           </div>
         ))
       ) : (
@@ -179,17 +179,17 @@ export default function DashboardView({ user }: { user: SessionUser }) {
     <section className="space-y-5 pb-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-violet-800">
+          <p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#073c96]">
             Dashboard
           </p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-[#281136]">
+          <h1 className="mt-1 text-3xl font-black tracking-tight text-[#111111]">
             Painel executivo
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             Visão consolidada de pedidos, carteira, catálogo e operação comercial.
           </p>
         </div>
-        <span className="rounded-xl border border-violet-200 bg-white px-4 py-2 text-xs font-bold text-violet-800">
+        <span className="rounded-xl border border-[#cde4f4] bg-white px-4 py-2 text-xs font-bold text-[#073c96]">
           HiperMix Representações
         </span>
       </header>
@@ -197,7 +197,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
         <form onSubmit={submit} className={card}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-extrabold text-[#281136]">Visão da operação</h2>
+              <h2 className="text-lg font-extrabold text-[#111111]">Visão da operação</h2>
               <p className="text-sm text-slate-500">
                 Encontre pedidos e analise os indicadores do período.
               </p>
@@ -205,7 +205,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
             <button
               type="button"
               onClick={() => setRevision((x) => x + 1)}
-              className="rounded-lg border border-violet-200 bg-white px-3 py-2 text-xs font-bold text-violet-800"
+              className="rounded-lg border border-[#cde4f4] bg-white px-3 py-2 text-xs font-bold text-[#073c96]"
             >
               ↻ Atualizar
             </button>
@@ -305,7 +305,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                 <p className="text-[11px] font-extrabold uppercase tracking-[.08em] text-slate-500">
                   {label}
                 </p>
-                <p className="mt-3 break-words text-2xl font-black tracking-tight text-[#281136]">
+                <p className="mt-3 break-words text-2xl font-black tracking-tight text-[#111111]">
                   {value}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">{help}</p>
@@ -319,7 +319,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                 {data.statuses.map((row) => (
                   <div key={row.status}>
                     <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
-                      <span className="font-bold text-[#281136]">
+                      <span className="font-bold text-[#111111]">
                         {names[row.status] || row.status}
                       </span>
                       <span className="text-xs font-semibold text-slate-600">
@@ -364,18 +364,18 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                     key={order.id}
                     className="flex items-center gap-3 rounded-lg border border-slate-100 px-3 py-3"
                   >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-violet-50 font-bold text-violet-700">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#edf5fc] font-bold text-[#0767b4]">
                       #{order.order_number || order.id}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-bold text-[#281136]">
+                      <p className="truncate text-xs font-bold text-[#111111]">
                         {order.customer_name}
                       </p>
                       <p className="text-xs text-slate-500">
                         {order.company_name} · {names[order.status] || order.status}
                       </p>
                     </div>
-                    <strong className="shrink-0 text-xs text-[#281136]">
+                    <strong className="shrink-0 text-xs text-[#111111]">
                       {money(order.total)}
                     </strong>
                   </div>
@@ -394,16 +394,16 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                   key={i}
                   className="flex flex-wrap items-center gap-3 rounded-xl border border-[#eee8f2] bg-[#fcfafd] p-4"
                 >
-                  <span className="grid size-8 place-items-center rounded-lg bg-violet-100 text-sm font-bold text-violet-800">
+                  <span className="grid size-8 place-items-center rounded-lg bg-[#e4f3fc] text-sm font-bold text-[#073c96]">
                     {i + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-extrabold text-[#281136]">{product.name}</p>
+                    <p className="text-sm font-extrabold text-[#111111]">{product.name}</p>
                     <p className="text-xs text-slate-500">
                       {product.company} · {number(product.quantity)} unidades
                     </p>
                   </div>
-                  <strong className="text-sm text-[#281136]">{money(product.total)}</strong>
+                  <strong className="text-sm text-[#111111]">{money(product.total)}</strong>
                 </div>
               ))}
               {!data.top_products.length && (
@@ -433,7 +433,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
                         <p className="text-xs text-slate-500">{row.company_name}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-violet-50 px-2 py-1 text-xs font-bold text-violet-700">
+                        <span className="rounded-full bg-[#edf5fc] px-2 py-1 text-xs font-bold text-[#0767b4]">
                           {names[row.status] || row.status}
                         </span>
                       </td>
