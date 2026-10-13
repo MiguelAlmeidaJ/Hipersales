@@ -24,3 +24,49 @@ export function toSqlServerSelect(source: string): string {
   // For a full migration this will be integrated into the parameterized request layer.
   return sql;
 }
+
+/**
+ * Bind legacy positional placeholders into SQL Server named parameters.
+ * Quotes, bracket identifiers and SQL comments are skipped; malformed
+ * statements fail closed. Values must be bound separately by the driver.
+ */
+export function bindSqlServerParameters(statement: string, values: readonly unknown[]): {
+  sql: string;
+  bindings: ReadonlyArray<{ name: string; value: unknown }>;
+} {
+  let sql = "";
+  let index = 0;
+  let state: "code" | "single" | "double" | "bracket" | "line" | "block" = "code";
+  for (let i = 0; i < statement.length; i++) {
+    const c = statement[i]!;
+    const next = statement[i + 1];
+    if (state === "code") {
+      if (c === "'") state = "single";
+      else if (c === '"') state = "double";
+      else if (c === "[") state = "bracket";
+      else if (c === "-" && next === "-") { state = "line"; sql += c; continue; }
+      else if (c === "/" && next === "*") { state = "block"; sql += c; continue; }
+      else if (c === "?") {
+        if (index >= values.length) throw new Error("Not enough SQL parameters.");
+        sql += "@p" + index++;
+        continue;
+      }
+    } else if (state === "single" && c === "'") {
+      if (next === "'") { sql += c + next; i++; continue; }
+      state = "code";
+    } else if (state === "double" && c === '"') {
+      if (next === '"') { sql += c + next; i++; continue; }
+      state = "code";
+    } else if (state === "bracket" && c === "]") {
+      if (next === "]") { sql += c + next; i++; continue; }
+      state = "code";
+    } else if (state === "line" && c === "\n") state = "code";
+    else if (state === "block" && c === "*" && next === "/") { sql += c + next; i++; state = "code"; continue; }
+    sql += c;
+  }
+  if (index !== values.length) throw new Error("Too many SQL parameters.");
+  if (state === "single" || state === "double" || state === "bracket" || state === "block") {
+    throw new Error("Unterminated SQL token.");
+  }
+  return { sql, bindings: values.map((value, i) => ({ name: "p" + i, value })) };
+}
