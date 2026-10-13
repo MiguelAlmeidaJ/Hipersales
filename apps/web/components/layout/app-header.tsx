@@ -115,10 +115,6 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
             )}
           </div>
         )}
-        <div className="hidden items-center gap-2 border-r border-slate-200 pr-4 lg:flex">
-          <span className="size-2 rounded-full bg-[#07a970]" aria-hidden="true" />
-          <span className="text-xs font-medium text-slate-500">Painel comercial</span>
-        </div>
         <div ref={menuRef} className="relative">
           <button type="button" className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-left shadow-sm transition hover:border-[#a8cde8] hover:bg-[#f7fbff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0767b4]"
             aria-expanded={accountOpen} aria-haspopup="dialog" aria-controls="app-account-menu"
