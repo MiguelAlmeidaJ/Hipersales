@@ -2,6 +2,8 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@hipersales/database";
 import { PrismaService } from "./prisma.service.js";
+import { EnvService } from "../config/env.service.js";
+import { SqlServerWriteService } from "./sqlserver-write.service.js";
 
 type QueryClient = PrismaService | Prisma.TransactionClient;
 type Row = Record<string, unknown>;
@@ -65,19 +67,28 @@ export class DatabaseService {
   readonly db = this;
   private readonly transactionStorage = new AsyncLocalStorage<Prisma.TransactionClient>();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly env: EnvService,
+    private readonly sqlserver: SqlServerWriteService,
+  ) {}
 
   prepare(sql: string): PreparedStatement {
     return new PreparedStatement(this, sql);
   }
 
   async query(sql: string, parameters: unknown[] = []): Promise<Row[]> {
+    if (this.env.databaseProvider === "sqlserver") {
+      const rows = await this.sqlserver.query(sql, parameters);
+      return rows.map((row) => normalizeValue(row) as Row);
+    }
     const client: QueryClient = this.transactionStorage.getStore() ?? this.prisma;
     const rows = await client.$queryRawUnsafe<Row[]>(postgresSql(sql), ...parameters);
     return rows.map((row) => normalizeValue(row) as Row);
   }
 
   async execute(sql: string, parameters: unknown[] = []): Promise<RunResult> {
+    if (this.env.databaseProvider === "sqlserver") return this.sqlserver.execute(sql, parameters);
     const client: QueryClient = this.transactionStorage.getStore() ?? this.prisma;
     let statement = postgresSql(sql).trim().replace(/;$/, "");
     const insert = /^INSERT\s+INTO\s+"?([a-z_]+)"?/i.exec(statement);
@@ -95,6 +106,7 @@ export class DatabaseService {
   }
 
   async transaction<T>(callback: () => Promise<T> | T): Promise<T> {
+    if (this.env.databaseProvider === "sqlserver") return this.sqlserver.transaction(async () => callback());
     return this.prisma.$transaction(
       (transaction) => this.transactionStorage.run(transaction, async () => callback()),
       { maxWait: 10_000, timeout: 30_000 },
