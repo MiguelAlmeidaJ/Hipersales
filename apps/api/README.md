@@ -1,6 +1,6 @@
 # API HiperSales
 
-Backend NestJS/TypeScript com PostgreSQL e Prisma. O legado Python e o runtime SQLite foram removidos.
+Backend NestJS/TypeScript com PostgreSQL e Prisma 7. O schema, as migrations e o Prisma Client pertencem ao pacote compartilhado `packages/database`.
 
 ## Desenvolvimento
 
@@ -8,7 +8,9 @@ Na raiz do repositório:
 
 ```bash
 pnpm install
+pnpm prisma:validate
 pnpm prisma:migrate
+pnpm build:database
 pnpm build:api
 pnpm test:api
 pnpm dev:api
