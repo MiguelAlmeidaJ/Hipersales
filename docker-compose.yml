@@ -1,4 +1,20 @@
 services:
+  # Banco principal de destino do Hipersales. Durante a migracao,
+  # PostgreSQL antigo permanece disponivel para nao interromper a API.
+  hipersales-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: ${HIPERSALES_SQLSERVER_SA_PASSWORD:?Configure_HIPERSALES_SQLSERVER_SA_PASSWORD}
+    ports:
+      - "127.0.0.1:14333:1433"
+    volumes:
+      - hipersales_sqlserver:/var/opt/mssql
+    shm_size: "1gb"
+    mem_limit: 3g
+
   hipersales-postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -69,6 +85,7 @@ services:
       retries: 10
 
 volumes:
+  hipersales_sqlserver:
   hipersales_postgres:
   evolution_postgres:
   evolution_redis:
