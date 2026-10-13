@@ -256,11 +256,13 @@ model EmailOutbox {
   body       String
   attempts   Int       @default(0)
   sentAt     DateTime? @map("sent_at") @db.Timestamptz(6)
+  claimedUntil DateTime? @map("claimed_until") @db.Timestamptz(6)
   error      String?
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([sentAt, attempts, createdAt])
+  @@index([claimedUntil])
   @@index([tenantId, kind, createdAt])
   @@map("email_outbox")
 }
