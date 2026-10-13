@@ -3,18 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "pnpm run build:contracts && pnpm --parallel --filter @hipersales/api --filter @hipersales/web dev",
-    "dev:api": "pnpm run build:contracts && pnpm --filter @hipersales/api dev",
+    "dev": "pnpm run build:contracts && pnpm run build:database && pnpm --parallel --filter @hipersales/api --filter @hipersales/web dev",
+    "dev:api": "pnpm run build:contracts && pnpm run build:database && pnpm --filter @hipersales/api dev",
     "dev:web": "pnpm --filter @hipersales/web dev",
     "build": "pnpm run build:api && pnpm run build:web",
     "build:contracts": "pnpm --filter @hipersales/contracts build",
-    "build:api": "pnpm run build:contracts && pnpm --filter @hipersales/api build",
+    "build:api": "pnpm run build:contracts && pnpm run build:database && pnpm --filter @hipersales/api build",
     "build:web": "pnpm run build:contracts && pnpm --filter @hipersales/web build",
     "test": "pnpm run test:api",
-    "test:api": "pnpm run build:contracts && pnpm --filter @hipersales/api test",
-    "typecheck": "pnpm run build:contracts && pnpm --filter @hipersales/api typecheck && pnpm --filter @hipersales/web typecheck",
-    "prisma:generate": "pnpm --filter @hipersales/api prisma:generate",
-    "prisma:migrate": "pnpm --filter @hipersales/api prisma:migrate",
+    "test:api": "pnpm run build:contracts && pnpm run build:database && pnpm --filter @hipersales/api test",
+    "typecheck": "pnpm run build:contracts && pnpm run build:database && pnpm --filter @hipersales/api typecheck && pnpm --filter @hipersales/web typecheck",
+    "prisma:generate": "pnpm --filter @hipersales/database generate",
+    "prisma:migrate": "pnpm --filter @hipersales/database migrate",
     "format": "pnpm --filter @hipersales/web format",
     "format:check": "pnpm --filter @hipersales/web format:check",
     "check:contracts": "pnpm --filter @hipersales/web check:contracts",
@@ -22,7 +22,9 @@
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:ps": "docker compose ps",
-    "pm2:reload": "pm2 startOrReload ecosystem.config.cjs"
+    "pm2:reload": "pm2 startOrReload ecosystem.config.cjs",
+    "build:database": "pnpm --filter @hipersales/database generate && pnpm --filter @hipersales/database build",
+    "prisma:validate": "pnpm --filter @hipersales/database validate"
   },
   "engines": {
     "node": ">=22"
