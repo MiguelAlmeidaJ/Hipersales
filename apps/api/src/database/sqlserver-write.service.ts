@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import sql from "mssql";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { bindSqlServerParameters } from "./sqlserver-dialect.js";
+import { bindSqlServerParameters, toSqlServerSelect } from "./sqlserver-dialect.js";
 import { SqlServerReadService } from "./sqlserver-read.service.js";
 
 export type SqlServerWriteResult = { changes: number; lastInsertRowid: number };
@@ -31,6 +31,19 @@ export class SqlServerWriteService {
       try { await transaction.rollback(); } catch { /* original error wins */ }
       throw error;
     }
+  }
+
+  /**
+   * Run SELECT in the same transaction as writes when transaction() is active.
+   * Outside transactions, use a pooled request.
+   */
+  async query(statement: string, params: readonly unknown[] = []): Promise<Record<string, unknown>[]> {
+    const bound = bindSqlServerParameters(toSqlServerSelect(statement), params);
+    const tx = this.transactions.getStore();
+    const request = tx ? new sql.Request(tx) : (await this.database.connection()).request();
+    for (const { name, value } of bound.bindings) request.input(name, value === undefined ? null : value);
+    const result = await request.query<Record<string, unknown>>(bound.sql);
+    return result.recordset;
   }
 
   async execute(statement: string, params: readonly unknown[] = []): Promise<SqlServerWriteResult> {
