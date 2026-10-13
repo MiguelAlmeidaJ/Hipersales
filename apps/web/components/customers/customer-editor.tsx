@@ -39,6 +39,8 @@ export default function CustomerEditor() {
   const [editing, setEditing] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -73,6 +75,9 @@ export default function CustomerEditor() {
       }),
     [rows, query, filter],
   );
+  const pages = Math.max(1, Math.ceil(visible.length / pageSize));
+  const currentPage = Math.min(page, pages);
+  const paged = visible.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   function reset() {
     setEditing(null);
     setForm({ ...empty });
@@ -111,10 +116,10 @@ export default function CustomerEditor() {
     }
   }
   return (
-    <section className="tile">
-      <h2>Clientes</h2>
-      <p className="muted">Cadastro e edição utilizando as mesmas regras da API atual.</p>
-      <form className="editor-form" onSubmit={submit}>
+    <section className="min-w-0 space-y-5">
+      <div><h2 className="text-xl font-extrabold">Clientes</h2>
+      <p className="mt-1 text-sm text-slate-500">Gerencie a carteira de clientes e seus dados cadastrais.</p></div>
+      <form className="editor-form rounded-2xl border border-[#e4ebf0] bg-white p-5" onSubmit={submit}>
         {fields.map(([key, label]) => (
           <label key={key}>
             {label}
@@ -149,27 +154,30 @@ export default function CustomerEditor() {
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
-      <div className="editor-form">
-        <label>
+      <div className="grid gap-3 rounded-2xl border border-[#e4ebf0] bg-white p-4 sm:grid-cols-[minmax(0,1fr)_180px_120px]">
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">
           Buscar cliente
           <input
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
             placeholder="Nome, CNPJ ou telefone"
           />
         </label>
-        <label>
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">
           Situação
-          <select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+          <select value={filter} onChange={(e) => { setFilter(e.target.value as typeof filter); setPage(1); }}>
             <option value="all">Todos</option>
             <option value="active">Ativos</option>
             <option value="inactive">Inativos</option>
           </select>
         </label>
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">Por página
+          <select className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm" value={pageSize} onChange={e => {setPageSize(Number(e.target.value));setPage(1);}}>{[10,20,50,100].map(n => <option value={n} key={n}>{n} por página</option>)}</select>
+        </label>
       </div>
       <p className="muted">{visible.length} cliente(s) encontrado(s)</p>
-      <div className="table-wrap">
+      <div className="table-wrap rounded-2xl border border-[#e4ebf0] bg-white p-3 shadow-sm">
         <table>
           <thead>
             <tr>
@@ -181,7 +189,7 @@ export default function CustomerEditor() {
             </tr>
           </thead>
           <tbody>
-            {visible.map((c) => (
+            {paged.map((c) => (
               <tr key={c.id}>
                 <td>{c.legal_name}</td>
                 <td>{c.cnpj}</td>
@@ -197,6 +205,7 @@ export default function CustomerEditor() {
           </tbody>
         </table>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500"><span>Página {currentPage} de {pages}</span><div className="flex gap-2"><button type="button" disabled={currentPage===1} onClick={() => setPage(currentPage-1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button type="button" disabled={currentPage===pages} onClick={() => setPage(currentPage+1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Próxima</button></div></div>
       <p className="muted">
         Associações comerciais podem ser gerenciadas em Usuários → Carteira. Para clientes
         vinculados a pedidos, utilize a opção Inativo para preservar o histórico.
