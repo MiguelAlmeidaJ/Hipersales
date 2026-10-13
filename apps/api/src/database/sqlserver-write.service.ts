@@ -37,7 +37,7 @@ export class SqlServerWriteService {
     let command = statement.trim().replace(/;$/, "");
     // Prepared legacy INSERT OR IGNORE / ON CONFLICT need table-specific
     // implementations; blindly rewriting them changes unique semantics.
-    if (!/^(?:INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM)\b/i.test(command) ||
+    if (!/^(?:INSERT\s+INTO\b|UPDATE\s+\[?[a-z_]+\]?|DELETE\s+FROM\b)/i.test(command) ||
         /\b(?:ON\s+CONFLICT|RETURNING|OR\s+IGNORE|MERGE|DROP|ALTER|TRUNCATE|EXEC)\b/i.test(command)) {
       throw new Error("Unsupported SQL Server mutation; explicit T-SQL rewrite required.");
     }
