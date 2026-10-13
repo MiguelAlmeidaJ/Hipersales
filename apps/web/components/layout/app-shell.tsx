@@ -111,10 +111,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (status === "login") {
     return (
-      <main className="wrap">
-        <form className="panel" onSubmit={login}>
-          <h1>Hipersales</h1>
-          <p>Portal comercial da HiperMix</p>
+      <main className="login-page">
+        <form className="login-panel" onSubmit={login}>
+          <header className="login-heading">
+            <span className="login-eyebrow">HiperMix</span>
+            <h1>Bem-vindo ao Hipersales</h1>
+            <p>Acesse o portal comercial para continuar.</p>
+          </header>
           <label className="field">
             Usuário
             <input
@@ -139,7 +142,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               {error}
             </p>
           )}
-          <button disabled={busy} className="primary">
+          <button disabled={busy} className="primary login-submit">
             {busy ? "Entrando…" : "Entrar"}
           </button>
         </form>

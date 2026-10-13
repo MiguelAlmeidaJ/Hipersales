@@ -30,6 +30,43 @@
   .panel {
     @apply w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl;
   }
+  .login-page {
+    @apply relative isolate grid min-h-dvh items-center overflow-hidden px-6 py-10 sm:px-10 lg:px-[8vw];
+    background-image: url("/assets/login.jpeg");
+    background-position: center;
+    background-size: cover;
+  }
+  .login-page::before {
+    content: "";
+    @apply absolute inset-0 -z-10;
+    background:
+      linear-gradient(90deg, rgba(7, 18, 34, 0.12) 0%, rgba(7, 18, 34, 0.3) 52%, rgba(7, 18, 34, 0.78) 100%),
+      linear-gradient(180deg, rgba(7, 18, 34, 0.08), rgba(7, 18, 34, 0.38));
+  }
+  .login-panel {
+    @apply relative z-10 w-full max-w-[430px] justify-self-center rounded-3xl border border-white/40 bg-white/95 p-7 shadow-[0_28px_80px_rgba(2,8,23,0.38)] backdrop-blur-md sm:p-10;
+  }
+  .login-heading {
+    @apply mb-7;
+  }
+  .login-heading h1 {
+    @apply mt-2 text-[1.75rem] leading-tight tracking-[-0.025em] text-slate-950;
+  }
+  .login-heading p {
+    @apply mt-2 text-sm leading-6 text-slate-500;
+  }
+  .login-eyebrow {
+    @apply text-xs font-extrabold uppercase tracking-[0.18em] text-brand;
+  }
+  .login-panel .field {
+    @apply my-5 gap-2 text-sm font-semibold text-slate-700;
+  }
+  .login-panel .field input {
+    @apply h-12 border-slate-300 bg-white/90 px-4 py-3 text-base font-normal shadow-sm outline-none transition focus:border-brand focus:ring-4 focus:ring-blue-100;
+  }
+  .login-submit {
+    @apply mt-2 w-full shadow-lg shadow-blue-900/15 transition hover:bg-[#045a9f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+  }
   .panel p {
     @apply my-3 text-slate-500;
   }
@@ -144,6 +181,19 @@
   }
   .tile .tile {
     @apply mt-5;
+  }
+}
+
+@media (max-width: 767px) {
+  .login-page {
+    @apply place-items-center px-4 py-8;
+    background-position: 42% center;
+  }
+  .login-page::before {
+    background: rgba(7, 18, 34, 0.62);
+  }
+  .login-panel {
+    @apply justify-self-center rounded-2xl p-6;
   }
 }
 
