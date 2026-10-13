@@ -135,8 +135,7 @@ export default function UsersEditor() {
       </div>
       {modalOpen && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-3 sm:p-6" onMouseDown={e => {if(e.target === e.currentTarget) closeModal();}}>
       <form role="dialog" aria-modal="true" aria-label={editing === null ? "Novo usuário" : "Editar usuário"} onSubmit={submit} className="max-h-[min(92dvh,780px)] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6">
-        <div className="mb-5 flex items-start justify-between"><div><h2 className="text-xl font-bold">
-        <h2 className="text-xl font-semibold">
+        <div className="mb-5 flex items-start justify-between"><div><h2 className="text-xl font-semibold">
           {editing === null ? "Novo usuário" : "Editar usuário"}
         </h2><p className="mt-1 text-sm text-slate-500">Preencha os dados e defina as permissões.</p></div><button type="button" aria-label="Fechar" onClick={closeModal} className="rounded-lg p-2 hover:bg-slate-100"><FiX/></button></div>
         <div className="grid gap-4 sm:grid-cols-2">
