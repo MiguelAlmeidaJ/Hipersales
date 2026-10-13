@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { SessionUser } from "@/lib/api";
 import { modulePath, type ModuleDefinition } from "@/lib/navigation";
 
@@ -32,13 +33,12 @@ export default function AppSidebar({ user, items, activeId, open, onClose }: Sid
 
       <aside id="app-navigation" className={`nav-side app-sidebar ${open ? "is-open" : ""}`}>
         <Link href="/app/painel" className="app-brand" onClick={onClose}>
-          <span className="app-brand-mark" aria-hidden="true">
-            H
-          </span>
-          <span className="min-w-0">
-            <strong className="block text-lg font-extrabold tracking-tight">Hipersales</strong>
-            <span className="block text-xs text-violet-200/80">Gestão comercial</span>
-          </span>
+          <Image 
+            src='/assets/logo_fundoescuro.png'
+            width={300}
+            height={200}
+            alt="Logo Sidebar Hipersales"
+          />
         </Link>
 
         <nav className="app-menu" aria-label="Navegação principal">
