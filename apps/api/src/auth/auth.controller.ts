@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Header, HttpCode, Post, Req, Res } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
 import {
   changePasswordRequestSchema,
@@ -6,6 +6,7 @@ import {
   type ChangePasswordRequest,
   type LoginRequest,
   type LogoutResponse,
+  type MobileSessionResponse,
   type SessionResponse,
 } from "@hipersales/contracts";
 import type { Request, Response } from "express";
@@ -13,6 +14,7 @@ import { Public } from "../common/decorators/public.decorator.js";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 import { AuthService } from "./auth.service.js";
+import { getSessionToken } from "./session-token.js";
 
 @Controller("api")
 export class AuthController {
@@ -20,6 +22,7 @@ export class AuthController {
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Header("Cache-Control", "no-store")
   @HttpCode(200)
   @Post("login")
   async login(
@@ -32,10 +35,22 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Header("Cache-Control", "no-store")
+  @HttpCode(200)
+  @Post("mobile/login")
+  async mobileLogin(
+    @Body(new ZodValidationPipe(loginRequestSchema)) input: LoginRequest,
+  ): Promise<MobileSessionResponse> {
+    const result = await this.auth.login(input);
+    return { user: result.user, session_token: result.token };
+  }
+
+  @Public()
   @HttpCode(200)
   @Post("logout")
   async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response): Promise<LogoutResponse> {
-    const token = request.cookies?.[this.auth.sessionCookieName] as string | undefined;
+    const token = getSessionToken(request, this.auth.sessionCookieName);
     await this.auth.logout(token);
     const { maxAge: _maxAge, ...clearOptions } = this.auth.cookieOptions;
     response.clearCookie(this.auth.sessionCookieName, clearOptions);

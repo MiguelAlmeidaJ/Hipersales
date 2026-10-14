@@ -3,6 +3,7 @@ import { Reflector } from "@nestjs/core";
 import type { AuthenticatedRequest } from "../http/authenticated-request.js";
 import { IS_PUBLIC_KEY } from "../decorators/public.decorator.js";
 import { AuthService } from "../../auth/auth.service.js";
+import { getSessionToken } from "../../auth/session-token.js";
 
 @Injectable()
 export class SessionGuard implements CanActivate {
@@ -19,7 +20,7 @@ export class SessionGuard implements CanActivate {
     if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const token = request.cookies?.[this.auth.sessionCookieName] as string | undefined;
+    const token = getSessionToken(request, this.auth.sessionCookieName);
     if (!token) throw new UnauthorizedException("Sessao expirada. Faca login novamente.");
 
     const user = await this.auth.findSessionUser(token);

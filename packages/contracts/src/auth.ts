@@ -36,6 +36,11 @@ export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export const sessionResponseSchema = z.object({ user: publicUserSchema });
 export type SessionResponse = z.infer<typeof sessionResponseSchema>;
 
+export const mobileSessionResponseSchema = sessionResponseSchema.extend({
+  session_token: z.string().min(32).max(256),
+});
+export type MobileSessionResponse = z.infer<typeof mobileSessionResponseSchema>;
+
 export const changePasswordRequestSchema = z.object({
   current_password: z.string().max(1024).optional().default(""),
   new_password: z

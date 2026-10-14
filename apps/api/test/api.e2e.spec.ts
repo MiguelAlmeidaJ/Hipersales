@@ -79,6 +79,15 @@ suite("API homologation", () => {
       .send({ username: "test.admin@example.test", password: "Database-Test-123!" }).expect(200);
     expect(login.body.user).toMatchObject({ role: "admin", tenant_name: "Tenant Test" });
     await agent.get("/api/me").expect(200);
+
+    const mobileLogin = await request(app.getHttpServer()).post("/api/mobile/login")
+      .send({ username: "test.admin", password: "Database-Test-123!" }).expect(200);
+    expect(mobileLogin.body).toMatchObject({ user: { role: "admin" } });
+    expect(mobileLogin.body.session_token).toMatch(/^[A-Za-z0-9_-]{32,256}$/);
+    const authorization = `Bearer ${mobileLogin.body.session_token}`;
+    await request(app.getHttpServer()).get("/api/me").set("Authorization", authorization).expect(200);
+    await request(app.getHttpServer()).post("/api/logout").set("Authorization", authorization).expect(200);
+    await request(app.getHttpServer()).get("/api/me").set("Authorization", authorization).expect(401);
   });
 
   it("creates the catalog, customer and seller with tenant-scoped assignments", async () => {

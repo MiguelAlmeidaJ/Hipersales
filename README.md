@@ -6,6 +6,7 @@ Backend NestJS/TypeScript, SQL Server + Prisma, frontend Next.js e integração 
 
 - `apps/api`: API NestJS (consome `@hipersales/database`)
 - `apps/web`: frontend Next.js
+- `apps/mobile`: aplicativo Expo/React Native para Android e iOS
 - `packages/contracts`: contratos Zod/TypeScript compartilhados
 - `packages/database`: schema único Prisma 7, migrations e Prisma Client compartilhado
 - `infra/docker`: infraestrutura Docker
@@ -32,6 +33,8 @@ Configure os arquivos .env conforme as instruções da API antes de rodar Prisma
 | `pnpm dev` | Inicializa API e Web em paralelo, compilando os contratos antes |
 | `pnpm dev:api` | Inicia apenas a API |
 | `pnpm dev:web` | Inicia apenas o Next.js |
+| `pnpm dev:mobile` | Inicia o Expo para desenvolvimento mobile |
+| `pnpm android` / `pnpm ios` | Abre o app mobile no emulador correspondente |
 | `pnpm build` | Compila contratos, API e Web |
 | `pnpm build:api` | Compila contratos, pacote database e API |
 | `pnpm build:web` | Compila contratos e Web |
