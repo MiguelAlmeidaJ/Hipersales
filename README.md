@@ -73,6 +73,6 @@ pnpm pm2:reload
 
 Preserve o `.env` e faça backup do banco antes de migrations em produção. Depois que o lockfile for versionado, use `pnpm install --frozen-lockfile`.
 
-O Docker Compose executa SQL Server para o HiperSales e PostgreSQL + Redis para a Evolution API. API em 127.0.0.1:8000, Web em 127.0.0.1:3000 e Evolution em 127.0.0.1:8081. Use proxy reverso TLS e não exponha bancos, Redis ou Evolution publicamente.
+O Docker Compose executa SQL Server para o HiperSales e PostgreSQL + Redis para a Evolution API. API em 127.0.0.1:3110, Web em 127.0.0.1:3111 e Evolution em 127.0.0.1:8081. Use proxy reverso TLS e não exponha bancos, Redis ou Evolution publicamente.
 
 Os endpoints `/api/*` e os dados persistidos permanecem intactos.
