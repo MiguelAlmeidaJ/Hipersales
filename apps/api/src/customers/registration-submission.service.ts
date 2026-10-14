@@ -39,8 +39,14 @@ export class RegistrationSubmissionService {
     const representativeEmail = customerText(
       user.communication_email, input.representative_email, user.email,
     );
+    const scheduled = customerText(input.scheduled_delivery) === "yes";
+    if (scheduled && !customerText(input.scheduling_instructions)) {
+      throw new BadRequestException("Informe como agendar a entrega.");
+    }
     const form: RegistrationInput = {
       ...input,
+      scheduled_delivery: scheduled ? "yes" : "no",
+      scheduling_instructions: scheduled ? customerText(input.scheduling_instructions) : "Descarga por ordem de chegada de segunda a sexta",
       representative_name: user.name || input.representative_name,
       representative_email: representativeEmail,
     };
