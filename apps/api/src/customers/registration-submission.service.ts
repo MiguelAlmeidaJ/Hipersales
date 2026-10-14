@@ -3,6 +3,7 @@ import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { CnpjLookupService } from "./cnpj-lookup.service.js";
 import { customerAddress, customerText } from "./customer-fields.js";
+import { cnpjDigits, isValidCnpj } from "./cnpj-validation.js";
 
 export type RegistrationInput = Record<string, unknown> & {
   legal_name?: string;
@@ -30,6 +31,8 @@ export class RegistrationSubmissionService {
       throw new BadRequestException("Informe razao social, CNPJ, contato e telefone.");
     }
 
+    if (!isValidCnpj(cnpj)) throw new BadRequestException("CNPJ inválido. Verifique os dígitos informados.");
+
     // Duplicate checks and the external lookup match the historical submission flow.
     // Keep network I/O outside the transaction.
     const external = await this.lookup.lookup(user.tenant_id, cnpj);
@@ -52,10 +55,12 @@ export class RegistrationSubmissionService {
       const records = await this.database.db.prepare(
         "SELECT cnpj FROM customers WHERE tenant_id = ?",
       ).all(user.tenant_id) as { cnpj: string }[];
-      const digits = cnpj.replace(/\D/g, "");
+      const digits = cnpjDigits(cnpj);
       if (records.some(row => row.cnpj.replace(/\D/g, "") === digits)) {
         throw new ConflictException("Ja existe esse CNPJ na nossa base.");
       }
+      const pending = await this.database.db.prepare("SELECT cnpj FROM registration_requests WHERE tenant_id=? AND status=?").all(user.tenant_id, "pendente") as {cnpj:string}[];
+      if (pending.some(row => cnpjDigits(row.cnpj) === digits)) throw new ConflictException("Já existe uma solicitação pendente para este CNPJ.");
       const result = await this.database.db.prepare(`INSERT INTO registration_requests
         (tenant_id, seller_id, legal_name, trade_name, cnpj, state_registration,
          address, phone, email, notes, form_payload, created_at)
