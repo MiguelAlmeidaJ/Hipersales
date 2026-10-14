@@ -6,7 +6,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
-      MSSQL_SA_PASSWORD: ${HIPERSALES_DATABASE_ADMIN_PASSWORD:-${HIPERSALES_SQLSERVER_SA_PASSWORD:?Configure_HIPERSALES_DATABASE_ADMIN_PASSWORD}}
+      MSSQL_SA_PASSWORD: ${HIPERSALES_DATABASE_ADMIN_PASSWORD:?Configure_em_.env.infrastructure}
     ports:
       - "127.0.0.1:14333:1433"
     volumes:

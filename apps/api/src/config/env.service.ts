@@ -39,6 +39,13 @@ const environmentSchema = z
     if (!value.SQLSERVER_DATABASE_URL) {
       context.addIssue({ code: "custom", path: ["SQLSERVER_DATABASE_URL"], message: "SQLSERVER_DATABASE_URL obrigatoria para SQL Server." });
     }
+    const databaseUser = value.SQLSERVER_DATABASE_URL
+      .match(/(?:^|;)\s*user\s*=\s*(\{[^}]*\}|[^;]*)/i)?.[1]
+      ?.replace(/^\{|\}$/g, "")
+      .trim();
+    if (value.NODE_ENV === "production" && databaseUser?.toLowerCase() === "sa") {
+      context.addIssue({ code: "custom", path: ["SQLSERVER_DATABASE_URL"], message: "Producao nao pode usar o login administrativo sa." });
+    }
   });
 
 @Injectable()

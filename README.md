@@ -24,7 +24,13 @@ pnpm install
 
 **Importante:** a primeira instalação gera `pnpm-lock.yaml`. Versione esse arquivo com `git add pnpm-lock.yaml && git commit -m "build: add pnpm lockfile"`. A partir daí, CI e produção podem usar `pnpm install --frozen-lockfile`. Não misture `npm install` ou `npm ci` com pnpm.
 
-Configure os arquivos .env conforme as instruções da API antes de rodar Prisma.
+Crie os ambientes a partir dos templates, sem misturar segredos do servidor com variáveis públicas do app:
+
+- `.env.example` → `.env`: runtime da API, Web e integrações; usa o login SQL `hipersales_app`;
+- `.env.infrastructure.example` → `.env.infrastructure`: senha administrativa do SQL Server e senha interna do PostgreSQL;
+- `apps/mobile/.env.example` → `apps/mobile/.env.local`: somente valores públicos `EXPO_PUBLIC_*`.
+
+Consulte [`docs/database.md`](docs/database.md) antes de rodar Prisma ou provisionar o usuário do banco.
 
 ## Comandos centralizados (sempre da raiz)
 
@@ -47,6 +53,7 @@ Configure os arquivos .env conforme as instruções da API antes de rodar Prisma
 | `pnpm format` / `pnpm format:check` | Formatação do Web |
 | `pnpm infra:up` / `pnpm infra:down` | Sobe / derruba serviços Docker |
 | `pnpm infra:ps` | Lista serviços Docker |
+| `pnpm database:setup-user` | Cria/valida o login SQL de menor privilégio da aplicação |
 | `pnpm pm2:reload` | Recarrega os processos de produção |
 
 ## Atualização de produção

@@ -8,3 +8,4 @@ packages:
 ignoredBuiltDependencies:
   - '@prisma/engines'
   - prisma
+  - unrs-resolver

@@ -16,7 +16,9 @@ pnpm test:api
 pnpm dev:api
 ```
 
-Configure `SQLSERVER_DATABASE_URL` para o banco. Services acessam somente o `DatabaseRepository`, que centraliza consultas parametrizadas, transações e normalização sobre o Prisma Client.
+Configure `SQLSERVER_DATABASE_URL` no `.env` da raiz com o login dedicado da aplicação. Em produção, a API recusa inicialização quando essa URL usa `sa`. A credencial administrativa fica separada em `.env.infrastructure` e é usada somente pelo Docker e pelo provisionamento; consulte [`docs/database.md`](../../docs/database.md).
+
+Services acessam somente o `DatabaseRepository`, que centraliza consultas parametrizadas, transações e normalização sobre o Prisma Client.
 
 Em um banco novo, configure `HYPERSALES_BOOTSTRAP_ADMIN_EMAIL` e `HYPERSALES_BOOTSTRAP_ADMIN_PASSWORD` (mínimo de 12 caracteres). O administrador inicial é criado uma única vez e deve trocar a senha no primeiro acesso.
 

@@ -1,14 +1,14 @@
 # Atualizar máquina local (Windows / PowerShell)
 
 Antes de atualizar, confirme um backup restaurável do SQL Server e preserve o
-`.env` fora do Git.
+`.env` e `.env.infrastructure` fora do Git.
 
 ```powershell
 git status
 git pull --ff-only origin main
 corepack enable
 pnpm install --frozen-lockfile
-docker compose up -d
+pnpm infra:up
 pnpm prisma:migrate
 pnpm build
 pnpm test
