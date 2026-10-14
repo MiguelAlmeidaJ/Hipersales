@@ -6,6 +6,7 @@ import CustomerEditor from "@/components/customers/customer-editor";
 import CustomerRequest from "@/components/customers/customer-request";
 import RegistrationApprovals from "@/components/customers/registration-approvals";
 import DashboardView from "@/components/dashboard/dashboard-view";
+import SellerHome from "@/components/dashboard/seller-home";
 import GoalsView from "@/components/goals/goals-view";
 import OccurrenceEditor from "@/components/occurrences/occurrence-editor";
 import OrdersView from "@/components/orders/orders-view";
@@ -26,7 +27,7 @@ export default function ModuleRenderer({ module, user }: ModuleRendererProps) {
 
   switch (module) {
     case "dashboard":
-      return <DashboardView user={user} />;
+      return isAdmin ? <DashboardView user={user} /> : <SellerHome user={user} />;
     case "orders":
       return <OrdersView user={user} />;
     case "occurrences":
