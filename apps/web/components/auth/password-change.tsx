@@ -3,12 +3,14 @@ import { useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
 export default function PasswordChange({
   required = false,
+  embedded = false,
   onSuccess,
 }: {
   required?: boolean;
+  embedded?: boolean;
   onSuccess: () => void;
 }) {
-  const [open, setOpen] = useState(required),
+  const [open, setOpen] = useState(required || embedded),
     [current, setCurrent] = useState(""),
     [next, setNext] = useState(""),
     [again, setAgain] = useState(""),
@@ -46,8 +48,8 @@ export default function PasswordChange({
     }
   }
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
-      {!required && (
+    <section className={embedded ? "w-full" : "rounded-xl border border-slate-200 bg-white p-4"}>
+      {!required && !embedded && (
         <button
           type="button"
           className="text-sm font-semibold text-blue-700"
@@ -57,15 +59,15 @@ export default function PasswordChange({
         </button>
       )}
       {open && (
-        <form onSubmit={submit} className="mt-3 grid max-w-md gap-3">
-          <h2 className="text-lg font-semibold">
+        <form onSubmit={submit} className={embedded ? "grid gap-4" : "mt-3 grid max-w-md gap-3"}>
+          <h2 className={embedded ? "sr-only" : "text-lg font-semibold"}>
             {required ? "Atualização obrigatória de senha" : "Alterar senha"}
           </h2>
           {!required && (
-            <label className="grid gap-1 text-sm">
+            <label className="grid gap-1.5 text-sm font-semibold text-slate-700">
               Senha atual
               <input
-                className="rounded-lg border p-2"
+                className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal outline-none transition focus:border-[#0767b4] focus:ring-2 focus:ring-blue-100"
                 type="password"
                 autoComplete="current-password"
                 required
@@ -98,6 +100,7 @@ export default function PasswordChange({
               onChange={(e) => setAgain(e.target.value)}
             />
           </label>
+          <p className="text-xs font-normal text-slate-500">Use pelo menos 12 caracteres.</p>
           {error && (
             <p role="alert" className="text-sm text-red-700">
               {error}
@@ -110,7 +113,7 @@ export default function PasswordChange({
           )}
           <button
             disabled={busy}
-            className="rounded-lg bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
+            className="mt-1 h-11 w-full rounded-xl bg-[#0767b4] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#073c96] disabled:opacity-50"
           >
             {busy ? "Salvando…" : "Salvar nova senha"}
           </button>
