@@ -44,7 +44,7 @@ export function normalizeWhatsappPhone(value: string): string {
 }
 
 export function toPublicUser(row: UserRow): PublicUser {
-  const role: Role = row.role === "dev" || row.is_dev || row.is_super_admin ? "dev" : row.role;
+  const role: Role = row.role;
   return {
     id: Number(row.id),
     name: row.name,
@@ -52,7 +52,7 @@ export function toPublicUser(row: UserRow): PublicUser {
     communication_email: row.communication_email ?? null,
     whatsapp_phone: row.whatsapp_phone ?? null,
     role,
-    tenant_id: Number(row.tenant_id || 1),
+    tenant_id: Number(row.tenant_id),
     tenant_name: row.tenant_name ?? "HiperMix",
     active: Boolean(row.active),
     must_change_password: Boolean(row.must_change_password),
