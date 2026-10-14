@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import FeedbackPopup from "@/components/ui/feedback-popup";
 
 export const metadata: Metadata = {
   title: "Hipersales",
@@ -11,7 +12,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>{children}<FeedbackPopup /></body>
     </html>
   );
 }
