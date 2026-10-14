@@ -20,7 +20,7 @@ module.exports = {
       restart_delay: 3000,
       env: {
         HOST: "127.0.0.1",
-        PORT: "8000",
+        PORT: "3110",
         NODE_ENV: "production",
       },
     },
@@ -28,7 +28,7 @@ module.exports = {
       name: "hipersales-web",
       cwd: path.join(root, "apps/web"),
       script: path.join(root, "apps/web/node_modules/next/dist/bin/next"),
-      args: "start -H 127.0.0.1 -p 3000",
+      args: "start -H 127.0.0.1 -p 3111",
       interpreter: process.execPath,
       exec_mode: "fork",
       instances: 1,
@@ -38,7 +38,7 @@ module.exports = {
       restart_delay: 3000,
       env: {
         NODE_ENV: "production",
-        HIPERSALES_API_ORIGIN: process.env.HIPERSALES_API_ORIGIN || "http://127.0.0.1:8000",
+        HIPERSALES_API_ORIGIN: process.env.HIPERSALES_API_ORIGIN || "http://127.0.0.1:3110",
       },
     },
   ],
