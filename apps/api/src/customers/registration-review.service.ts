@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { customerAddress, customerText } from "./customer-fields.js";
+import { isValidCnpj } from "./cnpj-validation.js";
 import { ApprovalNotificationsService } from "./approval-notifications.service.js";
 
 type Data = Record<string, unknown>;
@@ -66,12 +67,18 @@ export class RegistrationReviewService {
 
       if (status === "aprovada") {
         const currentCnpj = cnpjDigits(editable.cnpj);
-        if (currentCnpj.length !== 14) throw new BadRequestException("Informe um CNPJ valido.");
+        if (!isValidCnpj(currentCnpj)) throw new BadRequestException("CNPJ inválido.");
         const customers = await db.prepare("SELECT id,cnpj FROM customers WHERE tenant_id=?")
           .all(user.tenant_id) as {id:number;cnpj:string}[];
         const matched = customers.filter(c => cnpjDigits(c.cnpj) === currentCnpj);
         if (matched.length > 1) throw new ConflictException("Ja existe esse CNPJ na nossa base.");
         const existing = matched[0];
+        if (existing) {
+          const assignments = await db.prepare("SELECT seller_id FROM customer_sellers WHERE customer_id=?").all(existing.id) as {seller_id:number}[];
+          if (assignments.some(link => Number(link.seller_id) !== Number(original.seller_id))) {
+            throw new ConflictException("Cliente já vinculado a outro representante. Encaminhe a transferência para análise administrativa.");
+          }
+        }
         let customerId: number;
         if (existing) {
           customerId = existing.id;
