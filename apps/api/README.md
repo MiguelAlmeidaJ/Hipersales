@@ -29,13 +29,13 @@ A suíte de homologação integrada requer `TEST_DATABASE_URL` apontando exclusi
 ## Módulos
 
 - `auth`: sessões, cookies e credenciais.
-- `catalog`, `customers`, `users`: cadastros e vínculos com isolamento por tenant.
+- `catalog`, `customers`, `users`: cadastros e vínculos da organização única HiperMix.
 - `proposals`, `occurrences`: operação comercial, anexos e notificações.
 - `goals`, `dashboard`: indicadores e metas.
 - `documents`: PDFs de pedidos, ocorrências, clientes e relatórios.
 - `settings`: SMTP, Evolution API, webhook e processamento da outbox.
 - `jobs`: relatórios semanais e lembretes de metas.
 
-Rotas são autenticadas por padrão. Use `@Public()` somente em webhooks ou endpoints explicitamente públicos e `@Roles("admin")` nas operações administrativas.
+Rotas são autenticadas por padrão. Use `@Public()` somente em webhooks ou endpoints explicitamente públicos e `@Roles("admin")` nas operações administrativas. O perfil `dev` herda acesso administrativo, mas permanece invisível para `admin` e `seller`; consulte [`docs/access-control.md`](../../docs/access-control.md).
 
 Os workers podem ser desligados separadamente com `HIPERSALES_OUTBOX_WORKER=false` e `HIPERSALES_SCHEDULED_JOBS=false`.

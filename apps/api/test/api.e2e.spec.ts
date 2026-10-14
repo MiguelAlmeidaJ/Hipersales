@@ -17,7 +17,9 @@ const suite = enabled ? describe : describe.skip;
 suite("API homologation", () => {
   let app: INestApplication;
   let agent: Agent;
+  let developer: Agent;
   let pool: sql.ConnectionPool;
+  let developerId = 0;
   let sellerId = 0;
   let companyId = 0;
   let productId = 0;
@@ -39,9 +41,8 @@ suite("API homologation", () => {
     process.env.HYPERSALES_BOOTSTRAP_ADMIN_PASSWORD = "";
 
     pool = await new sql.ConnectionPool(config).connect();
-    const tenant = await pool.request().input("name", "Tenant Test").input("slug", "database-test").query(
-      "INSERT INTO tenants (name,slug,status,created_at) OUTPUT INSERTED.id VALUES (@name,@slug,'active',SYSUTCDATETIME())",
-    );
+    const tenant = await pool.request().query("SELECT TOP (1) id FROM tenants WHERE slug='hipermix'");
+    if (!tenant.recordset[0]) throw new Error("Tenant unico HiperMix nao foi criado pela migration.");
     await pool.request()
       .input("tenant", tenant.recordset[0].id).input("name", "Admin Test")
       .input("email", "test.admin").input("password", hashPassword("Database-Test-123!"))
@@ -49,14 +50,12 @@ suite("API homologation", () => {
       `INSERT INTO users (tenant_id,name,email,password_hash,role,active,is_super_admin,is_dev,must_change_password,created_at)
        VALUES (@tenant,@name,@email,@password,'admin',1,0,0,0,SYSUTCDATETIME())`,
     );
-    const foreignTenant = await pool.request().query(
-      "INSERT INTO tenants (name,slug,status,created_at) OUTPUT INSERTED.id VALUES ('Outro tenant','foreign-test','active',SYSUTCDATETIME())",
-    );
-    const foreignCompany = await pool.request().input("tenant", foreignTenant.recordset[0].id).query(
-      "INSERT INTO companies (tenant_id,name,active) OUTPUT INSERTED.id VALUES (@tenant,'Empresa estrangeira',1)",
-    );
-    await pool.request().input("tenant", foreignTenant.recordset[0].id).input("company", foreignCompany.recordset[0].id).query(
-      "INSERT INTO products (tenant_id,company_id,code,name,unit,price,active) VALUES (@tenant,@company,'FOREIGN','Produto estrangeiro','UN',1,1)");
+    const dev = await pool.request()
+      .input("tenant", tenant.recordset[0].id).input("name", "Nivel3")
+      .input("email", "nivel3").input("password", hashPassword("Database-Dev-123!"))
+      .query(`INSERT INTO users (tenant_id,name,email,password_hash,role,active,is_super_admin,is_dev,must_change_password,created_at)
+        OUTPUT INSERTED.id VALUES (@tenant,@name,@email,@password,'dev',1,0,1,0,SYSUTCDATETIME())`);
+    developerId = Number(dev.recordset[0].id);
 
     vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 503 })));
     const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -65,6 +64,7 @@ suite("API homologation", () => {
     app.useGlobalFilters(new ApiExceptionFilter());
     await app.init();
     agent = request.agent(app.getHttpServer());
+    developer = request.agent(app.getHttpServer());
   }, 30_000);
 
   afterAll(async () => {
@@ -77,7 +77,7 @@ suite("API homologation", () => {
     await request(app.getHttpServer()).get("/api/me").expect(401);
     const login = await agent.post("/api/login").set("Origin", "http://localhost:8000")
       .send({ username: "test.admin@example.test", password: "Database-Test-123!" }).expect(200);
-    expect(login.body.user).toMatchObject({ role: "admin", tenant_name: "Tenant Test" });
+    expect(login.body.user).toMatchObject({ role: "admin", tenant_name: "HiperMix" });
     await agent.get("/api/me").expect(200);
 
     const mobileLogin = await request(app.getHttpServer()).post("/api/mobile/login")
@@ -90,7 +90,24 @@ suite("API homologation", () => {
     await request(app.getHttpServer()).get("/api/me").set("Authorization", authorization).expect(401);
   });
 
-  it("creates the catalog, customer and seller with tenant-scoped assignments", async () => {
+  it("allows dev administration while hiding dev users from admins", async () => {
+    await developer.post("/api/login").send({ username: "nivel3", password: "Database-Dev-123!" }).expect(200);
+    const adminUsers = await agent.get("/api/admin/users").expect(200);
+    expect(adminUsers.body.users.some((user: { role: string }) => user.role === "dev")).toBe(false);
+    await agent.patch(`/api/admin/users/${developerId}`).send({ active: false }).expect(404);
+    await agent.post("/api/admin/users").send({
+      name: "Dev indevido", email: "forbidden.dev", role: "dev", active: true,
+      temporary_password: "Database-Dev-456!",
+    }).expect(403);
+
+    const developerUsers = await developer.get("/api/admin/users").expect(200);
+    expect(developerUsers.body.users).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: developerId, role: "dev" }),
+    ]));
+    await developer.get("/api/admin/overview").expect(200);
+  });
+
+  it("creates the catalog, customer and seller with organization-scoped assignments", async () => {
     sellerId = (await agent.post("/api/admin/users").send({
       name: "Seller Test", email: "test.seller", role: "seller", active: true,
       communication_email: "seller@example.test", temporary_password: "Database-Seller-123!",
@@ -153,7 +170,7 @@ suite("API homologation", () => {
     expect(attachment.text).toBe("teste");
   });
 
-  it("serves dashboards, settings and tenant-scoped administration", async () => {
+  it("serves dashboards, settings and HiperMix administration", async () => {
     for (const path of [
       "/api/admin/companies", "/api/admin/customers", "/api/admin/requests", "/api/admin/outbox",
       "/api/admin/goals", "/api/dashboard", "/api/admin/summary", "/api/admin/overview",

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import type {
   CreateUserRequest,
   PublicUser,
@@ -22,13 +22,17 @@ export class UsersService {
   constructor(private readonly database: DatabaseRepository) {}
 
   async list(actor: PublicUser): Promise<UsersResponse> {
+    const developerFilter = actor.role === "dev" ? "" : " AND u.role <> 'dev' AND COALESCE(u.is_dev, 0) = 0 AND COALESCE(u.is_super_admin, 0) = 0";
     const rows = await this.database.db
-      .prepare(`${USER_SELECT} WHERE u.tenant_id = ? AND COALESCE(u.is_super_admin, 0) = 0 ORDER BY u.name`)
+      .prepare(`${USER_SELECT} WHERE u.tenant_id = ?${developerFilter} ORDER BY u.name`)
       .all(actor.tenant_id) as unknown as UserRow[];
     return { users: rows.map(toPublicUser) };
   }
 
   async create(actor: PublicUser, input: CreateUserRequest): Promise<UserMutationResponse> {
+    if (input.role === "dev" && actor.role !== "dev") {
+      throw new ForbiddenException("Somente desenvolvedores podem criar outro usuario desenvolvedor.");
+    }
     const email = normalizeUsername(input.email);
     if (!email) throw new BadRequestException("Informe o usuario.");
     let whatsappPhone: string;
@@ -45,8 +49,8 @@ export class UsersService {
       const result = await this.database.db
         .prepare(`INSERT INTO users
           (tenant_id, name, email, communication_email, whatsapp_phone, password_hash, role,
-           active, must_change_password, password_updated_at, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+           is_dev, is_super_admin, active, must_change_password, password_updated_at, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(
           actor.tenant_id,
           input.name,
@@ -55,13 +59,15 @@ export class UsersService {
           whatsappPhone,
           hashPassword(password),
           input.role,
+          input.role === "dev" ? 1 : 0,
+          0,
           input.active ? 1 : 0,
           input.temporary_password ? 1 : 0,
           now,
           now,
         );
       const id = Number(result.lastInsertRowid);
-      return { id, message: "Usuario cadastrado.", user: await this.getTenantUser(actor.tenant_id, id) };
+      return { id, message: "Usuario cadastrado.", user: await this.getTenantUser(actor, id) };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
       throw new ConflictException("Este usuario ja esta em uso.");
@@ -75,11 +81,14 @@ export class UsersService {
     currentSessionToken: string,
   ): Promise<UserMutationResponse> {
     return this.database.transaction(async () => {
-      const row = await this.getTenantUserRow(actor.tenant_id, userId);
+      const row = await this.getTenantUserRow(actor, userId);
       const role = input.role ?? row.role;
       const active = input.active ?? Boolean(row.active);
-      if (actor.id === userId && (!active || role !== "admin")) {
-        throw new BadRequestException("Voce nao pode desativar ou remover o perfil administrador da propria conta.");
+      if (role === "dev" && actor.role !== "dev") {
+        throw new NotFoundException("Usuario nao encontrado.");
+      }
+      if (actor.id === userId && (!active || role !== actor.role)) {
+        throw new BadRequestException("Voce nao pode desativar ou alterar o perfil da propria conta.");
       }
       if (row.role === "admin" && row.active && (!active || role !== "admin")) {
         const otherAdmin = await this.database.db
@@ -110,7 +119,7 @@ export class UsersService {
 
       const assignments = [
         "name = ?", "email = ?", "communication_email = ?", "whatsapp_phone = ?",
-        "role = ?", "active = ?", "must_change_password = ?",
+        "role = ?", "is_dev = ?", "is_super_admin = 0", "active = ?", "must_change_password = ?",
       ];
       const values: Array<string | number> = [
         input.name ?? row.name,
@@ -118,6 +127,7 @@ export class UsersService {
         input.communication_email?.toLowerCase() ?? row.communication_email ?? "",
         whatsappPhone,
         role,
+        role === "dev" ? 1 : 0,
         active ? 1 : 0,
         mustChangePassword ? 1 : 0,
       ];
@@ -130,7 +140,7 @@ export class UsersService {
       try {
         const result = await this.database.db
           .prepare(`UPDATE users SET ${assignments.join(", ")}
-            WHERE id = ? AND tenant_id = ? AND COALESCE(is_super_admin, 0) = 0`)
+            WHERE id = ? AND tenant_id = ?`)
           .run(...values);
         if (!result.changes) throw new NotFoundException("Usuario nao encontrado.");
       } catch (error) {
@@ -145,19 +155,20 @@ export class UsersService {
           await this.database.db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
         }
       }
-      return { message: "Usuario atualizado.", user: await this.getTenantUser(actor.tenant_id, userId) };
+      return { message: "Usuario atualizado.", user: await this.getTenantUser(actor, userId) };
     });
   }
 
-  private async getTenantUser(tenantId: number, userId: number): Promise<PublicUser> {
-    return toPublicUser(await this.getTenantUserRow(tenantId, userId));
+  private async getTenantUser(actor: PublicUser, userId: number): Promise<PublicUser> {
+    return toPublicUser(await this.getTenantUserRow(actor, userId));
   }
 
-  private async getTenantUserRow(tenantId: number, userId: number): Promise<UserRow> {
+  private async getTenantUserRow(actor: PublicUser, userId: number): Promise<UserRow> {
+    const developerFilter = actor.role === "dev" ? "" : " AND u.role <> 'dev' AND COALESCE(u.is_dev, 0) = 0 AND COALESCE(u.is_super_admin, 0) = 0";
     const row = await this.database.db
       .prepare(`${USER_SELECT_ONE}
-        WHERE u.id = ? AND u.tenant_id = ? AND COALESCE(u.is_super_admin, 0) = 0`)
-      .get(userId, tenantId) as UserRow | undefined;
+        WHERE u.id = ? AND u.tenant_id = ?${developerFilter}`)
+      .get(userId, actor.tenant_id) as UserRow | undefined;
     if (!row) throw new NotFoundException("Usuario nao encontrado.");
     return row;
   }

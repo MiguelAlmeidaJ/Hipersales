@@ -36,7 +36,7 @@ async function toBase64(file: File): Promise<Attachment> {
   });
 }
 export default function OccurrenceEditor({ user }: { user: SessionUser }) {
-  const admin = user.role === "admin";
+  const admin = user.role === "admin" || user.role === "dev";
   const [rows, setRows] = useState<Occurrence[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);

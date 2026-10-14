@@ -39,7 +39,7 @@ const validIsoDate = (value: string) => {
 
 export default function NewOrderScreen() {
   const { status, user } = useSession();
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "dev";
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(initial);
   const [companies, setCompanies] = useState<Company[]>([]);

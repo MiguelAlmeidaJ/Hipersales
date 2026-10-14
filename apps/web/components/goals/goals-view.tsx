@@ -53,7 +53,7 @@ function Metric({ name, value }: { name: string; value: Progress }) {
   );
 }
 export default function GoalsView({ user }: { user: SessionUser }) {
-  const admin = user.role === "admin";
+  const admin = user.role === "admin" || user.role === "dev";
   const [month, setMonth] = useState(new Date().getMonth() + 1),
     [year, setYear] = useState(new Date().getFullYear());
   const [entries, setEntries] = useState<Entry[]>([]),

@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 
 type Data = Record<string,unknown>;
@@ -26,7 +26,7 @@ export function decodeOccurrenceAttachments(value:unknown) {
 export class OccurrenceCreationService {
   constructor(private readonly database:DatabaseRepository){}
   create(user:PublicUser,input:Data) {
-    if(!["seller","admin"].includes(user.role)) throw new ForbiddenException("Permissao negada.");
+    if(!["seller","admin","dev"].includes(user.role)) throw new ForbiddenException("Permissao negada.");
     const customerId=Number(input.customer_id),sellerId=Number(input.seller_id||user.id);
     const reason=String(input.reason||"").trim(),description=String(input.description||"").trim();
     if(!Number.isSafeInteger(customerId)||!Number.isSafeInteger(sellerId)||!reason||!description)
@@ -34,12 +34,12 @@ export class OccurrenceCreationService {
     const attachments=decodeOccurrenceAttachments(input.attachments);
     return this.database.transaction(async ()=>{
       const db=this.database.db,tenant=user.tenant_id;
-      if(user.role==="admin"&&!await db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,tenant))
+      if(hasAdminAccess(user.role)&&!await db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,tenant))
         throw new BadRequestException("Representante invalido.");
-      if(user.role!=="admin"&&sellerId!==user.id) throw new ForbiddenException("Representante invalido.");
+      if(!hasAdminAccess(user.role)&&sellerId!==user.id) throw new ForbiddenException("Representante invalido.");
       const customer=await db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=? AND active=1").get(customerId,tenant) as Data|undefined;
       if(!customer) throw new BadRequestException("Cliente invalido.");
-      if(user.role!=="admin"&&!await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
+      if(!hasAdminAccess(user.role)&&!await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
         throw new ForbiddenException("Cliente nao associado ao representante.");
       const seller=await db.prepare("SELECT name,email,communication_email FROM users WHERE id=? AND tenant_id=?").get(sellerId,tenant) as Data|undefined;
       const display=(v:unknown)=>String(v||"").trim()||"-";

@@ -23,7 +23,7 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
   const [accountOpen, setAccountOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const roleLabel = user.is_dev ? "Desenvolvedor" : user.role === "admin" ? "Administrador" : "Representante";
+  const roleLabel = user.role === "dev" ? "Desenvolvedor" : user.role === "admin" ? "Administrador" : "Representante";
   const initials = user.name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "HS";
 
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
               <span className="max-w-32 truncate text-xs font-bold text-[#111111]">{user.name}</span>
               <span className="text-[11px] text-slate-500">{roleLabel}</span>
             </span>
-            {user.is_dev && <span className="hidden rounded-md bg-[#eef2ff] px-1.5 py-1 text-[10px] font-bold text-[#073c96] lg:inline">DEV</span>}
+            {user.role === "dev" && <span className="hidden rounded-md bg-[#eef2ff] px-1.5 py-1 text-[10px] font-bold text-[#073c96] lg:inline">DEV</span>}
             <FiChevronDown size={15} className={`text-slate-500 transition-transform ${accountOpen ? "rotate-180" : ""}`} />
           </button>
 

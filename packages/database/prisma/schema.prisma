@@ -36,7 +36,7 @@ model Tenant {
 
 model User {
   id                 Int                  @id @default(autoincrement())
-  tenantId           Int?                 @map("tenant_id")
+  tenantId           Int                  @map("tenant_id")
   name               String
   email              String               @unique @db.NVarChar(191)
   communicationEmail String?              @map("communication_email")
@@ -49,7 +49,7 @@ model User {
   mustChangePassword Boolean              @default(false) @map("must_change_password")
   passwordUpdatedAt  DateTime?            @map("password_updated_at") @db.DateTime2
   createdAt          DateTime             @default(now()) @map("created_at") @db.DateTime2
-  tenant             Tenant?              @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sessions           Session[]
   companyAssignments CompanySeller[]
   customerAssignments CustomerSeller[]

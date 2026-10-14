@@ -18,10 +18,13 @@
     "typecheck": "pnpm run build:contracts && pnpm run build:database && pnpm --filter @hipersales/api typecheck && pnpm --filter @hipersales/web typecheck && pnpm --filter @hipersales/mobile typecheck",
     "prisma:generate": "pnpm --filter @hipersales/database generate",
     "prisma:migrate": "pnpm --filter @hipersales/database migrate",
+    "prisma:migrate:admin": "pnpm --filter @hipersales/database migrate:admin",
     "format": "pnpm --filter @hipersales/web format",
     "format:check": "pnpm --filter @hipersales/web format:check",
     "check:contracts": "pnpm --filter @hipersales/web check:contracts",
     "audit:legacy": "pnpm --filter @hipersales/web audit:legacy",
+    "env:check": "node scripts/validate-env.mjs",
+    "env:check:local": "node scripts/validate-env.mjs --local",
     "infra:up": "docker compose --env-file .env --env-file .env.infrastructure up -d",
     "infra:down": "docker compose --env-file .env --env-file .env.infrastructure down",
     "infra:ps": "docker compose --env-file .env --env-file .env.infrastructure ps",
@@ -29,7 +32,8 @@
     "build:database": "pnpm --filter @hipersales/database generate && pnpm --filter @hipersales/database build",
     "prisma:validate": "pnpm --filter @hipersales/database validate",
     "smoke:database": "pnpm --filter @hipersales/database smoke",
-    "database:setup-user": "pnpm --filter @hipersales/database setup:app-user"
+    "database:setup-user": "pnpm --filter @hipersales/database setup:app-user",
+    "access:check": "pnpm --filter @hipersales/database validate:access-model"
   },
   "engines": {
     "node": ">=22"

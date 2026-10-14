@@ -2,6 +2,8 @@
 
 Backend NestJS/TypeScript, SQL Server + Prisma, frontend Next.js e integração Evolution API.
 
+O produto opera exclusivamente para a organização HiperMix, com os perfis `dev`, `admin` e `seller`. A política está documentada em [`docs/access-control.md`](docs/access-control.md).
+
 ## Estrutura
 
 - `apps/api`: API NestJS (consome `@hipersales/database`)
@@ -50,10 +52,12 @@ Consulte [`docs/database.md`](docs/database.md) antes de rodar Prisma ou provisi
 | `pnpm test` | Testes da API |
 | `pnpm prisma:generate` | Gera cliente Prisma da API |
 | `pnpm prisma:migrate` | Aplica migrations pendentes (não apaga dados) |
+| `pnpm prisma:migrate:admin` | Aplica migrations com credencial administrativa isolada |
 | `pnpm format` / `pnpm format:check` | Formatação do Web |
 | `pnpm infra:up` / `pnpm infra:down` | Sobe / derruba serviços Docker |
 | `pnpm infra:ps` | Lista serviços Docker |
 | `pnpm database:setup-user` | Cria/valida o login SQL de menor privilégio da aplicação |
+| `pnpm env:check` / `pnpm env:check:local` | Valida os templates ou os arquivos locais sem exibir segredos |
 | `pnpm pm2:reload` | Recarrega os processos de produção |
 
 ## Atualização de produção

@@ -16,7 +16,8 @@ export class RolesGuard implements CanActivate {
     if (!roles?.length) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    if (request.user && roles.includes(request.user.role)) return true;
-    throw new ForbiddenException("Acesso permitido apenas para administradores.");
+    const role = request.user?.role;
+    if (role && (roles.includes(role) || (role === "dev" && roles.includes("admin")))) return true;
+    throw new ForbiddenException("Seu perfil nao possui permissao para esta operacao.");
   }
 }

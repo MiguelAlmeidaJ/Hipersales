@@ -37,7 +37,7 @@ export default function DashboardScreen() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const response = await api<DashboardData>(user?.role === "admin" ? "/api/admin/executive-dashboard" : "/api/dashboard");
+      const response = await api<DashboardData>(user?.role === "admin" || user?.role === "dev" ? "/api/admin/executive-dashboard" : "/api/dashboard");
       setData(response);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao carregar o painel.");

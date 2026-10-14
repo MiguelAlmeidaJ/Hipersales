@@ -44,7 +44,7 @@ const icons: Record<ModuleId, ComponentType<{ size?: number; className?: string 
 
 export default function AppSidebar({ user, items, activeId, open, collapsed, onToggleCollapsed, onClose }: SidebarProps) {
   const [expanded, setExpanded] = useState<string[]>(["Principal"]);
-  const roleLabel = user.is_dev ? "Desenvolvedor" : user.role === "admin" ? "Administrador" : "Representante";
+  const roleLabel = user.role === "dev" ? "Desenvolvedor" : user.role === "admin" ? "Administrador" : "Representante";
 
   useEffect(() => {
     const activeSection = sections.find(section => section.ids.includes(activeId as ModuleId))?.title;

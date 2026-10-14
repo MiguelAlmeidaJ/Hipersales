@@ -44,18 +44,16 @@ export function normalizeWhatsappPhone(value: string): string {
 }
 
 export function toPublicUser(row: UserRow): PublicUser {
-  const wasSuperAdmin = Boolean(row.is_super_admin);
+  const role: Role = row.role === "dev" || row.is_dev || row.is_super_admin ? "dev" : row.role;
   return {
     id: Number(row.id),
     name: row.name,
     email: row.email,
     communication_email: row.communication_email ?? null,
     whatsapp_phone: row.whatsapp_phone ?? null,
-    role: wasSuperAdmin ? "admin" : row.role,
+    role,
     tenant_id: Number(row.tenant_id || 1),
-    tenant_name: wasSuperAdmin ? "HiperMix Representacoes" : (row.tenant_name ?? null),
-    is_super_admin: false,
-    is_dev: Boolean(row.is_dev),
+    tenant_name: row.tenant_name ?? "HiperMix",
     active: Boolean(row.active),
     must_change_password: Boolean(row.must_change_password),
     password_updated_at: row.password_updated_at ?? null,

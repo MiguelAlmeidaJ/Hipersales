@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { customerAddress, customerField, customerText } from "./customer-fields.js";
 
@@ -33,14 +33,14 @@ export class CustomersService {
 
   async list(user: PublicUser, term = "") {
     const like = `%${term.trim()}%`;
-    const query = user.role === "admin"
+    const query = hasAdminAccess(user.role)
       ? `SELECT c.* FROM customers c WHERE c.tenant_id=? AND c.active=1
          AND (c.legal_name LIKE ? OR c.trade_name LIKE ? OR c.cnpj LIKE ?) ORDER BY c.legal_name`
       : `SELECT c.* FROM customers c JOIN customer_sellers cs
          ON cs.customer_id=c.id AND cs.seller_id=?
          WHERE c.tenant_id=? AND c.active=1
          AND (c.legal_name LIKE ? OR c.trade_name LIKE ? OR c.cnpj LIKE ?) ORDER BY c.legal_name`;
-    const params = user.role === "admin" ? [user.tenant_id,like,like,like] : [user.id,user.tenant_id,like,like,like];
+    const params = hasAdminAccess(user.role) ? [user.tenant_id,like,like,like] : [user.id,user.tenant_id,like,like,like];
     const rows = await this.database.db.prepare(query).all(...params);
     return { customers: rows.map(row => enrich(row as CustomerRow)) };
   }

@@ -11,6 +11,7 @@ const infrastructure = config({ path: resolve(root, ".env.infrastructure"), quie
 const url = process.env.SQLSERVER_DATABASE_URL ?? runtime.SQLSERVER_DATABASE_URL;
 const adminUser = inheritedAdminUser ?? infrastructure.SQLSERVER_ADMIN_USER ?? "sa";
 const adminPassword = inheritedAdminPassword ?? infrastructure.HIPERSALES_DATABASE_ADMIN_PASSWORD;
+const rotatePassword = process.argv.includes("--rotate-password");
 
 if (!url || !adminPassword) {
   throw new Error(
@@ -113,8 +114,11 @@ try {
       `CREATE LOGIN ${identifier(user)} WITH PASSWORD = ${literal(password)}, CHECK_POLICY = ON, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE = ${identifier(database)}`,
     );
     console.log("Login de aplicação criado.");
+  } else if (rotatePassword) {
+    await admin.request().query(`ALTER LOGIN ${identifier(user)} WITH PASSWORD = ${literal(password)}`);
+    console.log("Senha do login de aplicação atualizada a partir do runtime.");
   } else {
-    console.log("Login de aplicação já existe; a senha atual foi preservada.");
+    console.log("Login de aplicação já existe; a senha atual foi preservada. Use --rotate-password para sincronizá-la.");
   }
 
   const databaseConnection = await new sql.ConnectionPool({

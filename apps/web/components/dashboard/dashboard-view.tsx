@@ -98,7 +98,7 @@ function Ranking({ items }: { items: Rank[] }) {
   );
 }
 export default function DashboardView({ user }: { user: SessionUser }) {
-  const admin = user.role === "admin";
+  const admin = user.role === "admin" || user.role === "dev";
   const [overview, setOverview] = useState<SellerOverview | null>(null),
     [data, setData] = useState<Executive | null>(null),
     [loading, setLoading] = useState(true),

@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 
 type Row=Record<string,unknown>;
@@ -23,8 +23,8 @@ export class OccurrencesService {
       c.address AS customer_address,c.phone AS customer_phone,c.email AS customer_email
       FROM occurrences o JOIN users u ON u.id=o.seller_id
       JOIN customers c ON c.id=o.customer_id
-      WHERE o.tenant_id=? ${user.role==="admin"?"":"AND o.seller_id=?"}
-      ORDER BY o.created_at DESC,o.id DESC`).all(...(user.role==="admin"?[user.tenant_id]:[user.tenant_id,user.id])) as Row[];
+      WHERE o.tenant_id=? ${hasAdminAccess(user.role)?"":"AND o.seller_id=?"}
+      ORDER BY o.created_at DESC,o.id DESC`).all(...(hasAdminAccess(user.role)?[user.tenant_id]:[user.tenant_id,user.id])) as Row[];
     const attachments=db.prepare(`SELECT id,filename,mimetype,created_at FROM occurrence_attachments
       WHERE occurrence_id=? AND tenant_id=? ORDER BY id`);
     const events=db.prepare(`SELECT oe.*,u.name AS created_by_name FROM occurrence_events oe
@@ -91,7 +91,7 @@ export class OccurrencesService {
       .get(attachmentId,occurrenceId,user.tenant_id,user.tenant_id) as
       {filename:string;mimetype:string;content:Uint8Array;seller_id:number}|undefined;
     if(!record) throw new NotFoundException("Anexo nao encontrado.");
-    if(user.role!=="admin"&&Number(record.seller_id)!==user.id)
+    if(!hasAdminAccess(user.role)&&Number(record.seller_id)!==user.id)
       throw new ForbiddenException("Voce nao tem acesso a este anexo.");
     return {filename:record.filename,mimetype:record.mimetype,content:Buffer.from(record.content)};
   }

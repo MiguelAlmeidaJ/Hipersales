@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import PDFDocument from "pdfkit";
 import { DatabaseRepository } from "../database/database.repository.js";
 
@@ -47,7 +47,7 @@ export class DocumentsService {
       co.name company_name FROM proposals p JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id
       JOIN companies co ON co.id=p.company_id WHERE p.id=? AND p.tenant_id=?`).get(id, user.tenant_id) as Row | undefined;
     if (!proposal) throw new NotFoundException("Pedido nao encontrado.");
-    if (user.role !== "admin" && Number(proposal.seller_id) !== user.id) throw new ForbiddenException("Acesso negado.");
+    if (!hasAdminAccess(user.role) && Number(proposal.seller_id) !== user.id) throw new ForbiddenException("Acesso negado.");
     const items = await this.database.db.prepare(`SELECT pr.code,pr.name,pr.unit,pi.quantity,pi.negotiated_price,
       pi.quantity*pi.negotiated_price total FROM proposal_items pi JOIN products pr ON pr.id=pi.product_id
       WHERE pi.proposal_id=? ORDER BY pi.id`).all(id) as Row[];

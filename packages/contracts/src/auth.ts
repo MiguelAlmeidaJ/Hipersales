@@ -1,7 +1,10 @@
 import { z } from "zod";
 
-export const roleSchema = z.enum(["admin", "seller"]);
+export const roleSchema = z.enum(["dev", "admin", "seller"]);
 export type Role = z.infer<typeof roleSchema>;
+
+export const hasAdminAccess = (role: Role): boolean => role === "dev" || role === "admin";
+export const canManageDevelopers = (role: Role): boolean => role === "dev";
 
 export const publicUserSchema = z.object({
   id: z.number().int().positive(),
@@ -12,8 +15,6 @@ export const publicUserSchema = z.object({
   role: roleSchema,
   tenant_id: z.number().int().positive(),
   tenant_name: z.string().nullable().optional(),
-  is_super_admin: z.boolean(),
-  is_dev: z.boolean(),
   active: z.boolean(),
   must_change_password: z.boolean(),
   password_updated_at: z.string().nullable().optional(),

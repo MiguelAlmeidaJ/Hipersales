@@ -13,7 +13,7 @@ export default function SellerPortfolioPage({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   useEffect(() => {
-    if (user.role !== "admin") { setLoading(false); return; }
+    if (user.role === "seller") { setLoading(false); return; }
     let mounted = true;
     api<{ users: Seller[] }>("/api/admin/users").then(result => {
       const selected = result.users.find(item => String(item.id) === id && item.role === "seller");
@@ -26,7 +26,7 @@ export default function SellerPortfolioPage({ id }: { id: string }) {
     }).finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, [id, user.role]);
-  if (user.role !== "admin") return <p role="alert" className="rounded-xl border bg-white p-6">Acesso não autorizado.</p>;
+  if (user.role === "seller") return <p role="alert" className="rounded-xl border bg-white p-6">Acesso não autorizado.</p>;
   return <section className="min-w-0 space-y-5">
     <Link href="/app/usuarios" className="inline-flex items-center gap-2 text-sm font-semibold text-[#0767b4]"><FiArrowLeft/> Voltar para usuários</Link>
     <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-sm">

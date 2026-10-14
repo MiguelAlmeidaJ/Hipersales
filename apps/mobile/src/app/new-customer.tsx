@@ -28,7 +28,7 @@ export default function NewCustomerScreen() {
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "dev";
   const title = isAdmin ? "Cadastrar cliente" : "Solicitar cliente";
   const valid = useMemo(() => Boolean(form.legalName.trim() && digitsOnly(form.cnpj).length === 14 && (isAdmin || (form.contactPerson.trim() && digitsOnly(form.phone).length >= 10))), [form, isAdmin]);
 

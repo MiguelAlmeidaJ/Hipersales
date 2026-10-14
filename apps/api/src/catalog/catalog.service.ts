@@ -1,5 +1,5 @@
 import { Injectable, ForbiddenException, BadRequestException, NotFoundException, ConflictException } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 
 type DbRow = Record<string, unknown>;
@@ -17,7 +17,7 @@ export class CatalogService {
 
   async companies(user: PublicUser): Promise<{ companies: DbRow[] }> {
     const db = this.database.db;
-    const rows = user.role === "admin"
+    const rows = hasAdminAccess(user.role)
       ? await db.prepare("SELECT * FROM companies WHERE active = 1 AND tenant_id = ? ORDER BY name").all(user.tenant_id)
       : await db.prepare(`SELECT c.* FROM companies c
           JOIN company_sellers cs ON cs.company_id = c.id AND cs.seller_id = ?
@@ -28,7 +28,7 @@ export class CatalogService {
   async products(user: PublicUser, companyId: number, term = ""): Promise<{ products: DbRow[] }> {
     if (!Number.isSafeInteger(companyId) || companyId < 0) throw new BadRequestException("Empresa invalida.");
     const db = this.database.db;
-    if (user.role !== "admin") {
+    if (!hasAdminAccess(user.role)) {
       const assigned = await db.prepare("SELECT 1 FROM company_sellers WHERE company_id = ? AND seller_id = ?")
         .get(companyId, user.id);
       if (!assigned) throw new ForbiddenException("Empresa nao associada ao representante comercial.");

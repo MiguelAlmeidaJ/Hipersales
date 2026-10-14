@@ -66,7 +66,7 @@ export function getModuleFromPath(path: string) {
 }
 export function visibleModules(role: string) {
   return modules.filter((m) =>
-    role === "admin"
+    role === "admin" || role === "dev"
       ? m.id !== "requestCustomer"
       : !m.adminOnly &&
         m.id !== "users" &&

@@ -43,7 +43,7 @@ export default function ProposalForm({
   user: SessionUser;
   onCreated?: () => void;
 }) {
-  const isAdmin = user.role === "admin";
+  const isAdmin = user.role === "admin" || user.role === "dev";
   const [companies, setCompanies] = useState<Company[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);

@@ -50,7 +50,7 @@ export class AssignmentsService {
       whatsapp_phone: seller.whatsapp_phone ?? null,
       role: "seller", tenant_id: Number(seller.tenant_id),
       tenant_name: user.tenant_name ?? null,
-      is_super_admin: false, is_dev: Boolean(seller.is_dev), active: Boolean(seller.active),
+      active: Boolean(seller.active),
       must_change_password: Boolean(seller.must_change_password),
       password_updated_at: seller.password_updated_at ?? null,
     };

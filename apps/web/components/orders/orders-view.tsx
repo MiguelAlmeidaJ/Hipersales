@@ -250,7 +250,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
               </tbody>
             </table>
           </div>
-          {user.role === "admin" && (
+          {(user.role === "admin" || user.role === "dev") && (
             <OrderAdmin key={current.id} order={current} onSaved={() => setRefresh((v) => v + 1)} />
           )}
           <h3 className="mt-5 font-semibold">Histórico</h3>

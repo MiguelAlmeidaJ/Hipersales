@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { ProposalNotificationService } from "./proposal-notification.service.js";
 
@@ -27,7 +27,7 @@ export class ProposalCreationService {
   constructor(private readonly database:DatabaseRepository, private readonly notifications:ProposalNotificationService){}
 
   create(user:PublicUser,data:Input) {
-    if(!["admin","seller"].includes(user.role)) throw new ForbiddenException("Envio de proposta indisponivel para este usuario.");
+    if(!["dev","admin","seller"].includes(user.role)) throw new ForbiddenException("Envio de proposta indisponivel para este usuario.");
     const companyId=Number(data?.company_id),customerId=Number(data?.customer_id);
     const sellerId=Number(data?.seller_id || user.id);
     const orderType=String(data?.order_type||"").trim();
@@ -54,13 +54,13 @@ export class ProposalCreationService {
       const exists=async (table:string,id:number)=>await db.prepare(`SELECT id FROM ${table} WHERE id=? AND tenant_id=? AND active=1`).get(id,user.tenant_id);
       if(!await exists("companies",companyId)) throw new BadRequestException("Empresa invalida para esta conta.");
       if(!await exists("customers",customerId)) throw new BadRequestException("Cliente invalido para esta conta.");
-      if(user.role==="admin"&&!await db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,user.tenant_id)) {
+      if(hasAdminAccess(user.role)&&!await db.prepare("SELECT 1 FROM users WHERE id=? AND tenant_id=? AND role='seller' AND active=1").get(sellerId,user.tenant_id)) {
         throw new BadRequestException("Selecione um representante comercial ativo para criar o pedido.");
       }
-      if(user.role!=="admin"&&sellerId!==user.id) throw new ForbiddenException("Representante comercial invalido para esta proposta.");
+      if(!hasAdminAccess(user.role)&&sellerId!==user.id) throw new ForbiddenException("Representante comercial invalido para esta proposta.");
       if(!await db.prepare("SELECT 1 FROM company_sellers WHERE company_id=? AND seller_id=?").get(companyId,sellerId))
         throw new ForbiddenException("Empresa nao associada ao representante comercial.");
-      if(user.role!=="admin"&&!await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
+      if(!hasAdminAccess(user.role)&&!await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
         throw new ForbiddenException("Cliente nao associado ao representante comercial.");
       for(const item of items) if(!await db.prepare("SELECT 1 FROM products WHERE id=? AND tenant_id=? AND company_id=? AND active=1").get(item.id,user.tenant_id,companyId))
         throw new BadRequestException("Produto invalido para a empresa selecionada.");
@@ -81,11 +81,11 @@ export class ProposalCreationService {
       for(const item of items) await insertItem.run(proposalId,item.id,item.quantity,item.price);
       await db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
         .run(proposalId,"em_analise","Em analise","Proposta enviada para analise.",sellerId,now);
-      if(user.role==="admin" && !await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
+      if(hasAdminAccess(user.role) && !await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
         await db.prepare("INSERT INTO customer_sellers (customer_id,seller_id) VALUES (?,?)").run(customerId,sellerId);
       await this.notifications.queueNewProposal(user.tenant_id,proposalId);
       return {id:proposalId,order_number:orderNumber,status:"em_analise",company_id:companyId,
-        customer_id:customerId,message:user.role==="admin"?"Pedido criado pelo admin.":"Proposta enviada para analise."};
+        customer_id:customerId,message:hasAdminAccess(user.role)?"Pedido criado pela gestao.":"Proposta enviada para analise."};
     });
   }
 }

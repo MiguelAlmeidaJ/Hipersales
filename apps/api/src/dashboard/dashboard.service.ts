@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { normalizeProposalTimeline } from "../proposals/proposals.service.js";
 
@@ -65,7 +65,7 @@ export class DashboardService {
   }
 
   async summary(user: PublicUser) {
-    const row = user.role === "admin"
+    const row = hasAdminAccess(user.role)
       ? await this.database.db.prepare(`SELECT
           (SELECT COUNT(*) FROM customers WHERE tenant_id = ?) AS customers,
           (SELECT COUNT(*) FROM proposals WHERE tenant_id = ?) AS proposals,
@@ -84,8 +84,9 @@ export class DashboardService {
 
   async adminOverview(user: PublicUser) {
     const tenantId = user.tenant_id;
+    const developerFilter = user.role === "dev" ? "" : " AND role <> 'dev' AND COALESCE(is_dev, 0) = 0 AND COALESCE(is_super_admin, 0) = 0";
     const summary = await this.database.db.prepare(`SELECT
-      (SELECT COUNT(*) FROM users WHERE tenant_id = ? AND active = 1) AS users,
+      (SELECT COUNT(*) FROM users WHERE tenant_id = ? AND active = 1${developerFilter}) AS users,
       (SELECT COUNT(*) FROM users WHERE tenant_id = ? AND role = 'admin' AND active = 1) AS admins,
       (SELECT COUNT(*) FROM users WHERE tenant_id = ? AND role = 'seller' AND active = 1) AS sellers,
       (SELECT COUNT(*) FROM companies WHERE tenant_id = ? AND active = 1) AS companies,

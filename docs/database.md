@@ -27,16 +27,16 @@ O comando usa a conta administrativa apenas durante o provisionamento. Ele é id
 - preserva a senha de um login já existente;
 - testa uma conexão real com o login da aplicação e confirma que ele não é `db_owner`.
 
-Se a senha da aplicação mudar no `.env`, altere primeiro a senha do login por um procedimento administrativo controlado. O provisionador não redefine automaticamente credenciais existentes.
+Se a senha da aplicação mudar no `.env`, execute `pnpm database:setup-user -- --rotate-password`. A rotação é explícita: sem esse argumento, o provisionador preserva a senha de um login existente.
 
 ## Migrations
 
-O login `hipersales_app` é de runtime e não executa migrations. Durante o deploy, forneça ao comando `pnpm prisma:migrate` uma conexão administrativa temporária pelo ambiente do processo. Não grave essa URL em `.env` e restaure o ambiente normal imediatamente depois.
+O login `hipersales_app` é de runtime e não executa migrations. Use `pnpm prisma:migrate:admin`: o comando monta a conexão administrativa somente na memória do processo filho usando `.env.infrastructure`, sem gravá-la no runtime ou exibi-la no terminal.
 
 Fluxo de produção recomendado:
 
 1. validar backup restaurável;
-2. aplicar migrations com credencial administrativa efêmera;
+2. executar `pnpm prisma:migrate:admin`;
 3. executar `pnpm database:setup-user` se for a primeira instalação;
 4. iniciar/recarregar a API, que usa apenas `SQLSERVER_DATABASE_URL` do login da aplicação;
 5. executar `pnpm smoke:database` e validar login e operações essenciais.

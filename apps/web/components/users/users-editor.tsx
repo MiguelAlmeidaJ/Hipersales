@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
+import { useAuthenticatedUser } from "@/components/auth/session-context";
+import type { Role } from "@hipersales/contracts";
 import Link from "next/link";
 import { FiEdit2, FiBriefcase, FiPlus, FiSearch, FiX } from "react-icons/fi";
 type User = {
@@ -9,11 +11,11 @@ type User = {
   email: string;
   communication_email?: string;
   whatsapp_phone?: string;
-  role: "admin" | "seller";
+  role: Role;
   active: boolean | number;
-  is_super_admin?: boolean | number;
 };
-const initial = {
+type UserForm = Omit<User, "id" | "active"> & { active: boolean; temporary_password: string };
+const initial: UserForm = {
   name: "",
   email: "",
   communication_email: "",
@@ -23,6 +25,7 @@ const initial = {
   temporary_password: "",
 };
 export default function UsersEditor() {
+  const actor = useAuthenticatedUser();
   const [items, setItems] = useState<User[]>([]);
   const [form, setForm] = useState(initial);
   const [editing, setEditing] = useState<number | null>(null);
@@ -122,12 +125,10 @@ export default function UsersEditor() {
             <tbody>
               {visible.map(u => <tr key={u.id} className="border-t border-slate-100 hover:bg-[#f8fbfe]">
                 <td className="p-3 font-semibold text-slate-900"><div className="flex items-center gap-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#edf5fc] text-xs font-bold text-[#073c96]">{u.name.slice(0,1).toUpperCase()}</span><span className="truncate">{u.name}</span></div></td><td className="p-3 text-slate-600">{u.email}</td>
-                <td className="p-3"><span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{u.role === "admin" ? "Administrador" : "Representante"}</span></td>
+                <td className="p-3"><span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{u.role === "dev" ? "Desenvolvedor" : u.role === "admin" ? "Administrador" : "Representante"}</span></td>
                 <td className="p-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${u.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{u.active ? "Ativo" : "Inativo"}</span></td>
                 <td className="p-3"><div className="flex items-center gap-1.5">
-                  {!u.is_super_admin && (
-                    <button type="button" title={`Editar ${u.name}`} aria-label={`Editar ${u.name}`} onClick={() => edit(u)} className="grid size-9 place-items-center rounded-lg border border-transparent text-[#0767b4] transition hover:border-[#cde4f4] hover:bg-[#edf5fc]"><FiEdit2 size={16}/></button>
-                  )}
+                  <button type="button" title={`Editar ${u.name}`} aria-label={`Editar ${u.name}`} onClick={() => edit(u)} className="grid size-9 place-items-center rounded-lg border border-transparent text-[#0767b4] transition hover:border-[#cde4f4] hover:bg-[#edf5fc]"><FiEdit2 size={16}/></button>
                   {u.role === "seller" && (
                     <Link href={`/app/usuario/${u.id}/carteira`} title={`Gerenciar carteira de ${u.name}`} aria-label={`Gerenciar carteira de ${u.name}`} className="grid size-9 place-items-center rounded-lg border border-transparent text-[#0767b4] no-underline transition hover:border-[#cde4f4] hover:bg-[#edf5fc] hover:no-underline"><FiBriefcase size={17}/></Link>
                   )}
@@ -183,10 +184,11 @@ export default function UsersEditor() {
             <select
               className="rounded-lg border p-2.5"
               value={form.role}
-              onChange={(e) => setForm((v) => ({ ...v, role: e.target.value }))}
+              onChange={(e) => setForm((v) => ({ ...v, role: e.target.value as Role }))}
             >
               <option value="seller">Representante</option>
               <option value="admin">Administrador</option>
+              {actor.role === "dev" && <option value="dev">Desenvolvedor</option>}
             </select>
           </label>
           <label className="flex items-center gap-2">

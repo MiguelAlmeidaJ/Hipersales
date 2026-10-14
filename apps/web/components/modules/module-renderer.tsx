@@ -14,6 +14,7 @@ import SettingsEditor from "@/components/settings/settings-editor";
 import UsersEditor from "@/components/users/users-editor";
 import type { SessionUser } from "@/lib/api";
 import type { ModuleId } from "@/lib/navigation";
+import { hasAdminAccess } from "@hipersales/contracts";
 
 type ModuleRendererProps = {
   module: ModuleId;
@@ -21,7 +22,7 @@ type ModuleRendererProps = {
 };
 
 export default function ModuleRenderer({ module, user }: ModuleRendererProps) {
-  const isAdmin = user.role === "admin";
+  const isAdmin = hasAdminAccess(user.role);
 
   switch (module) {
     case "dashboard":

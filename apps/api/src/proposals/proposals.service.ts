@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { PublicUser } from "@hipersales/contracts";
+import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 
 type Row = Record<string, unknown>;
@@ -28,7 +28,7 @@ export class ProposalsService {
 
   async list(user: PublicUser) {
     const db = this.database.db;
-    const sellerOnly = user.role !== "admin";
+    const sellerOnly = !hasAdminAccess(user.role);
     const rows = await db.prepare(`SELECT p.*, u.name AS seller_name,
       COALESCE(NULLIF(u.communication_email, ''), u.email) AS seller_email,
       u.whatsapp_phone AS seller_whatsapp_phone,
