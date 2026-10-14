@@ -33,7 +33,7 @@ SET is_dev = CASE WHEN role = N'dev' THEN 1 ELSE 0 END,
 IF EXISTS (SELECT 1 FROM dbo.users WHERE role NOT IN (N'dev', N'admin', N'seller'))
   THROW 51001, 'Existem usuarios com perfil fora de dev, admin ou seller.', 1;
 
-DROP INDEX users_tenant_id_role_active_idx ON dbo.users;
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.users') AND name = N'users_tenant_id_role_active_idx')\n  DROP INDEX users_tenant_id_role_active_idx ON dbo.users;
 ALTER TABLE dbo.users ALTER COLUMN tenant_id INT NOT NULL;
 CREATE NONCLUSTERED INDEX users_tenant_id_role_active_idx
   ON dbo.users (tenant_id, role, active);
