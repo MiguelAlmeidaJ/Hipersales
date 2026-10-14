@@ -22,7 +22,7 @@ pnpm dev:api
 pnpm dev:web --prefix apps/web
 ```
 
-Abra `http://localhost:3000`. O frontend consome a API pelas rotas `/api/*`.
+Abra `http://localhost:3111`. O frontend consome a API pelas rotas `/api/*`.
 
 ## Verificações
 
