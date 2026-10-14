@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiChevronDown, FiDownload, FiKey, FiLogOut, FiShield, FiUser, FiX } from "react-icons/fi";
 import PasswordChange from "@/components/auth/password-change";
 import { api, type SessionUser } from "@/lib/api";
@@ -90,6 +91,7 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
   }
 
   return (
+    <>
     <header className="top app-header">
       <div className="min-w-0">
         <nav aria-label="Caminho da página" className="app-breadcrumb">
@@ -147,9 +149,11 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
             </div>
           )}
         </div>
-      {passwordOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091b30]/45 p-4 backdrop-blur-[3px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setPasswordOpen(false); }}>
-          <div role="dialog" aria-modal="true" aria-label="Alterar senha" className="w-full max-w-[430px] rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-[0_24px_80px_rgba(9,27,48,.22)] sm:p-7">
+      </div>
+    </header>
+      {passwordOpen && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[1000] flex min-h-dvh items-center justify-center overflow-y-auto bg-[#091b30]/50 p-4 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setPasswordOpen(false); }}>
+          <div role="dialog" aria-modal="true" aria-label="Alterar senha" className="my-auto w-full max-w-[430px] max-h-[calc(100dvh-32px)] overflow-y-auto rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-[0_24px_80px_rgba(9,27,48,.22)] sm:p-7">
             <div className="mb-5 flex items-start justify-between gap-3">
               <div>
                 <span className="mb-3 grid size-10 place-items-center rounded-xl bg-[#eaf4fc] text-[#0767b4]"><FiKey size={20}/></span>
@@ -161,8 +165,7 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
             <PasswordChange embedded onSuccess={onPasswordChanged}/>
           </div>
         </div>
-      )}
-      </div>
-    </header>
+      , document.body)}
+    </>
   );
 }
