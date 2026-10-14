@@ -11,7 +11,7 @@ const actions = [
   { title: "Consultar pedidos", description: "Acompanhe propostas e pedidos.", href: "/app/pedidos", Icon: FiClipboard },
   { title: "Registrar ocorrência", description: "Comunique uma situação comercial.", href: "/app/ocorrencias", Icon: FiActivity },
   { title: "Minhas metas", description: "Acompanhe seus objetivos comerciais.", href: "/app/metas", Icon: FiTarget },
-] as const;
+] satisfies Array<{ title: string; description: string; href: string; Icon: typeof FiUsers; featured?: boolean }>;
 
 export default function SellerHome({ user }: { user: SessionUser }) {
   const firstName = user.name.trim().split(/\s+/)[0] || "Representante";
