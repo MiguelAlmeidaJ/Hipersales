@@ -138,9 +138,9 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
                 <button type="button" aria-label="Fechar menu" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100" onClick={() => {setAccountOpen(false);setPasswordOpen(false);}}><FiX size={17}/></button>
               </div>
               <div className="mt-3 space-y-1">
-                <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-500"><FiUser size={15}/> Minha conta</div>
-                <button type="button" className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#073c96] hover:bg-[#edf5fc]" aria-expanded={passwordOpen} onClick={() => setPasswordOpen(value => !value)}><span className="flex items-center gap-2"><FiKey size={16}/> Alterar minha senha</span><FiChevronDown size={14} className={passwordOpen ? "rotate-180" : ""}/></button>
-                {passwordOpen && <div className="rounded-xl bg-slate-50 p-3"><PasswordChange onSuccess={onPasswordChanged}/></div>}
+                <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">Conta</div>
+                <button type="button" className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-semibold text-[#34495b] hover:bg-[#edf5fc]" onClick={() => { setAccountOpen(false); setPasswordOpen(true); }}><span className="flex items-center gap-2.5"><FiKey size={17} className="text-[#0767b4]"/> Alterar senha</span><span className="text-slate-400">›</span></button>
+
               </div>
               <div className="mt-3 border-t border-slate-100 pt-3">
                 <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50" disabled={busy} onClick={onLogout}><FiLogOut size={16}/> Sair da conta</button>
@@ -148,6 +148,21 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
             </div>
           )}
         </div>
+      {passwordOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#091b30]/45 p-4 backdrop-blur-[3px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setPasswordOpen(false); }}>
+          <div role="dialog" aria-modal="true" aria-label="Alterar senha" className="w-full max-w-[430px] rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-[0_24px_80px_rgba(9,27,48,.22)] sm:p-7">
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <div>
+                <span className="mb-3 grid size-10 place-items-center rounded-xl bg-[#eaf4fc] text-[#0767b4]"><FiKey size={20}/></span>
+                <h2 className="text-xl font-bold text-[#111111]">Alterar senha</h2>
+                <p className="mt-1 text-sm text-slate-500">Atualize a senha de acesso à sua conta.</p>
+              </div>
+              <button type="button" aria-label="Fechar alteração de senha" onClick={() => setPasswordOpen(false)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><FiX size={19}/></button>
+            </div>
+            <PasswordChange embedded onSuccess={onPasswordChanged}/>
+          </div>
+        </div>
+      )}
       </div>
     </header>
   );
