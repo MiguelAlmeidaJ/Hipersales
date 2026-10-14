@@ -23,7 +23,8 @@ const literal = (s) => "N'" + s.replaceAll("'", "''") + "'";
 const opts = { server, port: Number(port), options: { encrypt: fields.encrypt !== "false", trustServerCertificate: fields.trustservercertificate === "true" } };
 const admin = await new sql.ConnectionPool({ ...opts, user: "sa", password: saPassword, database: "master" }).connect();
 try {
-  await admin.request().query(`IF DB_ID(${literal(database)}) IS NULL CREATE DATABASE ${ident(database)}`);
+  const existingDatabase = await admin.request().input("database", sql.NVarChar, database).query("SELECT DB_ID(@database) AS id");
+  if (existingDatabase.recordset[0].id === null) throw Error(`Banco ${database} nao existe. O script nao cria bancos.`);
   const found = await admin.request().input("name", sql.NVarChar, user).query("SELECT COUNT(*) AS count FROM sys.sql_logins WHERE name = @name");
   if (!found.recordset[0].count) {
     await admin.request().query(`CREATE LOGIN ${ident(user)} WITH PASSWORD = ${literal(password)}, CHECK_POLICY = ON, CHECK_EXPIRATION = OFF, DEFAULT_DATABASE = ${ident(database)}`);
