@@ -4,14 +4,14 @@ import Link from "next/link";
 import { FiActivity, FiArrowUpRight, FiClipboard, FiFileText, FiTarget, FiUserPlus, FiUsers } from "react-icons/fi";
 import type { SessionUser } from "@/lib/api";
 
-const actions = [
+const actions: Array<{ title: string; description: string; href: string; Icon: typeof FiUsers; featured?: boolean }> = [
   { title: "Nova proposta", description: "Monte e envie um pedido para seu cliente.", href: "/app/pedidos", Icon: FiFileText, featured: true },
   { title: "Solicitar cliente", description: "Peça o cadastro de um novo cliente.", href: "/app/solicitar-cliente", Icon: FiUserPlus, featured: true },
   { title: "Meus clientes", description: "Consulte sua carteira de clientes.", href: "/app/clientes", Icon: FiUsers },
   { title: "Consultar pedidos", description: "Acompanhe propostas e pedidos.", href: "/app/pedidos", Icon: FiClipboard },
   { title: "Registrar ocorrência", description: "Comunique uma situação comercial.", href: "/app/ocorrencias", Icon: FiActivity },
   { title: "Minhas metas", description: "Acompanhe seus objetivos comerciais.", href: "/app/metas", Icon: FiTarget },
-] satisfies Array<{ title: string; description: string; href: string; Icon: typeof FiUsers; featured?: boolean }>;
+];
 
 export default function SellerHome({ user }: { user: SessionUser }) {
   const firstName = user.name.trim().split(/\s+/)[0] || "Representante";
