@@ -28,7 +28,8 @@
     "pm2:up": "pm2 startOrReload ecosystem.config.cjs --update-env",
     "build:database": "pnpm --filter @hipersales/database generate && pnpm --filter @hipersales/database build",
     "prisma:validate": "pnpm --filter @hipersales/database validate",
-    "smoke:database": "pnpm --filter @hipersales/database smoke"
+    "smoke:database": "pnpm --filter @hipersales/database smoke",
+    "database:setup-user": "pnpm --filter @hipersales/database setup:app-user"
   },
   "engines": {
     "node": ">=22"
