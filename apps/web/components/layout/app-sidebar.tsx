@@ -44,6 +44,7 @@ const icons: Record<ModuleId, ComponentType<{ size?: number; className?: string 
 
 export default function AppSidebar({ user, items, activeId, open, collapsed, onToggleCollapsed, onClose }: SidebarProps) {
   const [expanded, setExpanded] = useState<string[]>(["Principal"]);
+  const seller = user.role === "seller";
   const roleLabel = user.role === "dev" ? "Desenvolvedor" : user.role === "admin" ? "Administrador" : "Representante";
 
   useEffect(() => {
@@ -80,14 +81,14 @@ export default function AppSidebar({ user, items, activeId, open, collapsed, onT
             const isExpanded = expanded.includes(section.title);
             return (
               <div key={section.title} className="app-nav-section">
-                {!collapsed && (
+                {!collapsed && !seller && (
                   <button type="button" className="app-menu-section-trigger" onClick={() => toggleSection(section.title)}
                     aria-expanded={isExpanded} aria-controls={`nav-${section.title.replace(/\\W/g, "")}`}>
                     <span>{section.title}</span>
                     <FiChevronDown size={15} className={`transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                   </button>
                 )}
-                {(collapsed || isExpanded) && (
+                {(seller || collapsed || isExpanded) && (
                   <div id={`nav-${section.title.replace(/\\W/g, "")}`} className="app-menu-section-links">
                     {available.map(item => {
                       const Icon = icons[item.id];
