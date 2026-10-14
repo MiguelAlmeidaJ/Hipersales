@@ -59,7 +59,7 @@ export class RegistrationSubmissionService {
       if (records.some(row => row.cnpj.replace(/\D/g, "") === digits)) {
         throw new ConflictException("Ja existe esse CNPJ na nossa base.");
       }
-      const pending = await this.database.db.prepare("SELECT cnpj FROM registration_requests WHERE tenant_id=? AND status=?").all(user.tenant_id, "pendente") as {cnpj:string}[];
+      const pending = await this.database.db.prepare("SELECT cnpj FROM registration_requests WITH (TABLOCKX, HOLDLOCK) WHERE tenant_id=? AND status=?").all(user.tenant_id, "pendente") as {cnpj:string}[];
       if (pending.some(row => cnpjDigits(row.cnpj) === digits)) throw new ConflictException("Já existe uma solicitação pendente para este CNPJ.");
       const result = await this.database.db.prepare(`INSERT INTO registration_requests
         (tenant_id, seller_id, legal_name, trade_name, cnpj, state_registration,
