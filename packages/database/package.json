@@ -11,7 +11,8 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "smoke": "node scripts/smoke_database.mjs",
-    "test:database:create": "node scripts/create_test_database.mjs"
+    "test:database:create": "node scripts/create_test_database.mjs",
+    "setup:app-user": "node scripts/setup_app_user.mjs"
   },
   "dependencies": {
     "@prisma/client": "^7.10.0",
