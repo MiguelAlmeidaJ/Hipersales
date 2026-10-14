@@ -1,6 +1,7 @@
 import { BadGatewayException, BadRequestException, ConflictException, Injectable } from "@nestjs/common";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { customerText } from "./customer-fields.js";
+import { isValidCnpj } from "./cnpj-validation.js";
 
 type Data = Record<string, unknown>;
 
@@ -95,14 +96,16 @@ export class CnpjLookupService {
 
   async lookup(tenantId: number, value: string, excludeId?: number) {
     const digits = String(value ?? "").replace(/\D/g, "");
-    if (digits.length !== 14) throw new BadRequestException("Informe um CNPJ valido.");
+    if (!isValidCnpj(digits)) throw new BadRequestException("CNPJ inválido. Verifique os dígitos informados.");
     const customers = await this.database.db.prepare("SELECT id, cnpj FROM customers WHERE tenant_id=?").all(tenantId) as {id:number;cnpj:string}[];
     if (customers.some(item => item.id !== excludeId && item.cnpj.replace(/\D/g,"") === digits)) {
       throw new ConflictException("Ja existe esse CNPJ na nossa base.");
     }
+    const pending = await this.database.db.prepare("SELECT cnpj FROM registration_requests WHERE tenant_id=? AND status=?").all(tenantId, "pendente") as {cnpj:string}[];
+    if (pending.some(row => row.cnpj.replace(/\\D/g, "") === digits)) throw new ConflictException("Este CNPJ já possui uma solicitação pendente de análise.");
     const providers = [
-      { url: `https://publica.cnpj.ws/cnpj/${digits}`, normalize: normalizeCnpjWs },
       { url: `https://brasilapi.com.br/api/cnpj/v1/${digits}`, normalize: unwrap },
+      { url: `https://minhareceita.org/${digits}`, normalize: unwrap },
     ];
     for (const provider of providers) {
       try {
