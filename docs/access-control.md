@@ -10,7 +10,7 @@ O HiperSales é um sistema interno single-tenant. Existe somente a organização
 | `admin` | Sim | Sim | Não | Não |
 | `seller` | Somente carteira atribuída | Não | Não | Não |
 
-O campo `users.role` é a fonte de autorização. Os campos legados `is_dev` e `is_super_admin` são mantidos temporariamente somente para compatibilidade da migration e não são enviados pelas APIs.
+O campo `users.role` é a única fonte de autorização (inclusive no mapper de sessão). Os campos legados `is_dev` e `is_super_admin` são mantidos temporariamente somente para compatibilidade da migration e não são enviados pelas APIs.
 
 ## Regras de proteção
 
