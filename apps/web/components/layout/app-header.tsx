@@ -30,7 +30,6 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
     function onPointerDown(event: PointerEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setAccountOpen(false);
-        setPasswordOpen(false);
       }
     }
     function onKeyDown(event: KeyboardEvent) {
