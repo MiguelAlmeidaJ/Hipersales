@@ -29,4 +29,4 @@ apontando para um banco dedicado cujo nome termine em `_test` ou `_validation`.
 Nunca use o banco operacional nesse teste.
 
 Após a atualização, valide login, cadastros, pedidos, ocorrências, anexos, PDFs,
-metas, dashboards, SMTP e Evolution API pelo frontend em `http://localhost:3000`.
+metas, dashboards, SMTP e Evolution API pelo frontend em `http://localhost:3111`.
