@@ -1,4 +1,5 @@
 import { BadGatewayException, BadRequestException, ConflictException, Injectable } from "@nestjs/common";
+import { EnvService } from "../config/env.service.js";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { customerText } from "./customer-fields.js";
 import { isValidCnpj } from "./cnpj-validation.js";
@@ -56,6 +57,32 @@ function normalizeCnpjWs(payload: Data): Data {
   };
 }
 
+export function normalizeSintegra(payload: Data): Data {
+  const registrations = Array.isArray(payload.inscricoes_estaduais)
+    ? payload.inscricoes_estaduais.map(object)
+    : [];
+  const preferredState = text(payload.uf).toUpperCase();
+  const registration = registrations.find(item => Boolean(item.ativa) && text(item.uf).toUpperCase() === preferredState)
+    ?? registrations.find(item => Boolean(item.ativa))
+    ?? registrations[0]
+    ?? {};
+  const registrationAddress = nested(registration, "endereco");
+  const address = Object.keys(registrationAddress).length ? registrationAddress : nested(payload, "endereco");
+  return {
+    razao_social: text(payload.razao_social),
+    inscricao_estadual: text(registration.inscricao_estadual),
+    logradouro: [text(address.tipo), text(address.logradouro)].filter(Boolean).join(" "),
+    numero: text(address.numero),
+    complemento: text(address.complemento),
+    bairro: text(address.bairro),
+    municipio: text(address.municipio),
+    uf: text(address.uf, registration.uf, payload.uf),
+    cep: text(address.cep),
+    situacao_cadastral: text(registration.situacao_pj),
+    _raw: payload,
+  };
+}
+
 function formatted(digits: string) {
   return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
 }
@@ -92,7 +119,10 @@ export function normalizeLookup(digits: string, source: Data) {
 
 @Injectable()
 export class CnpjLookupService {
-  constructor(private readonly database: DatabaseRepository) {}
+  constructor(
+    private readonly database: DatabaseRepository,
+    private readonly env: EnvService,
+  ) {}
 
   async lookup(tenantId: number, value: string, excludeId?: number) {
     const digits = String(value ?? "").replace(/\D/g, "");
@@ -106,11 +136,23 @@ export class CnpjLookupService {
     const providers = [
       { url: `https://brasilapi.com.br/api/cnpj/v1/${digits}`, normalize: unwrap },
       { url: `https://minhareceita.org/${digits}`, normalize: unwrap },
+      { url: `https://publica.cnpj.ws/cnpj/${digits}`, normalize: (payload: Data) => normalizeCnpjWs(unwrap(payload)) },
+      { url: `https://www.receitaws.com.br/v1/cnpj/${digits}`, normalize: unwrap },
+      ...(this.env.sintegraApiKey ? [{
+        url: `https://api.sintegrapi.com.br/consultas/v2/sintegra/${digits}?cache_strategy=ONLINE_PREFERENCIAL&error_fallback=true&endereco=true`,
+        headers: { "x-api-key": this.env.sintegraApiKey },
+        normalize: (payload: Data) => normalizeSintegra(unwrap(payload)),
+      }] : []),
     ];
     for (const provider of providers) {
       try {
         const response = await fetch(provider.url, {
-          headers: { Accept: "application/json", "User-Agent": "HiperSalesWeb/1.0", "Accept-Language": "pt-BR" },
+          headers: {
+            Accept: "application/json",
+            "User-Agent": "HiperSalesWeb/1.0",
+            "Accept-Language": "pt-BR",
+            ...provider.headers,
+          },
           signal: AbortSignal.timeout(12_000),
         });
         if (!response.ok) continue;
