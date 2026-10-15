@@ -18,6 +18,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
   const [records, setRecords] = useState<Item[]>([]);
   const [companies, setCompanies] = useState<Item[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
     legal_name: "",
@@ -89,6 +90,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
   }
   function reset() {
     setEditing(null);
+    setModalOpen(false);
     setForm({
       name: "",
       legal_name: "",
@@ -101,6 +103,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
   }
   function edit(item: Item) {
     setEditing(item.id);
+    setModalOpen(true);
     setForm({
       name: item.name,
       legal_name: item.legal_name || "",
@@ -155,28 +158,38 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
   return (
     <section className="min-w-0 space-y-5">
       <div><h2 className="text-xl font-extrabold text-slate-900">{kind === "companies" ? "Empresas" : "Produtos"}</h2><p className="mt-1 text-sm text-slate-500">Gerencie o catálogo, consulte registros e filtre por situação.</p></div>
-      <form onSubmit={submit} className="editor-form rounded-2xl border border-[#e4ebf0] bg-white p-5 shadow-sm">
-        <label>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Catálogo</p><p className="text-sm text-slate-500">{records.length} registros cadastrados</p></div>
+        <button type="button" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white hover:bg-[#073c96]" onClick={() => { reset(); setModalOpen(true); }}>+ {kind === "products" ? "Novo produto" : "Nova empresa"}</button>
+      </div>
+      {modalOpen && <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]" onMouseDown={e => {if(e.target === e.currentTarget && !busy) reset();}}>
+        <section role="dialog" aria-modal="true" aria-label="Cadastro do catálogo" className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h3 className="text-xl font-extrabold">{editing !== null ? "Editar" : "Cadastrar"} {kind === "products" ? "produto" : "empresa"}</h3><p className="text-sm text-slate-500">Preencha os dados do cadastro.</p></div><button type="button" disabled={busy} onClick={reset} className="rounded-lg border border-slate-200 px-3 py-2">✕</button></div>
+          <div className="max-h-[75dvh] overflow-y-auto p-5">      <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
           Nome
           <input
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
             required
             value={form.name}
             onChange={(e) => setForm((x) => ({ ...x, name: e.target.value }))}
           />
         </label>
         {kind === "companies" ? (
-          <label>
+          <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
             Razão social
             <input
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
               value={form.legal_name}
               onChange={(e) => setForm((x) => ({ ...x, legal_name: e.target.value }))}
             />
           </label>
         ) : (
           <>
-            <label>
+            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
               Empresa
               <select
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
                 required
                 value={form.company_id}
                 onChange={(e) => setForm((x) => ({ ...x, company_id: e.target.value }))}
@@ -189,24 +202,27 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                 ))}
               </select>
             </label>
-            <label>
+            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
               Código
               <input
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
                 required
                 value={form.code}
                 onChange={(e) => setForm((x) => ({ ...x, code: e.target.value }))}
               />
             </label>
-            <label>
+            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
               Unidade
               <input
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
                 value={form.unit}
                 onChange={(e) => setForm((x) => ({ ...x, unit: e.target.value }))}
               />
             </label>
-            <label>
+            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
               Preço
               <input
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
                 type="number"
                 min="0"
                 step="0.01"
@@ -217,15 +233,16 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             </label>
           </>
         )}
-        <label className="checkbox-row">
+        <label className="flex items-center gap-2 text-sm font-semibold">
           <input
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
             type="checkbox"
             checked={form.active}
             onChange={(e) => setForm((x) => ({ ...x, active: e.target.checked }))}
           />{" "}
           Ativo
         </label>
-        <button className="primary" disabled={busy} type="submit">
+        <button className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={busy} type="submit">
           {busy ? "Salvando…" : editing !== null ? "Salvar alterações" : "Cadastrar"}
         </button>
         {editing !== null && (
@@ -233,7 +250,9 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             Cancelar edição
           </button>
         )}
-      </form>
+      </form>{error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}</div>
+        </section>
+      </div>}
       {error && (
         <p className="error" role="alert">
           {error}
@@ -274,14 +293,14 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             {visible.map((x) => (
               <tr key={x.id}>
                 <td>{x.id}</td>
-                <td>{x.name}</td>
+                <td><span className="font-semibold text-slate-900">{x.name}</span>{kind === "products" && <span className="block text-xs text-slate-500">{companies.find(c => c.id === x.company_id)?.name || ""}</span>}</td>
                 {kind === "products" && (
                   <>
                     <td>{x.code}</td>
-                    <td>{x.price}</td>
+                    <td>{new Intl.NumberFormat("pt-BR", {style:"currency",currency:"BRL"}).format(Number(x.price || 0))}</td>
                   </>
                 )}
-                <td>{x.active ? "Ativo" : "Inativo"}</td>
+                <td><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${x.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{x.active ? "Ativo" : "Inativo"}</span></td>
                 <td>
                   <button type="button" className="secondary" onClick={() => edit(x)}>
                     Editar
