@@ -191,7 +191,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
             Visão consolidada de pedidos, carteira, catálogo e operação comercial.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3"><span className="inline-flex items-center gap-2 rounded-xl border border-[#d9e7f2] bg-white px-3 py-2.5 text-xs font-semibold text-[#073c96]"><FiBriefcase size={15}/> HiperMix Representações</span><span className="inline-flex items-center gap-1.5 text-xs text-slate-500"><FiClock size={14}/>{lastUpdated ? `Atualizado às ${lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Aguardando atualização"}</span></div>
+        <div className="flex flex-wrap items-center gap-3"><span className="inline-flex items-center gap-2 rounded-xl border border-[#d9e7f2] bg-white px-3 py-2.5 text-xs font-semibold text-[#073c96]"><FiBriefcase size={15}/> HiperSales Representações</span><span className="inline-flex items-center gap-1.5 text-xs text-slate-500"><FiClock size={14}/>{lastUpdated ? `Atualizado às ${lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Aguardando atualização"}</span></div>
       </header>
       {admin && (
         <form onSubmit={submit} className={card}>
@@ -279,7 +279,7 @@ export default function DashboardView({ user }: { user: SessionUser }) {
       )}
       {loading && (
         <div role="status" className="rounded-2xl border bg-white p-8 text-slate-500">
-          Carregando indicadores da HiperMix…
+          Carregando indicadores da HiperSales…
         </div>
       )}
       {!admin && !loading && (
