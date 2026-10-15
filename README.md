@@ -2,7 +2,7 @@
 
 Backend NestJS/TypeScript, SQL Server + Prisma, frontend Next.js e integração Evolution API.
 
-O produto opera exclusivamente para a organização HiperMix, com os perfis `dev`, `admin` e `seller`. A política está documentada em [`docs/access-control.md`](docs/access-control.md).
+O produto opera exclusivamente para a organização HiperSales, com os perfis `dev`, `admin` e `seller`. A política está documentada em [`docs/access-control.md`](docs/access-control.md).
 
 ## Estrutura
 
