@@ -60,6 +60,10 @@ Consulte [`docs/database.md`](docs/database.md) antes de rodar Prisma ou provisi
 | `pnpm env:check` / `pnpm env:check:local` | Valida os templates ou os arquivos locais sem exibir segredos |
 | `pnpm pm2:reload` | Recarrega os processos de produção |
 
+## Deploy Linux com domínios públicos
+
+Veja [docs/deploy-linux.md](docs/deploy-linux.md) para Nginx, TLS e PM2. O frontend temporário usa `https://web.hipersalesweb.com.br` e a API `https://api.hipersalesweb.com.br`.
+
 ## Atualização de produção
 
 ```bash
