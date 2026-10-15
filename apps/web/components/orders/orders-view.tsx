@@ -10,6 +10,9 @@ import {
   FiPackage,
   FiFileText,
   FiClock,
+  FiX,
+  FiCheckCircle,
+  FiAlertCircle,
   FiPlus,
   FiSearch,
   FiUser,
@@ -185,6 +188,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
   }, [orders, query, status]);
 
   const current = orders.find((order) => order.id === selected);
+  const timelineOrder = orders.find((order) => order.id === timelineOpen);
   const totalFiltered = useMemo(
     () => filtered.reduce((total, order) => total + orderTotal(order), 0),
     [filtered],
@@ -447,24 +451,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
                   Abrir PDF
                 </a>
               </div>
-              {timelineOpen === order.id && (
-                <section id={`timeline-${order.id}`} className="rounded-xl border border-teal-100 bg-teal-50/40 p-4">
-                  <h4 className="mb-3 text-sm font-bold text-slate-800">Histórico do pedido #{orderNumber(order)}</h4>
-                  {(order.timeline || []).length ? (
-                    <ol className="space-y-3">
-                      {order.timeline.map((entry, index) => (
-                        <li key={entry.id || index} className="border-l-2 border-teal-300 pl-3 text-sm">
-                          <p className="font-bold text-slate-800">{entry.title || statusLabel(entry.status)}</p>
-                          <p className="text-xs text-slate-500">{formatDate(entry.created_at)}{entry.created_by_name ? ` · ${entry.created_by_name}` : ""}</p>
-                          {entry.notes && <p className="mt-1 text-xs text-slate-600">{entry.notes}</p>}
-                        </li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <p className="text-sm text-slate-500">Ainda não há eventos registrados para este pedido.</p>
-                  )}
-                </section>
-              )}
+
             </div>
           </article>
         ))}
@@ -478,8 +465,67 @@ export default function OrdersView({ user }: { user: SessionUser }) {
         )}
       </div>
 
+      {timelineOrder && (
+        <div
+          className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[3px] sm:p-6"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setTimelineOpen(null); }}
+        >
+          <section role="dialog" aria-modal="true" aria-label={`Linha do tempo do pedido #${orderNumber(timelineOrder)}`}
+            className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <header className="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4 sm:px-7">
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-[#0767b4]">Linha do tempo</p>
+                <h2 className="mt-1 text-xl font-extrabold text-[#111111]">Pedido #{orderNumber(timelineOrder)}</h2>
+              </div>
+              <button type="button" aria-label="Fechar linha do tempo" onClick={() => setTimelineOpen(null)}
+                className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-500 hover:bg-slate-100"><FiX size={19} /></button>
+            </header>
+            <div className="overflow-y-auto px-5 py-5 sm:px-7">
+              <div className="mb-7 rounded-xl border border-slate-200 bg-[#f8fafc] p-4">
+                <h3 className="font-bold text-slate-900">{timelineOrder.customer_name}</h3>
+                <p className="mt-1 text-xs text-slate-500">{timelineOrder.company_name} · {timelineOrder.seller_name}</p>
+                <span className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${statusTone(timelineOrder.status)}`}>{statusLabel(timelineOrder.status)}</span>
+              </div>
+              {(timelineOrder.timeline || []).length ? (
+                <ol className="space-y-0">
+                  {[...timelineOrder.timeline].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((entry, index, events) => (
+                    <li key={entry.id || index} className="grid grid-cols-[75px_28px_minmax(0,1fr)] gap-3 sm:grid-cols-[100px_36px_minmax(0,1fr)] sm:gap-4">
+                      <div className="pt-1 text-right text-xs text-slate-500">
+                        <strong className="block font-bold">{formatDate(entry.created_at)}</strong>
+                        <span>{!Number.isNaN(new Date(entry.created_at).getTime()) ? new Intl.DateTimeFormat("pt-BR", {hour:"2-digit",minute:"2-digit",timeZone:"America/Sao_Paulo"}).format(new Date(entry.created_at)) : ""}</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <span className={`z-10 grid size-8 shrink-0 place-items-center rounded-full border-2 bg-white ${statusTone(entry.status)}`}>
+                          {/fatur|entreg|aprov/i.test(entry.status) ? <FiCheckCircle size={15}/> : /recus|cancel/i.test(entry.status) ? <FiAlertCircle size={15}/> : <FiClock size={15}/>}
+                        </span>
+                        {index < events.length - 1 && <span className="min-h-14 w-px flex-1 border-l-2 border-dashed border-slate-200" />}
+                      </div>
+                      <div className="min-w-0 pb-7">
+                        <h4 className="font-bold text-slate-800">{entry.title || statusLabel(entry.status)}</h4>
+                        {entry.notes && <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{entry.notes}</p>}
+                        {entry.created_by_name && <p className="mt-2 text-xs text-slate-500">Responsável: {entry.created_by_name}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              ) : <p className="py-8 text-center text-sm text-slate-500">Nenhum evento registrado neste pedido.</p>}
+            </div>
+            <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:px-7">
+              <button type="button" onClick={() => setTimelineOpen(null)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                <FiX size={16}/> Fechar
+              </button>
+              <a href={`/api/proposals/${timelineOrder.id}/pdf`} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0767b4] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#073c96]">
+                <FiFileText size={16}/> Abrir PDF
+              </a>
+            </footer>
+          </section>
+        </div>
+      )}
       {current && (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div role="presentation" className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-[2px] sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
+        <section role="dialog" aria-modal="true" aria-label={`Visualizar pedido #${orderNumber(current)}`} className="max-h-[92dvh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-7">
           <div className="mb-5 flex flex-wrap justify-between gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -581,6 +627,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
             ))}
           </ol>
         </section>
+        </div>
       )}
     </section>
   );
