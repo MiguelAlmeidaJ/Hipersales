@@ -112,6 +112,23 @@ def main():
             ordered.append(table)
             pending.pop(table)
         for deps in pending.values(): deps.difference_update(ready)
+    # The historical database allowed users without tenant_id. In single-tenant
+    # mode, only those NULL values may be normalized to the existing singleton.
+    tenant_row = source.execute('SELECT id FROM tenants').fetchall()
+    if len(tenant_row) != 1:
+        raise RuntimeError('Expected exactly one source tenant for single-tenant import.')
+    singleton_id = tenant_row[0][0]
+    invalid_users = source.execute(
+        'SELECT COUNT(*) FROM users WHERE tenant_id IS NOT NULL AND tenant_id <> ?',
+        (singleton_id,),
+    ).fetchone()[0]
+    if invalid_users:
+        raise RuntimeError(f'Users referencing another tenant: {invalid_users}')
+    null_user_tenants = source.execute(
+        'SELECT COUNT(*) FROM users WHERE tenant_id IS NULL'
+    ).fetchone()[0]
+    if null_user_tenants:
+        print(f'users: will normalize {null_user_tenants} NULL tenant_id value(s) to {singleton_id}')
     plans=[]
     print('Source integrity OK; target schema found. Checking destination emptiness...')
     for table in ordered:
@@ -160,7 +177,10 @@ def main():
                 batch=rows.fetchmany(100)
                 if not batch: break
                 for row in batch:
-                    vals=[transform(row[c],metadata[c]['type']) for c in use]
+                    vals=[(
+                        singleton_id if table == 'users' and c == 'tenant_id' and row[c] is None
+                        else transform(row[c], metadata[c]['type'])
+                    ) for c in use]
                     cur.execute(sql,vals)
                     n+=1
             if identity: cur.execute('SET IDENTITY_INSERT dbo.'+identifier(table)+' OFF')
