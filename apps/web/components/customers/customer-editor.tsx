@@ -54,6 +54,7 @@ export default function CustomerEditor() {
   const [rows, setRows] = useState<Customer[]>([]);
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState<number | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const [page, setPage] = useState(1);
@@ -98,11 +99,13 @@ export default function CustomerEditor() {
   function reset() {
     setEditing(null);
     setForm({ ...empty });
+    setModalOpen(false);
   }
   function edit(c: Customer) {
     const payload = c.form_payload || {};
     const payloadText = (key: string) => String(payload[key] ?? "");
     setEditing(c.id);
+    setModalOpen(true);
     setForm({
       legal_name: c.legal_name || "",
       trade_name: c.trade_name || "",
@@ -145,19 +148,30 @@ export default function CustomerEditor() {
   return (
     <section className="min-w-0 space-y-5">
       <div>
-        <h2 className="text-xl font-extrabold">Clientes</h2>
+        <h2 className="text-xl font-extrabold text-slate-900">Gestão de clientes</h2>
         <p className="mt-1 text-sm text-slate-500">
           Gerencie a carteira de clientes e seus dados cadastrais.
         </p>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><p className="text-xs font-semibold uppercase tracking-widest text-[#0767b4]">Cadastro comercial</p><p className="text-sm text-slate-500">{rows.length} clientes cadastrados</p></div>
+        <button type="button" onClick={() => { reset(); setModalOpen(true); }} className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#073c96]">+ Novo cliente</button>
+      </div>
+      {modalOpen && (
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]" onMouseDown={e => {if (e.target === e.currentTarget && !busy) reset();}}>
+          <section role="dialog" aria-modal="true" aria-label={editing === null ? "Cadastrar cliente" : "Editar cliente"} className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-start justify-between border-b border-slate-100 px-5 py-4 sm:px-7"><div><h3 className="text-xl font-extrabold">{editing === null ? "Cadastrar cliente" : "Editar cliente"}</h3><p className="text-sm text-slate-500">Dados cadastrais, endereço e informações de entrega</p></div><button type="button" onClick={reset} disabled={busy} className="rounded-lg border border-slate-200 px-3 py-2 font-semibold">✕</button></div>
+            <div className="overflow-y-auto p-5 sm:p-7">
+              <div className="mb-4 border-b border-slate-100 pb-3 text-sm font-bold text-[#0767b4]">Informações do cliente</div>
       <form
-        className="editor-form rounded-2xl border border-[#e4ebf0] bg-white p-5"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2"
         onSubmit={submit}
       >
         {fields.map(([key, label]) => (
-          <label key={key}>
+          <label key={key} className={`grid gap-1.5 text-xs font-semibold text-slate-600 ${["legal_name", "address", "delivery_address", "delivery_warnings"].includes(key) ? "sm:col-span-2" : ""}`}>
             {label}
             <input
+              className="w-full rounded-xl border border-slate-200 bg-[#fcfcfc] px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#0767b4]"
               required={key === "legal_name" || key === "cnpj"}
               type={key === "email" ? "email" : "text"}
               value={form[key]}
@@ -165,7 +179,7 @@ export default function CustomerEditor() {
             />
           </label>
         ))}
-        <label className="checkbox-row">
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 sm:col-span-2">
           <input
             type="checkbox"
             checked={form.active}
@@ -173,15 +187,20 @@ export default function CustomerEditor() {
           />{" "}
           Ativo
         </label>
-        <button className="primary" disabled={busy}>
+        <button className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white disabled:opacity-50 sm:col-span-2" disabled={busy}>
           {busy ? "Salvando…" : editing === null ? "Cadastrar cliente" : "Salvar alterações"}
         </button>
         {editing !== null && (
-          <button type="button" className="secondary" onClick={reset}>
+          <button type="button" className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold" onClick={reset}>
             Cancelar edição
           </button>
         )}
       </form>
+              {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
+            </div>
+          </section>
+        </div>
+      )}
       {error && (
         <p className="error" role="alert">
           {error}
@@ -248,10 +267,10 @@ export default function CustomerEditor() {
           <tbody>
             {paged.map((c) => (
               <tr key={c.id}>
-                <td>{c.legal_name}</td>
+                <td><span className="font-semibold text-slate-900">{c.legal_name}</span>{c.trade_name && <span className="block text-xs text-slate-500">{c.trade_name}</span>}</td>
                 <td>{c.cnpj}</td>
                 <td>{c.phone || "—"}</td>
-                <td>{c.active ? "Ativo" : "Inativo"}</td>
+                <td><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${c.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{c.active ? "Ativo" : "Inativo"}</span></td>
                 <td>
                   <button className="secondary" type="button" onClick={() => edit(c)}>
                     Editar
