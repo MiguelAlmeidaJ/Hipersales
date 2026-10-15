@@ -138,17 +138,26 @@ model CompanySeller {
 }
 
 model Product {
-  id          Int            @id @default(autoincrement())
-  tenantId    Int            @map("tenant_id")
-  companyId   Int            @map("company_id")
-  code        String
-  name        String
-  unit        String         @default("UN")
-  price       Decimal        @default(0) @db.Decimal(14, 4)
-  active      Boolean        @default(true)
-  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  company     Company        @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  proposalItems ProposalItem[]
+  id                  Int            @id @default(autoincrement())
+  tenantId            Int            @map("tenant_id")
+  companyId           Int            @map("company_id")
+  code                String
+  name                String
+  productGroup        String?        @map("product_group")
+  subgroup            String?
+  unit                String         @default("UN")
+  brand               String?
+  minimumSaleQuantity Decimal        @default(0) @map("minimum_sale_quantity") @db.Decimal(14, 4)
+  weight              Decimal        @default(0) @db.Decimal(14, 4)
+  ncm                 String?
+  ipiPercent          Decimal        @default(0) @map("ipi_percent") @db.Decimal(7, 4)
+  hasSt               Boolean        @default(false) @map("has_st")
+  invoiceOrigin       String?        @map("invoice_origin")
+  price               Decimal        @default(0) @db.Decimal(14, 4)
+  active              Boolean        @default(true)
+  tenant              Tenant         @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  company             Company        @relation(fields: [companyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proposalItems       ProposalItem[]
 
   @@unique([companyId, code])
   @@index([tenantId, companyId, active, name])
