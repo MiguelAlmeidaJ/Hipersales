@@ -95,7 +95,7 @@ export default function AppHeader({ title, user, busy, onLogout, onUserChange }:
     <header className="top app-header">
       <div className="min-w-0">
         <nav aria-label="Caminho da página" className="app-breadcrumb">
-          <span>HiperMix</span><span className="mx-2 text-slate-300">/</span><span className="text-slate-600">{user.role === "seller" && title === "Dashboard" ? "Início" : title}</span>
+          <span>HiperSales</span><span className="mx-2 text-slate-300">/</span><span className="text-slate-600">{user.role === "seller" && title === "Dashboard" ? "Início" : title}</span>
         </nav>
         <h1 className="app-header-title">{user.role === "seller" && title === "Dashboard" ? "Início" : title}</h1>
       </div>
