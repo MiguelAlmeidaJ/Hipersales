@@ -144,9 +144,28 @@ export class DocumentsService {
       const left = 26, width = 790, half = 386, right = left + half + 12;
       const rule = (y: number) => document.moveTo(left, y).lineTo(left + width, y).lineWidth(1).strokeColor("#111111").stroke();
       const heading = (text: string, x: number, y: number, w: number) => document.font("Helvetica-Bold").fontSize(9).fillColor("#111111").text(text, x, y, { width: w });
+      // Limit every field to its own rectangle. PDFKit wraps text by default;
+      // wrapped fields previously collided with neighbouring columns.
+      const compactText = (value: unknown, availableWidth: number, fontSize = 8) => {
+        const full = first(value) || "-";
+        document.font("Helvetica").fontSize(fontSize);
+        if (document.widthOfString(full) <= availableWidth) return full;
+        let low = 0;
+        let high = full.length;
+        while (low < high) {
+          const mid = Math.ceil((low + high) / 2);
+          if (document.widthOfString(full.slice(0, mid) + "…") <= availableWidth) low = mid;
+          else high = mid - 1;
+        }
+        return low > 0 ? full.slice(0, low).trimEnd() + "…" : "…";
+      };
       const line = (label: string, value: unknown, x: number, y: number, labelWidth = 58, valueWidth = 315) => {
-        document.font("Helvetica").fontSize(8).fillColor("#111111").text(`${label}:`, x, y, { width: labelWidth });
-        document.text(first(value) || "-", x + labelWidth, y, { width: valueWidth });
+        const boundedWidth = Math.max(15, Math.min(valueWidth, left + width - x - labelWidth - 3));
+        document.font("Helvetica").fontSize(8).fillColor("#111111")
+          .text(`${label}:`, x, y, { width: labelWidth, height: 11, lineBreak: false });
+        document.text(compactText(value, boundedWidth), x + labelWidth, y, {
+          width: boundedWidth, height: 11, lineBreak: false,
+        });
       };
       const pageHeader = () => {
         document.font("Helvetica-Bold").fontSize(16).text(bonus ? "PEDIDO DE BONIFICAÇÃO" : "PEDIDO DE VENDA", left, 28);
@@ -155,8 +174,8 @@ export class DocumentsService {
       };
       pageHeader();
       heading("FORNECEDOR", left + 2, 56, half);
-      line("R. Social", first(proposal.company_legal_name, proposal.company_name), left + 2, 69);
-      line("Fantasia", proposal.company_name, left + 205, 69, 45, 135);
+      line("R. Social", first(proposal.company_legal_name, proposal.company_name), left + 2, 69, 58, 135);
+      line("Fantasia", proposal.company_name, left + 205, 69, 45, 130);
       line("CNPJ", "-", left + 2, 82);
       line("Inscrição Estadual", "-", left + 205, 82, 86, 105);
       line("Endereço", "-", left + 2, 95);
@@ -164,15 +183,15 @@ export class DocumentsService {
       line("E-mail", "-", left + 2, 121);
       document.moveTo(right - 6, 49).lineTo(right - 6, 143).stroke();
       heading("DADOS PARA FATURAMENTO / CLIENTE", right, 56, half);
-      line("R. Social", customer.legalName, right, 69, 52, 205);
+      line("R. Social", customer.legalName, right, 69, 52, 200);
       line("Fantasia", customer.tradeName, right + 258, 69, 45, 90);
-      line("CNPJ", customer.cnpj, right, 82, 52, 150);
+      line("CNPJ", customer.cnpj, right, 82, 52, 145);
       line("Inscrição Estadual", customer.stateRegistration, right + 202, 82, 86, 100);
-      line("Endereço", customer.street, right, 95, 52, 210);
+      line("Endereço", customer.street, right, 95, 52, 205);
       line("Número", customer.number, right + 266, 95, 42, 80);
-      line("Bairro", customer.neighborhood, right, 108, 52, 150);
+      line("Bairro", customer.neighborhood, right, 108, 52, 145);
       line("Município/UF", [customer.city, customer.state].filter(Boolean).join(" - "), right + 202, 108, 70, 115);
-      line("Telefone", customer.phone, right, 121, 52, 150);
+      line("Telefone", customer.phone, right, 121, 52, 145);
       line("CEP", customer.zipCode, right + 202, 121, 28, 90);
       line("E-mail", customer.email, right, 134, 52, 300);
       rule(146);
