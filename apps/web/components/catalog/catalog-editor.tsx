@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "@/lib/api";
 
@@ -8,26 +9,61 @@ type Item = {
   legal_name?: string;
   active?: number | boolean;
   company_id?: number;
+  company_name?: string;
   code?: string;
+  product_group?: string | null;
+  subgroup?: string | null;
   unit?: string;
+  brand?: string | null;
+  minimum_sale_quantity?: number;
+  weight?: number;
+  ncm?: string | null;
+  ipi_percent?: number;
+  has_st?: number | boolean;
+  invoice_origin?: string | null;
   price?: number;
+  average_practiced_price?: number;
+  total_sold_quantity?: number;
+  total_sales_revenue?: number;
 };
+
 type Kind = "companies" | "products";
+
+const money = (value: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0);
+
+const numberPt = (value: number) =>
+  new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 4 }).format(value || 0);
+
+const fieldClass =
+  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#0767b4] focus:ring-2 focus:ring-[#0767b4]/10";
+
+const emptyForm = {
+  name: "",
+  legal_name: "",
+  company_id: "",
+  code: "",
+  product_group: "",
+  subgroup: "",
+  unit: "UN",
+  brand: "",
+  minimum_sale_quantity: "0",
+  weight: "0",
+  ncm: "",
+  ipi_percent: "0",
+  has_st: false,
+  invoice_origin: "",
+  price: "0",
+  active: true,
+};
 
 export function CatalogEditor({ kind }: { kind: Kind }) {
   const [records, setRecords] = useState<Item[]>([]);
   const [companies, setCompanies] = useState<Item[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
+  const [editingRecord, setEditingRecord] = useState<Item | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    legal_name: "",
-    company_id: "",
-    code: "",
-    unit: "UN",
-    price: "0",
-    active: true,
-  });
+  const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,6 +73,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const endpoint = kind === "companies" ? "/api/admin/companies" : "/api/admin/products";
+
   async function reload() {
     const data = await api<{ companies?: Item[]; products?: Item[] }>(endpoint);
     setRecords(data[kind] || []);
@@ -45,6 +82,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
       setCompanies(c.companies || []);
     }
   }
+
   useEffect(() => {
     let active = true;
     async function load() {
@@ -64,11 +102,12 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
       active = false;
     };
   }, [endpoint, kind]);
+
   async function removeProduct(item: Item) {
     if (
       kind !== "products" ||
       !window.confirm(
-        `Excluir o produto "${item.name}"? A API impedirá a exclusão se houver pedidos vinculados.`,
+        `Excluir o produto "${item.name}"? Produtos que já possuem histórico de pedidos não podem ser excluídos; nesse caso, inative o cadastro.`,
       )
     )
       return;
@@ -88,32 +127,49 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
       setBusy(false);
     }
   }
+
   function reset() {
     setEditing(null);
+    setEditingRecord(null);
     setModalOpen(false);
-    setForm({
-      name: "",
-      legal_name: "",
-      company_id: "",
-      code: "",
-      unit: "UN",
-      price: "0",
-      active: true,
-    });
+    setForm(emptyForm);
   }
+
+  function openNew() {
+    setEditing(null);
+    setEditingRecord(null);
+    setForm(emptyForm);
+    setError("");
+    setNotice("");
+    setModalOpen(true);
+  }
+
   function edit(item: Item) {
     setEditing(item.id);
+    setEditingRecord(item);
     setModalOpen(true);
+    setError("");
+    setNotice("");
     setForm({
       name: item.name,
       legal_name: item.legal_name || "",
       company_id: String(item.company_id ?? ""),
       code: item.code || "",
+      product_group: item.product_group || "",
+      subgroup: item.subgroup || "",
       unit: item.unit || "UN",
+      brand: item.brand || "",
+      minimum_sale_quantity: String(item.minimum_sale_quantity ?? 0),
+      weight: String(item.weight ?? 0),
+      ncm: item.ncm || "",
+      ipi_percent: String(item.ipi_percent ?? 0),
+      has_st: item.has_st === true || item.has_st === 1,
+      invoice_origin: item.invoice_origin || "",
       price: String(item.price ?? 0),
       active: item.active === true || item.active === 1,
     });
   }
+
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
@@ -127,8 +183,17 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
               name: form.name,
               company_id: Number(form.company_id),
               code: form.code,
+              product_group: form.product_group || null,
+              subgroup: form.subgroup || null,
               unit: form.unit,
-              price: Number(form.price),
+              brand: form.brand || null,
+              minimum_sale_quantity: Number(form.minimum_sale_quantity || 0),
+              weight: Number(form.weight || 0),
+              ncm: form.ncm || null,
+              ipi_percent: Number(form.ipi_percent || 0),
+              has_st: form.has_st,
+              invoice_origin: form.invoice_origin || null,
+              price: Number(form.price || 0),
               active: form.active,
             };
       if (kind === "products" && !form.company_id) throw new Error("Selecione a empresa.");
@@ -145,144 +210,460 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
       setBusy(false);
     }
   }
-  const filtered = records.filter(item => {
-    const searchable = [item.name, item.legal_name, item.code, item.id].join(" ").toLocaleLowerCase("pt-BR");
+
+  const filtered = records.filter((item) => {
+    const searchable = [
+      item.name,
+      item.legal_name,
+      item.code,
+      item.product_group,
+      item.subgroup,
+      item.brand,
+      item.ncm,
+      item.id,
+    ]
+      .join(" ")
+      .toLocaleLowerCase("pt-BR");
     const active = item.active === true || item.active === 1;
-    return searchable.includes(query.trim().toLocaleLowerCase("pt-BR")) &&
+    return (
+      searchable.includes(query.trim().toLocaleLowerCase("pt-BR")) &&
       (stateFilter === "all" || (stateFilter === "active" ? active : !active)) &&
-      (kind !== "products" || !companyFilter || String(item.company_id) === companyFilter);
+      (kind !== "products" || !companyFilter || String(item.company_id) === companyFilter)
+    );
   });
+
   const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, pages);
   const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const historicalAverage = Number(editingRecord?.average_practiced_price || 0);
+  const historicalQuantity = Number(editingRecord?.total_sold_quantity || 0);
+  const historicalRevenue = Number(editingRecord?.total_sales_revenue || 0);
+
   return (
     <section className="min-w-0 space-y-5">
-      <div><h2 className="text-xl font-extrabold text-slate-900">{kind === "companies" ? "Empresas" : "Produtos"}</h2><p className="mt-1 text-sm text-slate-500">Gerencie o catálogo, consulte registros e filtre por situação.</p></div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Catálogo</p><p className="text-sm text-slate-500">{records.length} registros cadastrados</p></div>
-        <button type="button" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white hover:bg-[#073c96]" onClick={() => { reset(); setModalOpen(true); }}>+ {kind === "products" ? "Novo produto" : "Nova empresa"}</button>
+      <div>
+        <h2 className="text-xl font-extrabold text-slate-900">
+          {kind === "companies" ? "Empresas" : "Produtos"}
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          {kind === "products"
+            ? "Cadastro comercial completo dos produtos. Inclusão, alteração e exclusão são restritas à administração."
+            : "Gerencie o catálogo, consulte registros e filtre por situação."}
+        </p>
       </div>
-      {modalOpen && <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]" onMouseDown={e => {if(e.target === e.currentTarget && !busy) reset();}}>
-        <section role="dialog" aria-modal="true" aria-label="Cadastro do catálogo" className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
-          <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h3 className="text-xl font-extrabold">{editing !== null ? "Editar" : "Cadastrar"} {kind === "products" ? "produto" : "empresa"}</h3><p className="text-sm text-slate-500">Preencha os dados do cadastro.</p></div><button type="button" disabled={busy} onClick={reset} className="rounded-lg border border-slate-200 px-3 py-2">✕</button></div>
-          <div className="max-h-[75dvh] overflow-y-auto p-5">      <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
-          Nome
-          <input
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-            required
-            value={form.name}
-            onChange={(e) => setForm((x) => ({ ...x, name: e.target.value }))}
-          />
-        </label>
-        {kind === "companies" ? (
-          <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
-            Razão social
-            <input
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-              value={form.legal_name}
-              onChange={(e) => setForm((x) => ({ ...x, legal_name: e.target.value }))}
-            />
-          </label>
-        ) : (
-          <>
-            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
-              Empresa
-              <select
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                required
-                value={form.company_id}
-                onChange={(e) => setForm((x) => ({ ...x, company_id: e.target.value }))}
-              >
-                <option value="">Selecione</option>
-                {companies.map((x) => (
-                  <option value={x.id} key={x.id}>
-                    {x.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
-              Código
-              <input
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                required
-                value={form.code}
-                onChange={(e) => setForm((x) => ({ ...x, code: e.target.value }))}
-              />
-            </label>
-            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
-              Unidade
-              <input
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                value={form.unit}
-                onChange={(e) => setForm((x) => ({ ...x, unit: e.target.value }))}
-              />
-            </label>
-            <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
-              Preço
-              <input
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                value={form.price}
-                onChange={(e) => setForm((x) => ({ ...x, price: e.target.value }))}
-              />
-            </label>
-          </>
-        )}
-        <label className="flex items-center gap-2 text-sm font-semibold">
-          <input
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
-            type="checkbox"
-            checked={form.active}
-            onChange={(e) => setForm((x) => ({ ...x, active: e.target.checked }))}
-          />{" "}
-          Ativo
-        </label>
-        <button className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={busy} type="submit">
-          {busy ? "Salvando…" : editing !== null ? "Salvar alterações" : "Cadastrar"}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Catálogo</p>
+          <p className="text-sm text-slate-500">{records.length} registros cadastrados</p>
+        </div>
+        <button
+          type="button"
+          className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white hover:bg-[#073c96]"
+          onClick={openNew}
+        >
+          + {kind === "products" ? "Novo produto" : "Nova empresa"}
         </button>
-        {editing !== null && (
-          <button type="button" className="secondary" onClick={reset}>
-            Cancelar edição
-          </button>
-        )}
-      </form>{error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}</div>
-        </section>
-      </div>}
-      {error && (
-        <p className="error" role="alert">
+      </div>
+
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !busy) reset();
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label={kind === "products" ? "Cadastro de produto" : "Cadastro de empresa"}
+            className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 p-5">
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-900">
+                  {editing !== null ? "Editar" : "Cadastrar"} {kind === "products" ? "produto" : "empresa"}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {kind === "products"
+                    ? "Preencha os dados comerciais, fiscais e logísticos do produto."
+                    : "Preencha os dados do cadastro."}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={reset}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="max-h-[78dvh] overflow-y-auto p-5">
+              <form onSubmit={submit} className="space-y-6">
+                {kind === "companies" ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Nome
+                      <input
+                        className={fieldClass}
+                        required
+                        value={form.name}
+                        onChange={(e) => setForm((x) => ({ ...x, name: e.target.value }))}
+                      />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Razão social
+                      <input
+                        className={fieldClass}
+                        value={form.legal_name}
+                        onChange={(e) => setForm((x) => ({ ...x, legal_name: e.target.value }))}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <p className="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                        Identificação
+                      </p>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600 xl:col-span-2">
+                          Empresa
+                          <select
+                            className={fieldClass}
+                            required
+                            value={form.company_id}
+                            onChange={(e) => setForm((x) => ({ ...x, company_id: e.target.value }))}
+                          >
+                            <option value="">Selecione</option>
+                            {companies.map((x) => (
+                              <option value={x.id} key={x.id}>
+                                {x.name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Código
+                          <input
+                            className={fieldClass}
+                            required
+                            value={form.code}
+                            onChange={(e) => setForm((x) => ({ ...x, code: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Status do produto
+                          <select
+                            className={fieldClass}
+                            value={form.active ? "1" : "0"}
+                            onChange={(e) => setForm((x) => ({ ...x, active: e.target.value === "1" }))}
+                          >
+                            <option value="1">Ativo</option>
+                            <option value="0">Inativo</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Grupo
+                          <input
+                            className={fieldClass}
+                            value={form.product_group}
+                            onChange={(e) => setForm((x) => ({ ...x, product_group: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Subgrupo
+                          <input
+                            className={fieldClass}
+                            value={form.subgroup}
+                            onChange={(e) => setForm((x) => ({ ...x, subgroup: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600 md:col-span-2">
+                          Descrição do produto
+                          <input
+                            className={fieldClass}
+                            required
+                            value={form.name}
+                            onChange={(e) => setForm((x) => ({ ...x, name: e.target.value }))}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                        Comercial e logística
+                      </p>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Unidade de medida
+                          <input
+                            className={fieldClass}
+                            value={form.unit}
+                            onChange={(e) => setForm((x) => ({ ...x, unit: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Marca
+                          <input
+                            className={fieldClass}
+                            value={form.brand}
+                            onChange={(e) => setForm((x) => ({ ...x, brand: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Qtd. mínima de venda
+                          <input
+                            className={fieldClass}
+                            type="number"
+                            min="0"
+                            step="0.0001"
+                            value={form.minimum_sale_quantity}
+                            onChange={(e) =>
+                              setForm((x) => ({ ...x, minimum_sale_quantity: e.target.value }))
+                            }
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Peso do produto
+                          <input
+                            className={fieldClass}
+                            type="number"
+                            min="0"
+                            step="0.0001"
+                            value={form.weight}
+                            onChange={(e) => setForm((x) => ({ ...x, weight: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Preço sugerido
+                          <input
+                            className={fieldClass}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={form.price}
+                            onChange={(e) => setForm((x) => ({ ...x, price: e.target.value }))}
+                          />
+                          <span className="font-normal text-slate-400">
+                            Valor inicial sugerido ao criar um pedido.
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="mb-3 text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                        Fiscal
+                      </p>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          NCM
+                          <input
+                            className={fieldClass}
+                            value={form.ncm}
+                            onChange={(e) => setForm((x) => ({ ...x, ncm: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          IPI (%)
+                          <input
+                            className={fieldClass}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={form.ipi_percent}
+                            onChange={(e) => setForm((x) => ({ ...x, ipi_percent: e.target.value }))}
+                          />
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Tem ST?
+                          <select
+                            className={fieldClass}
+                            value={form.has_st ? "1" : "0"}
+                            onChange={(e) => setForm((x) => ({ ...x, has_st: e.target.value === "1" }))}
+                          >
+                            <option value="0">Não</option>
+                            <option value="1">Sim</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                          Origem NF
+                          <input
+                            className={fieldClass}
+                            value={form.invoice_origin}
+                            onChange={(e) => setForm((x) => ({ ...x, invoice_origin: e.target.value }))}
+                            placeholder="Ex.: MG"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#d9e8f4] bg-[#f6fbff] p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-extrabold uppercase tracking-wider text-[#0767b4]">
+                            Preço médio praticado
+                          </p>
+                          <p className="mt-1 text-2xl font-extrabold text-slate-900">
+                            {editingRecord ? money(historicalAverage) : "Será calculado pelo histórico"}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Calculado automaticamente: faturamento histórico do produto ÷ quantidade histórica vendida.
+                          </p>
+                        </div>
+                        {editingRecord && (
+                          <div className="grid grid-cols-2 gap-3 text-right text-xs">
+                            <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                              <span className="block text-slate-400">Qtd. histórica</span>
+                              <strong className="text-slate-800">{numberPt(historicalQuantity)}</strong>
+                            </div>
+                            <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                              <span className="block text-slate-400">Faturamento</span>
+                              <strong className="text-slate-800">{money(historicalRevenue)}</strong>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {kind === "companies" && (
+                  <label className="flex items-center gap-2 text-sm font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={form.active}
+                      onChange={(e) => setForm((x) => ({ ...x, active: e.target.checked }))}
+                    />
+                    Ativo
+                  </label>
+                )}
+
+                {error && (
+                  <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+                    {error}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-4">
+                  <button
+                    type="button"
+                    className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                    onClick={reset}
+                    disabled={busy}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+                    disabled={busy}
+                    type="submit"
+                  >
+                    {busy ? "Salvando…" : editing !== null ? "Salvar alterações" : "Cadastrar"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {error && !modalOpen && (
+        <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700" role="alert">
           {error}
         </p>
       )}
-      {notice && <p role="status">{notice}</p>}
+      {notice && (
+        <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700" role="status">
+          {notice}
+        </p>
+      )}
+
       <div className="grid min-w-0 gap-3 rounded-2xl border border-[#e4ebf0] bg-white p-4 sm:grid-cols-2 xl:grid-cols-4">
-        <label className="grid min-w-0 gap-1 text-xs font-semibold text-slate-600">Buscar
-          <input type="search" value={query} onChange={e => {setQuery(e.target.value);setPage(1);}} placeholder={kind === "companies" ? "Nome ou razão social" : "Nome, código ou ID"} className="w-full min-w-0 rounded-lg border border-slate-200 p-2.5 text-sm"/>
+        <label className="grid min-w-0 gap-1 text-xs font-semibold text-slate-600">
+          Buscar
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+            placeholder={kind === "companies" ? "Nome ou razão social" : "Descrição, código, grupo, marca ou NCM"}
+            className="w-full min-w-0 rounded-lg border border-slate-200 p-2.5 text-sm"
+          />
         </label>
-        <label className="grid gap-1 text-xs font-semibold text-slate-600">Situação
-          <select value={stateFilter} onChange={e => {setStateFilter(e.target.value);setPage(1);}} className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm"><option value="all">Todos</option><option value="active">Ativos</option><option value="inactive">Inativos</option></select>
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">
+          Situação
+          <select
+            value={stateFilter}
+            onChange={(e) => {
+              setStateFilter(e.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm"
+          >
+            <option value="all">Todos</option>
+            <option value="active">Ativos</option>
+            <option value="inactive">Inativos</option>
+          </select>
         </label>
-        {kind === "products" && <label className="grid gap-1 text-xs font-semibold text-slate-600">Empresa
-          <select value={companyFilter} onChange={e => {setCompanyFilter(e.target.value);setPage(1);}} className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm"><option value="">Todas as empresas</option>{companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}</select>
-        </label>}
-        <label className="grid gap-1 text-xs font-semibold text-slate-600">Por página
-          <select value={pageSize} onChange={e => {setPageSize(Number(e.target.value));setPage(1);}} className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm">{[10,20,50,100].map(n => <option key={n} value={n}>{n} por página</option>)}</select>
+        {kind === "products" && (
+          <label className="grid gap-1 text-xs font-semibold text-slate-600">
+            Empresa
+            <select
+              value={companyFilter}
+              onChange={(e) => {
+                setCompanyFilter(e.target.value);
+                setPage(1);
+              }}
+              className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm"
+            >
+              <option value="">Todas as empresas</option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">
+          Por página
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+            className="rounded-lg border border-slate-200 bg-white p-2.5 text-sm"
+          >
+            {[10, 20, 50, 100].map((n) => (
+              <option key={n} value={n}>
+                {n} por página
+              </option>
+            ))}
+          </select>
         </label>
       </div>
+
       <div className="table-wrap rounded-2xl border border-[#e4ebf0] bg-white p-3 shadow-sm">
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nome</th>
+              <th>{kind === "products" ? "Produto" : "Nome"}</th>
               {kind === "products" && (
                 <>
                   <th>Código</th>
-                  <th>Preço</th>
+                  <th>Grupo</th>
+                  <th>Unidade</th>
+                  <th>Preço médio</th>
                 </>
               )}
               <th>Situação</th>
@@ -293,36 +674,99 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             {visible.map((x) => (
               <tr key={x.id}>
                 <td>{x.id}</td>
-                <td><span className="font-semibold text-slate-900">{x.name}</span>{kind === "products" && <span className="block text-xs text-slate-500">{companies.find(c => c.id === x.company_id)?.name || ""}</span>}</td>
+                <td>
+                  <span className="font-semibold text-slate-900">{x.name}</span>
+                  {kind === "products" && (
+                    <span className="block text-xs text-slate-500">
+                      {x.company_name || companies.find((c) => c.id === x.company_id)?.name || ""}
+                      {x.brand ? ` · ${x.brand}` : ""}
+                    </span>
+                  )}
+                </td>
                 {kind === "products" && (
                   <>
                     <td>{x.code}</td>
-                    <td>{new Intl.NumberFormat("pt-BR", {style:"currency",currency:"BRL"}).format(Number(x.price || 0))}</td>
+                    <td>
+                      {x.product_group || "—"}
+                      {x.subgroup && <span className="block text-xs text-slate-400">{x.subgroup}</span>}
+                    </td>
+                    <td>{x.unit || "UN"}</td>
+                    <td>
+                      <span className="font-semibold text-slate-900">
+                        {money(Number(x.average_practiced_price || 0))}
+                      </span>
+                      <span className="block text-xs text-slate-400">
+                        {numberPt(Number(x.total_sold_quantity || 0))} vendidos
+                      </span>
+                    </td>
                   </>
                 )}
-                <td><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${x.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{x.active ? "Ativo" : "Inativo"}</span></td>
                 <td>
-                  <button type="button" className="secondary" onClick={() => edit(x)}>
-                    Editar
-                  </button>
-                  {kind === "products" && (
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      x.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {x.active ? "Ativo" : "Inativo"}
+                  </span>
+                </td>
+                <td>
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      disabled={busy}
-                      className="ml-3 text-red-700"
-                      onClick={() => void removeProduct(x)}
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      onClick={() => edit(x)}
                     >
-                      Excluir
+                      Editar
                     </button>
-                  )}
+                    {kind === "products" && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                        onClick={() => void removeProduct(x)}
+                      >
+                        Excluir
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
-            {!visible.length && <tr><td colSpan={kind === "products" ? 6 : 4} className="p-8 text-center text-sm text-slate-500">Nenhum registro encontrado.</td></tr>}
+            {!visible.length && (
+              <tr>
+                <td colSpan={kind === "products" ? 8 : 4} className="p-8 text-center text-sm text-slate-500">
+                  Nenhum registro encontrado.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500"><span>{filtered.length} registro(s) · Página {currentPage} de {pages}</span><div className="flex gap-2"><button type="button" disabled={currentPage <= 1} onClick={() => setPage(currentPage-1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Anterior</button><button type="button" disabled={currentPage >= pages} onClick={() => setPage(currentPage+1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Próxima</button></div></div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+        <span>
+          {filtered.length} registro(s) · Página {currentPage} de {pages}
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setPage(currentPage - 1)}
+            className="rounded-lg border px-3 py-2 disabled:opacity-40"
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            disabled={currentPage >= pages}
+            onClick={() => setPage(currentPage + 1)}
+            className="rounded-lg border px-3 py-2 disabled:opacity-40"
+          >
+            Próxima
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
