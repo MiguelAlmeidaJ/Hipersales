@@ -8,6 +8,8 @@ import {
   FiEye,
   FiFilter,
   FiPackage,
+  FiFileText,
+  FiClock,
   FiPlus,
   FiSearch,
   FiUser,
@@ -86,6 +88,8 @@ const statusLabel = (value: string) => {
     faturado: "Faturado",
     cancelado: "Cancelado",
     aprovado: "Aprovado",
+    pedido_aprovado: "Pedido aprovado",
+    recusado: "Recusado",
     pendente: "Pendente",
     rascunho: "Rascunho",
   };
@@ -93,12 +97,23 @@ const statusLabel = (value: string) => {
 };
 
 const statusTone = (value: string) => {
-  if (/produc/i.test(value)) return "border-sky-200 bg-sky-50 text-sky-700";
+  if (/recus|cancel/i.test(value)) return "border-rose-200 bg-rose-50 text-rose-700";
+  if (/fatur/i.test(value)) return "border-violet-200 bg-violet-50 text-violet-700";
   if (/entreg/i.test(value)) return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (/fatur|aprov/i.test(value)) return "border-green-200 bg-green-50 text-green-700";
-  if (/cancel/i.test(value)) return "border-rose-200 bg-rose-50 text-rose-700";
+  if (/produc/i.test(value)) return "border-cyan-200 bg-cyan-50 text-cyan-700";
+  if (/aprov/i.test(value)) return "border-blue-200 bg-blue-50 text-blue-700";
   if (/anal|pendent/i.test(value)) return "border-amber-200 bg-amber-50 text-amber-700";
   return "border-slate-200 bg-slate-50 text-slate-600";
+};
+
+const statusAccent = (value: string) => {
+  if (/recus|cancel/i.test(value)) return "border-l-rose-500";
+  if (/fatur/i.test(value)) return "border-l-violet-500";
+  if (/entreg/i.test(value)) return "border-l-emerald-500";
+  if (/produc/i.test(value)) return "border-l-cyan-500";
+  if (/aprov/i.test(value)) return "border-l-blue-500";
+  if (/anal|pendent/i.test(value)) return "border-l-amber-500";
+  return "border-l-slate-300";
 };
 
 const formatDate = (value: string) => {
@@ -120,6 +135,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [selected, setSelected] = useState<number | null>(null);
+  const [timelineOpen, setTimelineOpen] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -315,7 +331,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
         {filtered.map((order) => (
           <article
             key={order.id}
-            className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-[#a8cde8] hover:shadow-md sm:p-5"
+            className={`group rounded-2xl border border-slate-200 border-l-4 ${statusAccent(order.status)} bg-white p-4 shadow-sm transition hover:border-[#a8cde8] hover:shadow-md sm:p-5`}
           >
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -401,17 +417,54 @@ export default function OrdersView({ user }: { user: SessionUser }) {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#cde4f4] bg-[#f7fbff] px-3.5 text-xs font-bold text-[#0767b4] transition hover:border-[#76bd3d] hover:bg-white"
                   onClick={() => setSelected(order.id)}
                 >
                   <FiEye size={16} />
-                  Visualizar pedido
+                  Visualizar
                   <FiChevronRight size={15} />
                 </button>
+                <button
+                  type="button"
+                  aria-expanded={timelineOpen === order.id}
+                  aria-controls={`timeline-${order.id}`}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3.5 text-xs font-bold text-teal-700 transition hover:bg-teal-100"
+                  onClick={() => setTimelineOpen((previous) => previous === order.id ? null : order.id)}
+                >
+                  <FiClock size={16} />
+                  Linha do tempo
+                </button>
+                <a
+                  href={`/api/proposals/${order.id}/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
+                >
+                  <FiFileText size={16} />
+                  Abrir PDF
+                </a>
               </div>
+              {timelineOpen === order.id && (
+                <section id={`timeline-${order.id}`} className="rounded-xl border border-teal-100 bg-teal-50/40 p-4">
+                  <h4 className="mb-3 text-sm font-bold text-slate-800">Histórico do pedido #{orderNumber(order)}</h4>
+                  {(order.timeline || []).length ? (
+                    <ol className="space-y-3">
+                      {order.timeline.map((entry, index) => (
+                        <li key={entry.id || index} className="border-l-2 border-teal-300 pl-3 text-sm">
+                          <p className="font-bold text-slate-800">{entry.title || statusLabel(entry.status)}</p>
+                          <p className="text-xs text-slate-500">{formatDate(entry.created_at)}{entry.created_by_name ? ` · ${entry.created_by_name}` : ""}</p>
+                          {entry.notes && <p className="mt-1 text-xs text-slate-600">{entry.notes}</p>}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="text-sm text-slate-500">Ainda não há eventos registrados para este pedido.</p>
+                  )}
+                </section>
+              )}
             </div>
           </article>
         ))}
