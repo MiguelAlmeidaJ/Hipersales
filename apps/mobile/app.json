@@ -63,6 +63,12 @@
       "typedRoutes": true,
       "reactCompiler": true,
       "autolinkingModuleResolution": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e9371591-d78e-48d4-8d42-3d8a053daf8e"
+      }
     }
   }
 }
