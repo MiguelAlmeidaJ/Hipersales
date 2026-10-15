@@ -81,6 +81,7 @@ export default function RegistrationApprovals() {
   const [selected, setSelected] = useState<number | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [filter, setFilter] = useState("pendente");
+  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -107,8 +108,8 @@ export default function RegistrationApprovals() {
     };
   }, []);
   const visible = useMemo(
-    () => requests.filter((r) => filter === "todas" || r.status === filter),
-    [requests, filter],
+    () => requests.filter((r) => (filter === "todas" || r.status === filter) && [r.legal_name,r.trade_name,r.cnpj,r.seller_name,r.id].join(" ").toLocaleLowerCase("pt-BR").includes(query.trim().toLocaleLowerCase("pt-BR"))),
+    [requests, filter, query],
   );
   function open(r: RequestRow) {
     setSelected(r.id);
@@ -149,65 +150,58 @@ export default function RegistrationApprovals() {
   if (loading) return <p role="status">Carregando solicitações…</p>;
   return (
     <section className="space-y-5">
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold">Solicitações de cadastro</h2>
-            <p className="text-sm text-slate-500">
-              Analise os dados enviados pelos representantes.
-            </p>
-          </div>
-          <label className="grid gap-1 text-sm">
-            Filtrar por status
-            <select
-              className="rounded-lg border border-slate-300 bg-white p-2.5"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              <option value="pendente">Pendentes</option>
-              <option value="aprovada">Aprovadas</option>
-              <option value="recusada">Recusadas</option>
-              <option value="todas">Todas</option>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><p className="text-xs font-extrabold uppercase tracking-widest text-[#0767b4]">Análise de cadastros</p><p className="mt-1 text-sm text-slate-500">Confira os dados enviados pelos representantes antes da aprovação.</p></div>
+        <span className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-bold text-[#0767b4]">{requests.length} solicitações recebidas</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          {title:"Total",value:requests.length,filter:"todas",color:"text-slate-800",bg:"bg-slate-50"},
+          {title:"Pendentes",value:requests.filter(r=>r.status==="pendente").length,filter:"pendente",color:"text-amber-700",bg:"bg-amber-50"},
+          {title:"Aprovadas",value:requests.filter(r=>r.status==="aprovada").length,filter:"aprovada",color:"text-emerald-700",bg:"bg-emerald-50"},
+          {title:"Recusadas",value:requests.filter(r=>r.status==="recusada").length,filter:"recusada",color:"text-rose-700",bg:"bg-rose-50"},
+        ].map(card=><button type="button" key={card.title} onClick={()=>setFilter(card.filter)}
+          className={`rounded-2xl border p-4 text-left transition hover:shadow-md ${filter===card.filter?"border-[#0767b4] ring-1 ring-[#0767b4]/20":"border-slate-200"} ${card.bg}`}>
+          <span className={`block text-2xl font-extrabold ${card.color}`}>{card.value}</span>
+          <span className="mt-1 block text-xs font-semibold text-slate-600">{card.title}</span>
+        </button>)}
+      </div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="mb-4 flex flex-wrap items-end gap-3">
+          <label className="grid min-w-[220px] flex-1 gap-1.5 text-xs font-semibold text-slate-600">Buscar solicitação
+            <input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Cliente, CNPJ, representante ou ID"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0767b4]" />
+          </label>
+          <label className="grid gap-1.5 text-xs font-semibold text-slate-600">Status
+            <select value={filter} onChange={e=>setFilter(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+              <option value="pendente">Pendentes</option><option value="aprovada">Aprovadas</option>
+              <option value="recusada">Recusadas</option><option value="todas">Todas</option>
             </select>
           </label>
         </div>
-        <p className="mb-3 text-sm text-slate-500">{visible.length} solicitação(ões)</p>
+        <p className="mb-3 text-xs text-slate-500">{visible.length} solicitação(ões) encontrada(s)</p>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr>
-                {["ID", "Cliente", "CNPJ", "Representante", "Status", "Ação"].map((h) => (
-                  <th className="border-b border-slate-200 p-3" key={h}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs text-slate-600"><tr>
+              {["ID","Cliente","CNPJ","Representante","Status","Ação"].map(h=><th key={h} className="border-b border-slate-200 p-3 font-bold">{h}</th>)}
+            </tr></thead>
             <tbody>
-              {visible.map((r) => (
-                <tr key={r.id}>
-                  <td className="border-b p-3">{r.id}</td>
-                  <td className="border-b p-3">{r.legal_name}</td>
-                  <td className="border-b p-3">{r.cnpj}</td>
-                  <td className="border-b p-3">{r.seller_name}</td>
-                  <td className="border-b p-3">{r.status}</td>
-                  <td className="border-b p-3">
-                    <button
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-brand"
-                      type="button"
-                      onClick={() => open(r)}
-                    >
-                      Analisar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {visible.map(r=><tr key={r.id} className="transition hover:bg-[#f7fbff]">
+                <td className="border-b border-slate-100 p-3 font-bold text-[#0767b4]">#{r.id}</td>
+                <td className="border-b border-slate-100 p-3"><strong className="block text-slate-900">{r.legal_name}</strong>{r.trade_name && <span className="text-xs text-slate-500">{r.trade_name}</span>}</td>
+                <td className="border-b border-slate-100 p-3 text-slate-600">{r.cnpj}</td>
+                <td className="border-b border-slate-100 p-3">{r.seller_name}</td>
+                <td className="border-b border-slate-100 p-3"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${r.status==="aprovada"?"bg-emerald-50 text-emerald-700":r.status==="recusada"?"bg-rose-50 text-rose-700":"bg-amber-50 text-amber-700"}`}>{r.status==="aprovada"?"Aprovada":r.status==="recusada"?"Recusada":"Pendente"}</span></td>
+                <td className="border-b border-slate-100 p-3"><button type="button" onClick={()=>open(r)} className="rounded-xl border border-[#cde4f4] bg-[#f7fbff] px-3 py-2 text-xs font-bold text-[#0767b4] hover:bg-blue-50">{r.status==="pendente"?"Analisar":"Visualizar"}</button></td>
+              </tr>)}
+              {visible.length===0 && <tr><td colSpan={6} className="p-10 text-center"><p className="font-bold text-slate-700">Nenhuma solicitação encontrada</p><p className="mt-1 text-xs text-slate-500">Experimente outro filtro ou aguarde novos cadastros.</p></td></tr>}
             </tbody>
           </table>
         </div>
       </div>
       {draft && (
-        <form onSubmit={submit} className="rounded-xl border border-blue-200 bg-white p-5">
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]" onMouseDown={e=>{if(e.target===e.currentTarget&&!busy){setDraft(null);setSelected(null);}}}><form onSubmit={submit} role="dialog" aria-modal="true" aria-label="Analisar solicitação" className="max-h-[92dvh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-7">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="text-lg font-semibold">Solicitação #{selected}</h3>
             <button
@@ -227,7 +221,7 @@ export default function RegistrationApprovals() {
                 {title}
                 <input
                   required={key === "legal_name" || key === "cnpj"}
-                  className="rounded-lg border border-slate-300 p-2.5"
+                  className="rounded-xl border border-slate-200 bg-white p-2.5 text-sm"
                   value={draft[key]}
                   onChange={(e) => setDraft((d) => (d ? { ...d, [key]: e.target.value } : d))}
                 />
@@ -236,7 +230,7 @@ export default function RegistrationApprovals() {
             <label className="grid gap-1.5 text-sm">
               Decisão
               <select
-                className="rounded-lg border border-slate-300 bg-white p-2.5"
+                className="rounded-xl border border-slate-200 bg-white p-2.5 text-sm"
                 value={draft.status}
                 onChange={(e) =>
                   setDraft((d) => (d ? { ...d, status: e.target.value as Draft["status"] } : d))
@@ -254,7 +248,7 @@ export default function RegistrationApprovals() {
           >
             {busy ? "Salvando…" : "Confirmar decisão"}
           </button>
-        </form>
+        </form></div>
       )}
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">
