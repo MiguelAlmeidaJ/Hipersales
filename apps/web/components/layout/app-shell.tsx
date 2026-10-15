@@ -114,7 +114,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <main className="login-page">
         <form className="login-panel" onSubmit={login}>
           <header className="login-heading">
-            <span className="login-eyebrow">HiperMix</span>
+            <span className="login-eyebrow">HiperSales</span>
             <h1>Bem-vindo ao Hipersales</h1>
             <p>Acesse o portal comercial para continuar.</p>
           </header>
