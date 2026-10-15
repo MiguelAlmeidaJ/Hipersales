@@ -301,9 +301,106 @@ export class DocumentsService {
       LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE ${where.join(" AND ")}
       GROUP BY p.order_number,p.status,p.created_at,u.name,c.legal_name,co.name ORDER BY p.created_at DESC`).all(...params) as Row[];
     const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
-    return this.pdf(`Relatorio - ${type.replaceAll("_", " ")}`, `${rows.length} registros | Total ${money(total)}`, [
-      { title: "Pedidos", lines: rows.map((row) => ({ label: `#${row.order_number} - ${row.customer_name}`,
-        value: `${row.company_name} | ${row.seller_name} | ${row.status} | ${money(row.total)}` })) },
-    ]);
+    const labels: Record<string,string> = {
+      vendas:"Relatório de vendas", pedidos:"Relatório de pedidos",
+      bonificacoes:"Relatório de bonificações", produtos_vendidos:"Produtos vendidos",
+      prazo_pagamento:"Prazo de pagamento", fechamento_mensal:"Fechamento mensal",
+    };
+    const statusNames: Record<string,string> = {
+      em_analise:"Em análise",pedido_aprovado:"Aprovado",em_producao:"Em produção",
+      faturado:"Faturado",entregue:"Entregue",recusado:"Recusado",
+    };
+    return new Promise<Buffer>((resolve,reject)=>{
+      const doc = new PDFDocument({size:"A4",layout:"landscape",margin:34,bufferPages:true,
+        info:{Title:labels[type],Author:"HiperSales"}});
+      const chunks:Buffer[]=[];
+      doc.on("data",(chunk:Buffer)=>chunks.push(chunk));
+      doc.on("end",()=>resolve(Buffer.concat(chunks)));
+      doc.on("error",reject);
+      const left=34, pageWidth=doc.page.width-68;
+      const headerColumns=[
+        {name:"PEDIDO",width:65},
+        {name:"CLIENTE",width:210},
+        {name:"EMPRESA",width:115},
+        {name:"REPRESENTANTE",width:108},
+        {name:"STATUS",width:105},
+        {name:"DATA",width:78},
+        {name:"VALOR",width:pageWidth-681},
+      ];
+      const ellipsis=(value:unknown,width:number)=>{
+        const raw=first(value)||"-";
+        if(doc.widthOfString(raw)<=width)return raw;
+        let low=0,high=raw.length;
+        while(low<high){
+          const middle=Math.ceil((low+high)/2);
+          if(doc.widthOfString(raw.slice(0,middle)+"…")<=width)low=middle;
+          else high=middle-1;
+        }
+        return low?raw.slice(0,low).trimEnd()+"…":"…";
+      };
+      const drawHeader=()=>{
+        doc.rect(0,0,doc.page.width,8).fill("#0767B4");
+        doc.fillColor("#0767B4").font("Helvetica-Bold").fontSize(14).text("HiperSales",left,27);
+        doc.fillColor("#132238").fontSize(20).text(labels[type],left,60);
+        doc.fillColor("#65758B").font("Helvetica").fontSize(9)
+          .text("Gerado em "+safeDate(new Date().toISOString()),left,88);
+        doc.roundedRect(left,111,pageWidth,54,8).fill("#F2F7FB");
+        doc.fillColor("#64748B").font("Helvetica-Bold").fontSize(8)
+          .text("REGISTROS",left+16,122).text("VALOR TOTAL",left+210,122);
+        doc.fillColor("#0B2A63").fontSize(15)
+          .text(String(rows.length),left+16,136)
+          .text(money(total),left+210,136);
+        doc.fillColor("#132238").fontSize(11).text("Pedidos",left,184);
+        drawTableHeader(206);
+      };
+      const drawTableHeader=(y:number)=>{
+        doc.rect(left,y,pageWidth,28).fill("#E8F0F7");
+        let x=left;
+        doc.font("Helvetica-Bold").fontSize(8).fillColor("#34465C");
+        for(const column of headerColumns){
+          doc.text(column.name,x+7,y+9,{width:column.width-12,lineBreak:false});
+          x+=column.width;
+        }
+      };
+      drawHeader();
+      let y=240;
+      rows.forEach((row,index)=>{
+        if(y+30>doc.page.height-48){
+          doc.addPage();
+          doc.fillColor("#0767B4").font("Helvetica-Bold").fontSize(12).text("HiperSales  /  "+labels[type],left,28);
+          drawTableHeader(55);
+          y=89;
+        }
+        if(index%2===0)doc.rect(left,y,pageWidth,30).fill("#FAFCFE");
+        const columns=[
+          "#"+first(row.order_number),first(row.customer_name),first(row.company_name),
+          first(row.seller_name),statusNames[first(row.status)]||first(row.status).replaceAll("_"," "),
+          dateOnly(row.created_at),money(row.total),
+        ];
+        let x=left;
+        doc.font("Helvetica").fontSize(8).fillColor("#26354B");
+        columns.forEach((value,i)=>{
+          const w=headerColumns[i].width;
+          doc.text(ellipsis(value,w-14),x+7,y+10,{width:w-14,height:12,lineBreak:false,align:i===6?"right":"left"});
+          x+=w;
+        });
+        doc.moveTo(left,y+30).lineTo(left+pageWidth,y+30).lineWidth(.35).strokeColor("#E2E8F0").stroke();
+        y+=30;
+      });
+      if(rows.length===0){
+        doc.font("Helvetica").fontSize(10).fillColor("#64748B")
+          .text("Nenhum registro encontrado para os filtros selecionados.",left,251,{width:pageWidth,align:"center"});
+      }
+      const pageRange=doc.bufferedPageRange();
+      for(let page=pageRange.start;page<pageRange.start+pageRange.count;page++){
+        doc.switchToPage(page);
+        doc.moveTo(left,doc.page.height-32).lineTo(left+pageWidth,doc.page.height-32).strokeColor("#DCE5EE").stroke();
+        doc.font("Helvetica").fontSize(8).fillColor("#64748B")
+          .text("HiperSales • Relatório comercial",left,doc.page.height-24,{lineBreak:false});
+        doc.text("Página "+(page+1)+" de "+pageRange.count,left+pageWidth-105,doc.page.height-24,
+          {width:105,align:"right",lineBreak:false});
+      }
+      doc.end();
+    });
   }
 }
