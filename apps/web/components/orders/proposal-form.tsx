@@ -166,7 +166,7 @@ export default function ProposalForm({
         { method: "POST", body: JSON.stringify(payload) },
       );
       setSuccess(
-        `${result.message || "Proposta enviada."} Nº ${result.order_number || result.id}.`,
+        `${result.message || "Proposta enviada."} Nº ${result.order_number || result.id}/${bonus ? "B" : "V"}.`,
       );
       setLines([]);
       setForm(initial);

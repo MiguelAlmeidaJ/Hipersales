@@ -146,7 +146,7 @@ export default function NewOrderScreen() {
         items: lines.map((line) => ({ product_id: line.productId, quantity: decimal(line.quantity), negotiated_price: decimal(line.price) })),
       };
       const result = await api<{ id: number; order_number?: number; message?: string }>("/api/proposals", { method: "POST", body: JSON.stringify(payload), timeoutMs: 30_000 });
-      Alert.alert("Proposta enviada", `${result.message || "Pedido criado."}\nNúmero: ${result.order_number || result.id}`, [{ text: "Ver pedidos", onPress: () => router.replace("/(app)/orders") }]);
+      Alert.alert("Proposta enviada", `${result.message || "Pedido criado."}\nNúmero: ${result.order_number || result.id}/${bonus ? "B" : "V"}`, [{ text: "Ver pedidos", onPress: () => router.replace("/(app)/orders") }]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível enviar a proposta.");
     } finally { setBusy(false); }

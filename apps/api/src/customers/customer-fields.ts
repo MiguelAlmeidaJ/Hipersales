@@ -21,7 +21,7 @@ export function customerField(payload: Data, ...keys: string[]): string {
 export function customerAddress(payload: Data): string {
   const direct = customerField(payload, "address", "delivery_address");
   const street = customerField(payload, "street", "logradouro");
-  const number = customerField(payload, "number", "numero");
+  const number = customerField(payload, "address_number", "number", "numero");
   const complement = customerField(payload, "complement", "complemento");
   const neighborhood = customerField(payload, "neighborhood", "bairro_distrito", "bairro");
   const city = customerField(payload, "city", "cidade");

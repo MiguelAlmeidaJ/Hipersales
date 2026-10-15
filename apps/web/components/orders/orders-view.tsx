@@ -51,6 +51,8 @@ type Order = {
 };
 const cash = (x: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(x);
+const orderNumber = (order: Pick<Order, "id" | "order_number" | "order_type">) =>
+  `${order.order_number || order.id}/${/bonific/i.test(order.order_type) ? "B" : "V"}`;
 export default function OrdersView({ user }: { user: SessionUser }) {
   const [showForm, setShowForm] = useState(false);
   const [refresh, setRefresh] = useState(0);
@@ -162,7 +164,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
             <tbody>
               {filtered.map((o) => (
                 <tr className="border-b border-slate-100" key={o.id}>
-                  <td className="p-3 font-semibold">{o.order_number || o.id}</td>
+                  <td className="p-3 font-semibold">{orderNumber(o)}</td>
                   <td className="p-3">{o.customer_name}</td>
                   <td className="p-3">{o.company_name}</td>
                   <td className="p-3">{o.status}</td>
@@ -185,7 +187,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="mb-5 flex flex-wrap justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">Pedido #{current.order_number || current.id}</h2>
+              <h2 className="text-xl font-bold">Pedido {orderNumber(current)}</h2>
               <p className="text-sm text-slate-500">
                 {current.customer_name} · {current.company_name}
               </p>

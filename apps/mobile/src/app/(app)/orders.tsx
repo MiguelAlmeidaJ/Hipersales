@@ -39,6 +39,8 @@ const statusColors: Record<string, { background: string; text: string }> = {
 
 const proposalTotal = (proposal: Proposal) =>
   (proposal.items ?? []).reduce((total, item) => total + Number(item.quantity) * Number(item.negotiated_price), 0);
+const orderNumber = (proposal: Proposal) =>
+  `${proposal.order_number || proposal.id}/${/bonific/i.test(proposal.order_type) ? "B" : "V"}`;
 
 function StatusBadge({ status }: { status: string }) {
   const palette = statusColors[status] ?? { background: "#EEF2F6", text: colors.muted };
@@ -101,7 +103,7 @@ export default function OrdersScreen() {
           ListEmptyComponent={<EmptyState title="Nenhum pedido encontrado" description="Altere a busca ou o filtro de status para consultar outros pedidos." />}
           renderItem={({ item }) => (
             <Pressable accessibilityRole="button" onPress={() => setSelected(item)} style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
-              <View style={styles.cardTop}><Text style={styles.number}>Pedido #{item.order_number || item.id}</Text><StatusBadge status={item.status} /></View>
+              <View style={styles.cardTop}><Text style={styles.number}>Pedido {orderNumber(item)}</Text><StatusBadge status={item.status} /></View>
               <Text style={styles.customer} numberOfLines={1}>{item.customer_trade_name || item.customer_name}</Text>
               <Text style={styles.company} numberOfLines={1}>{item.company_name}</Text>
               <View style={styles.cardBottom}><Text style={styles.date}>{shortDate(item.created_at)}</Text><Text style={styles.total}>{money(proposalTotal(item))}</Text></View>
@@ -124,7 +126,7 @@ function Detail({ label, value }: { label: string; value?: string | null }) {
 function OrderDetails({ proposal, onClose }: { proposal: Proposal; onClose: () => void }) {
   return (
     <SafeAreaView style={styles.modal} edges={["top", "bottom"]}>
-      <View style={styles.modalHeader}><View><Text style={styles.modalEyebrow}>DETALHES DO PEDIDO</Text><Text style={styles.modalTitle}>#{proposal.order_number || proposal.id}</Text></View><Pressable accessibilityLabel="Fechar detalhes" onPress={onClose} style={styles.close}><Text style={styles.closeText}>×</Text></Pressable></View>
+      <View style={styles.modalHeader}><View><Text style={styles.modalEyebrow}>DETALHES DO PEDIDO</Text><Text style={styles.modalTitle}>{orderNumber(proposal)}</Text></View><Pressable accessibilityLabel="Fechar detalhes" onPress={onClose} style={styles.close}><Text style={styles.closeText}>×</Text></Pressable></View>
       <ScrollView contentContainerStyle={styles.modalContent}>
         <View style={styles.summaryCard}><StatusBadge status={proposal.status} /><Text style={styles.summaryCustomer}>{proposal.customer_name}</Text><Text style={styles.summaryCompany}>{proposal.company_name}</Text><Text style={styles.summaryTotal}>{money(proposalTotal(proposal))}</Text></View>
         <Text style={styles.sectionTitle}>Informações comerciais</Text>

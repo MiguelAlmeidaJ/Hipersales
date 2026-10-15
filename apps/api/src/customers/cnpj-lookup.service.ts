@@ -103,7 +103,7 @@ export function normalizeLookup(digits: string, source: Data) {
     legal_name: text(payload.razao_social, payload.nome, payload.nome_empresarial, payload.nome_razao_social),
     trade_name: text(payload.fantasia, payload.nome_fantasia, payload.nome_comercial),
     state_registration: text(payload.inscricao_estadual, payload.ie),
-    address: fullAddress, address_line: addressLine, neighborhood,
+    address: fullAddress, address_line: addressLine, street, number, neighborhood,
     phone: text(payload.ddd_telefone_1, payload.ddd_telefone_2, payload.telefone, payload.telefone1),
     email: text(payload.email, payload.endereco_eletronico),
     city, state, zip_code: zip,

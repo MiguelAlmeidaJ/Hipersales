@@ -11,7 +11,14 @@ type RequestRow = {
   trade_name?: string;
   cnpj: string;
   state_registration?: string;
+  municipal_registration?: string;
   address?: string;
+  address_number?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  delivery_address?: string;
   phone?: string;
   email?: string;
   notes?: string;
@@ -19,7 +26,14 @@ type RequestRow = {
 type Draft = Pick<RequestRow, "legal_name" | "cnpj"> & {
   trade_name: string;
   state_registration: string;
+  municipal_registration: string;
   address: string;
+  address_number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  delivery_address: string;
   phone_1: string;
   purchase_email: string;
   delivery_warnings: string;
@@ -30,7 +44,14 @@ const initial = (r: RequestRow): Draft => ({
   trade_name: r.trade_name || "",
   cnpj: r.cnpj || "",
   state_registration: r.state_registration || "",
+  municipal_registration: r.municipal_registration || "",
   address: r.address || "",
+  address_number: r.address_number || "",
+  neighborhood: r.neighborhood || "",
+  city: r.city || "",
+  state: r.state || "",
+  zip_code: r.zip_code || "",
+  delivery_address: r.delivery_address || "",
   phone_1: r.phone || "",
   purchase_email: r.email || "",
   delivery_warnings: r.notes || "",
@@ -43,7 +64,14 @@ const fields = [
   ["trade_name", "Nome fantasia"],
   ["cnpj", "CNPJ"],
   ["state_registration", "Inscrição estadual"],
+  ["municipal_registration", "Inscrição municipal"],
   ["address", "Endereço"],
+  ["address_number", "Número"],
+  ["neighborhood", "Bairro"],
+  ["city", "Município"],
+  ["state", "UF"],
+  ["zip_code", "CEP"],
+  ["delivery_address", "Endereço de entrega"],
   ["phone_1", "Telefone"],
   ["purchase_email", "E-mail de compras"],
   ["delivery_warnings", "Observações"],

@@ -16,17 +16,26 @@ type Form = {
   billing_email: string;
   xml_email: string;
   state_registration: string;
+  municipal_registration: string;
   address: string;
+  address_number: string;
   neighborhood: string;
   city: string;
   state: string;
   zip_code: string;
+  delivery_address: string;
   scheduled_delivery: string;
   scheduling_instructions: string;
   delivery_warnings: string;
   notes: string;
 };
-type Lookup = Partial<Form> & { phone?: string; email?: string; address_line?: string };
+type Lookup = Partial<Form> & {
+  phone?: string;
+  email?: string;
+  address_line?: string;
+  street?: string;
+  number?: string;
+};
 const DEFAULT_SCHEDULING = "Descarga por ordem de chegada de segunda a sexta";
 const empty: Form = {
   cnpj: "",
@@ -39,11 +48,14 @@ const empty: Form = {
   billing_email: "",
   xml_email: "",
   state_registration: "",
+  municipal_registration: "",
   address: "",
+  address_number: "",
   neighborhood: "",
   city: "",
   state: "",
   zip_code: "",
+  delivery_address: "",
   scheduled_delivery: "no",
   scheduling_instructions: DEFAULT_SCHEDULING,
   delivery_warnings: "",
@@ -98,8 +110,10 @@ const fields: {
 }[] = [
   { key: "legal_name", label: "Razão social", required: true, span: true },
   { key: "trade_name", label: "Nome fantasia / fachada estabelecimento" },
-  { key: "state_registration", label: "Inscrição municipal" },
-  { key: "address", label: "Endereço", span: true },
+  { key: "municipal_registration", label: "Inscrição municipal" },
+  { key: "state_registration", label: "Inscrição estadual" },
+  { key: "address", label: "Endereço" },
+  { key: "address_number", label: "Número" },
   { key: "neighborhood", label: "Bairro" },
   { key: "city", label: "Cidade" },
   { key: "state", label: "UF" },
@@ -178,7 +192,8 @@ export default function CustomerRequest() {
               state_registration: result.state_registration || old.state_registration,
               phone_1: result.phone ? maskPhone(result.phone) : old.phone_1,
               purchase_email: result.email || old.purchase_email,
-              address: result.address_line || result.address || old.address,
+              address: result.street || result.address_line || result.address || old.address,
+              address_number: result.number || result.address_number || old.address_number,
               neighborhood: result.neighborhood || old.neighborhood,
               city: result.city || old.city,
               state: result.state || old.state,
@@ -359,6 +374,15 @@ export default function CustomerRequest() {
             <p className="text-xs font-bold uppercase tracking-wider text-[#0767b4]">Entrega</p>
             <h3 className="mt-1 font-semibold">Condições de recebimento</h3>
           </div>
+          <label className="block text-sm font-semibold text-[#24374c]">
+            Endereço de entrega
+            <input
+              className={fieldClass}
+              value={form.delivery_address}
+              placeholder="Se vazio, será usado o endereço de faturamento"
+              onChange={(e) => setForm((x) => ({ ...x, delivery_address: e.target.value }))}
+            />
+          </label>
           <label className="block text-sm font-semibold text-[#24374c]">
             Entrega agendada
             <select
