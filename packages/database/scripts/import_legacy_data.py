@@ -126,6 +126,16 @@ def main():
             raise RuntimeError(f'{table}: required columns unavailable in source: {required}')
         orig=source.execute('SELECT COUNT(*) FROM '+identifier(table)).fetchone()[0]
         existing=cur.execute('SELECT COUNT_BIG(*) FROM dbo.'+identifier(table)).fetchone()[0]
+        if table == 'tenants' and existing == 1 and orig == 1:
+            source_tenant = source.execute('SELECT id, slug FROM tenants').fetchone()
+            target_tenant = cur.execute('SELECT id, slug FROM dbo.tenants').fetchone()
+            if (source_tenant['id'], source_tenant['slug']) != (target_tenant[0], target_tenant[1]):
+                raise RuntimeError(
+                    'Existing tenant does not match source id/slug; refusing to remap foreign keys.'
+                )
+            print(f'tenants: preserved existing singleton (id={target_tenant[0]}, slug={target_tenant[1]})')
+            plans.append((table, use, target_cols, 0))
+            continue
         if existing:
             raise RuntimeError(f'{table} is NOT EMPTY ({existing} rows). Refusing to overwrite.')
         plans.append((table,use,target_cols,orig))
