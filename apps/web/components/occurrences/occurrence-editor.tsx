@@ -136,10 +136,10 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
     }
   }
   return (
-    <section className="tile">
-      <h2>Ocorrências</h2>
-      <form className="editor-form" onSubmit={create}>
-        <label>
+    <section className="min-w-0 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Atendimento e suporte</p><p className="text-sm text-slate-500">Registre, acompanhe e resolva solicitações comerciais.</p></div><span className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700">{rows.length} registros</span></div>
+      <form className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 xl:grid-cols-3" onSubmit={create}>
+        <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
           Cliente
           <select
             required
@@ -157,7 +157,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
           </select>
         </label>
         {admin && (
-          <label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
             Representante
             <select
               required
@@ -173,7 +173,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
             </select>
           </label>
         )}
-        <label>
+        <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
           Motivo
           <input
             required
@@ -181,7 +181,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
             onChange={(e) => setForm((v) => ({ ...v, reason: e.target.value }))}
           />
         </label>
-        <label className="wide">
+        <label className="grid gap-1.5 text-xs font-semibold text-slate-600 sm:col-span-2 xl:col-span-3">
           Descrição
           <textarea
             required
@@ -190,7 +190,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
             onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))}
           />
         </label>
-        <label>
+        <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
           Anexos (até 25 MB no total)
           <input
             type="file"
@@ -198,7 +198,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
             onChange={(e) => setFiles(Array.from(e.target.files || []))}
           />
         </label>
-        <button type="submit" className="primary" disabled={busy}>
+        <button type="submit" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={busy}>
           {busy ? "Enviando…" : "Registrar ocorrência"}
         </button>
       </form>
@@ -208,7 +208,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
-      <div className="table-wrap">
+      <div className="table-wrap rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
         <table>
           <thead>
             <tr>
@@ -224,10 +224,10 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
             {rows.map((o) => (
               <tr key={o.id}>
                 <td>{o.id}</td>
-                <td>{o.customer_name || o.customer_id || "—"}</td>
+                <td className="font-semibold text-slate-800">{o.customer_name || o.customer_id || "—"}</td>
                 <td>{o.reason || "—"}</td>
-                <td>{o.status || "—"}</td>
-                <td>{o.created_at || "—"}</td>
+                <td><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${o.status === "solucionada" ? "bg-emerald-50 text-emerald-700" : o.status === "em_analise" ? "bg-amber-50 text-amber-700" : o.status === "recusada" ? "bg-rose-50 text-rose-700" : "bg-sky-50 text-sky-700"}`}>{statuses.find(s => s[0] === o.status)?.[1] || o.status || "—"}</span></td>
+                <td>{o.created_at && !Number.isNaN(new Date(o.created_at).getTime()) ? new Date(o.created_at).toLocaleDateString("pt-BR") : "—"}</td>
                 <td>
                   {admin && (
                     <button
@@ -256,7 +256,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
       {editing !== null && admin && (
         <section className="tile">
           <h3>Atualizar ocorrência #{editing}</h3>
-          <label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
             Status
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
               {statuses.map(([key, name]) => (
