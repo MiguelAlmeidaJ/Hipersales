@@ -1,9 +1,8 @@
 import Constants from "expo-constants";
-import { Image, ImageBackground } from "expo-image";
 import { Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
@@ -43,7 +42,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <ImageBackground source={require("../../assets/images/login.jpeg")} style={styles.background} contentFit="cover">
+    <ImageBackground source={require("../../assets/images/login.jpeg")} style={styles.background} resizeMode="cover">
       <StatusBar style="light" />
       <View style={styles.overlay} />
       <SafeAreaView style={styles.safeArea}>
@@ -55,7 +54,7 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <View style={styles.card}>
-              <Image source={require("../../assets/images/hipersales-logo.png")} style={styles.logo} contentFit="contain" />
+              <Image source={require("../../assets/images/hipersales-logo.png")} style={styles.logo} resizeMode="contain" />
               <Text style={styles.eyebrow}>HIPERMIX REPRESENTAÇÕES</Text>
               <Text style={styles.title}>Bem-vindo</Text>
               <Text style={styles.subtitle}>Gerencie sua operação comercial de onde estiver.</Text>

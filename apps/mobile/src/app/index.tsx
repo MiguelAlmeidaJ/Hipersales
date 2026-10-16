@@ -1,10 +1,9 @@
 import Constants from "expo-constants";
-import { Image } from "expo-image";
 import { Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
@@ -20,7 +19,7 @@ export default function IndexScreen() {
     return (
       <View style={styles.loading}>
         <StatusBar style="light" />
-        <Image source={require("../../assets/images/brand-mark.png")} style={styles.brandMark} contentFit="contain" />
+        <Image source={require("../../assets/images/brand-mark.png")} style={styles.brandMark} resizeMode="contain" />
         <Text style={styles.brandName}>HiperSales</Text>
         <Text style={styles.tagline}>Gestão comercial na palma da mão</Text>
         <ActivityIndicator color="#FFFFFF" size="small" style={styles.spinner} />

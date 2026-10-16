@@ -57,7 +57,8 @@ export default function OrdersScreen() {
   const [error, setError] = useState("");
 
   const load = useCallback(async (refresh = false) => {
-    refresh ? setRefreshing(true) : setLoading(true);
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
     setError("");
     try {
       const response = await api<{ proposals: Proposal[] }>("/api/proposals");

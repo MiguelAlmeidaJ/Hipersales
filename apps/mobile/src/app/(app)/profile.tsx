@@ -22,7 +22,7 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <View style={styles.avatar}><Text style={styles.avatarText}>{user?.name.slice(0, 1).toUpperCase()}</Text></View>
         <Text style={styles.name}>{user?.name}</Text>
-        <Text style={styles.role}>{user?.role === "dev" ? "Desenvolvedor" : user?.role === "admin" ? "Administrador" : "Vendedor"}</Text>
+        <Text style={styles.role}>{user?.role === "dev" ? "Desenvolvedor" : user?.role === "admin" ? "Administrador" : "Representante comercial"}</Text>
         <View style={styles.divider} />
         <Text style={styles.label}>E-mail / usuário</Text><Text style={styles.value}>{user?.email}</Text>
         <Text style={styles.label}>Empresa</Text><Text style={styles.value}>{user?.tenant_name || "HiperMix"}</Text>

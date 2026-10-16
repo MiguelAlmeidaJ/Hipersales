@@ -21,7 +21,8 @@ export default function CustomersScreen() {
   const [error, setError] = useState("");
 
   const load = useCallback(async (refresh = false) => {
-    refresh ? setRefreshing(true) : setLoading(true);
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
     setError("");
     try {
       const response = await api<{ customers: Customer[] }>("/api/customers");

@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
-import { router } from "expo-router";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { router, type Href } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { AppIcon, type AppIconName } from "@/components/app-icon";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { api } from "@/lib/api";
+import { webModuleUrl } from "@/lib/web-portal";
 
-type DashboardData = {
-  summary?: Record<string, number>;
-  status_counts?: Record<string, number>;
-};
+type DashboardData = { summary?: Record<string, number> };
+type NativeRoute = "/new-order" | "/new-customer" | "/(app)/orders" | "/(app)/customers" | "/(app)/modules";
+type Action = { title: string; subtitle: string; icon: AppIconName; color: string; background: string; route?: NativeRoute; webSlug?: string };
 
 const labels: Record<string, string> = {
   orders: "Pedidos",
@@ -21,6 +22,15 @@ const labels: Record<string, string> = {
   pending_requests: "Pendências",
 };
 
+const sellerActions: Action[] = [
+  { title: "Nova proposta", subtitle: "Criar pedido", icon: "add-circle-outline", color: colors.brand, background: "#E8F3FB", route: "/new-order" },
+  { title: "Solicitar cliente", subtitle: "Novo cadastro", icon: "person-add-outline", color: "#7A5AF8", background: "#F0ECFF", route: "/new-customer" },
+  { title: "Meus clientes", subtitle: "Minha carteira", icon: "people-outline", color: colors.success, background: "#E7F7F0", route: "/(app)/customers" },
+  { title: "Meus pedidos", subtitle: "Acompanhar", icon: "receipt-outline", color: "#B54708", background: "#FFF1E5", route: "/(app)/orders" },
+  { title: "Ocorrência", subtitle: "Registrar situação", icon: "alert-circle-outline", color: colors.danger, background: "#FDEBEC", webSlug: "ocorrencias" },
+  { title: "Minhas metas", subtitle: "Ver objetivos", icon: "flag-outline", color: "#4C7E27", background: "#EDF7E7", webSlug: "metas" },
+];
+
 function formatValue(key: string, value: number) {
   if (key === "revenue" || key === "total") {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
@@ -28,69 +38,107 @@ function formatValue(key: string, value: number) {
   return new Intl.NumberFormat("pt-BR").format(value);
 }
 
-export default function DashboardScreen() {
+const fetchAdminDashboard = () => api<DashboardData>("/api/admin/executive-dashboard");
+
+async function openAction(action: Action) {
+  if (action.route) {
+    router.push(action.route as Href);
+    return;
+  }
+  try {
+    await Linking.openURL(webModuleUrl(action.webSlug ?? ""));
+  } catch {
+    Alert.alert("Não foi possível abrir", "Confira sua conexão e tente novamente.");
+  }
+}
+
+export default function HomeScreen() {
   const { user } = useSession();
+  const isAdmin = user?.role === "admin" || user?.role === "dev";
+  return isAdmin ? <AdminHome firstName={user?.name.split(" ")[0] || "administrador"} /> : <SellerHome firstName={user?.name.split(" ")[0] || "representante"} />;
+}
+
+function SellerHome({ firstName }: { firstName: string }) {
+  return (
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <ScreenHeader eyebrow="Seu espaço de trabalho" title={`Olá, ${firstName}!`} subtitle="O que você precisa fazer hoje?" />
+      <View style={styles.sellerHero}>
+        <View style={styles.sellerHeroIcon}><AppIcon name="briefcase-outline" color="#FFFFFF" size={28} /></View>
+        <View style={styles.sellerHeroCopy}>
+          <Text style={styles.sellerHeroTitle}>Sua rotina comercial</Text>
+          <Text style={styles.sellerHeroText}>Crie propostas, cuide da carteira e acompanhe seus resultados.</Text>
+        </View>
+      </View>
+      <Text style={styles.actionHeading}>Ações rápidas</Text>
+      <View style={styles.actionGrid}>
+        {sellerActions.map((action) => (
+          <Pressable key={action.title} accessibilityRole="button" onPress={() => void openAction(action)} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
+            <View style={[styles.actionIcon, { backgroundColor: action.background }]}><AppIcon name={action.icon} color={action.color} size={25} /></View>
+            <Text style={styles.actionTitle}>{action.title}</Text>
+            <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+function AdminHome({ firstName }: { firstName: string }) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    setError("");
+  useEffect(() => {
+    let active = true;
+    fetchAdminDashboard()
+      .then((response) => { if (active) { setData(response); setError(""); } })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Falha ao carregar o painel."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  async function refresh() {
+    setLoading(true);
     try {
-      const response = await api<DashboardData>(user?.role === "admin" || user?.role === "dev" ? "/api/admin/executive-dashboard" : "/api/dashboard");
+      const response = await fetchAdminDashboard();
       setData(response);
+      setError("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao carregar o painel.");
     } finally {
       setLoading(false);
     }
-  }, [user?.role]);
-
-  useEffect(() => { void load(); }, [load]);
+  }
 
   const metrics = Object.entries(data?.summary ?? {}).filter(([key]) => labels[key]).slice(0, 4);
-  const firstName = user?.name.split(" ")[0] || "usuário";
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={load} colors={[colors.brand]} tintColor={colors.brand} />}>
-      <ScreenHeader eyebrow="HiperSales" title={`Olá, ${firstName}`} subtitle="Aqui está o resumo da sua operação comercial." />
-
-      <View style={styles.hero}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void refresh()} colors={[colors.brand]} tintColor={colors.brand} />}>
+      <ScreenHeader eyebrow="Administração" title={`Olá, ${firstName}`} subtitle="Visão geral da operação HiperSales." />
+      <View style={styles.adminHero}>
         <View style={styles.heroAccent} />
-        <Text style={styles.heroEyebrow}>VISÃO DO DIA</Text>
+        <Text style={styles.heroEyebrow}>GESTÃO DA OPERAÇÃO</Text>
         <Text style={styles.heroTitle}>Seu negócio em movimento.</Text>
-        <Text style={styles.heroText}>Acompanhe indicadores e acesse rapidamente as rotinas mais importantes.</Text>
+        <Text style={styles.heroText}>Acompanhe indicadores e acesse todas as áreas administrativas.</Text>
       </View>
-
       <View style={styles.sectionRow}>
         <Text style={styles.sectionTitle}>Indicadores</Text>
-        <Pressable onPress={load}><Text style={styles.refresh}>Atualizar</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={() => void refresh()}><Text style={styles.refresh}>Atualizar</Text></Pressable>
       </View>
-
       {loading && !data ? <ActivityIndicator color={colors.brand} style={styles.loader} /> : null}
       {error ? <View style={styles.errorCard}><Text style={styles.errorText}>{error}</Text></View> : null}
       <View style={styles.metricGrid}>
-        {metrics.length ? metrics.map(([key, value]) => (
+        {metrics.map(([key, value]) => (
           <View key={key} style={styles.metricCard}>
             <Text style={styles.metricLabel}>{labels[key]}</Text>
             <Text style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>{formatValue(key, value)}</Text>
           </View>
-        )) : !loading && !error ? <Text style={styles.empty}>Nenhum indicador disponível.</Text> : null}
+        ))}
       </View>
-
-      <Text style={[styles.sectionTitle, styles.accessTitle]}>Acesso rápido</Text>
-      <Pressable accessibilityRole="button" onPress={() => router.push("/(app)/orders")} style={styles.quickCard}>
-        <View style={styles.quickIcon}><Text style={styles.quickIconText}>＋</Text></View>
-        <View style={styles.quickCopy}><Text style={styles.quickTitle}>Pedidos e propostas</Text><Text style={styles.quickText}>Consulte valores, itens e histórico.</Text></View>
-        <Text style={styles.chevron}>›</Text>
-      </Pressable>
-      <Pressable accessibilityRole="button" onPress={() => router.push("/(app)/customers")} style={styles.quickCard}>
-        <View style={[styles.quickIcon, styles.quickIconGreen]}><Text style={[styles.quickIconText, styles.quickIconTextGreen]}>●</Text></View>
-        <View style={styles.quickCopy}><Text style={styles.quickTitle}>Consultar cliente</Text><Text style={styles.quickText}>Encontre dados da sua carteira.</Text></View>
-        <Text style={styles.chevron}>›</Text>
+      <Pressable accessibilityRole="button" onPress={() => router.push("/(app)/modules" as Href)} style={({ pressed }) => [styles.modulesCta, pressed && styles.pressed]}>
+        <View style={styles.modulesIcon}><AppIcon name="grid" color="#FFFFFF" size={24} /></View>
+        <View style={styles.modulesCopy}><Text style={styles.modulesTitle}>Todos os módulos</Text><Text style={styles.modulesText}>Usuários, catálogo, ocorrências, metas, relatórios e configurações.</Text></View>
+        <AppIcon name="chevron-forward" color="#9FD2F2" size={20} />
       </Pressable>
     </ScrollView>
   );
@@ -99,7 +147,19 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.canvas },
   content: { paddingBottom: 28 },
-  hero: { margin: 20, padding: 22, borderRadius: 22, overflow: "hidden", backgroundColor: colors.brandDark },
+  sellerHero: { flexDirection: "row", alignItems: "center", margin: 20, padding: 18, borderRadius: 22, backgroundColor: colors.brandDark },
+  sellerHeroIcon: { width: 52, height: 52, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.14)" },
+  sellerHeroCopy: { flex: 1, marginLeft: 14 },
+  sellerHeroTitle: { color: "#FFFFFF", fontSize: 17, fontWeight: "900" },
+  sellerHeroText: { color: "#D7E8F7", fontSize: 12, lineHeight: 18, marginTop: 4 },
+  actionHeading: { color: colors.ink, fontSize: 18, fontWeight: "900", marginHorizontal: 20, marginBottom: 12 },
+  actionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, paddingHorizontal: 20 },
+  actionCard: { width: "48%", flexGrow: 1, minHeight: 142, padding: 16, borderRadius: 19, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  actionIcon: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  actionTitle: { color: colors.ink, fontSize: 14, fontWeight: "900" },
+  actionSubtitle: { color: colors.muted, fontSize: 11, marginTop: 4 },
+  pressed: { opacity: 0.72, transform: [{ scale: 0.985 }] },
+  adminHero: { margin: 20, padding: 22, borderRadius: 22, overflow: "hidden", backgroundColor: colors.brandDark },
   heroAccent: { position: "absolute", width: 140, height: 140, borderRadius: 70, backgroundColor: colors.brand, opacity: 0.5, right: -35, top: -55 },
   heroEyebrow: { color: "#9FD2F2", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 },
   heroTitle: { color: "#FFFFFF", fontSize: 23, fontWeight: "900", marginTop: 8 },
@@ -114,15 +174,9 @@ const styles = StyleSheet.create({
   metricCard: { width: "48%", flexGrow: 1, minHeight: 100, borderRadius: 18, padding: 16, justifyContent: "space-between", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   metricLabel: { color: colors.muted, fontSize: 12, fontWeight: "700" },
   metricValue: { color: colors.ink, fontSize: 23, fontWeight: "900", marginTop: 12 },
-  empty: { color: colors.muted, fontSize: 14, paddingVertical: 18 },
-  accessTitle: { marginHorizontal: 20, marginTop: 26, marginBottom: 12 },
-  quickCard: { flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginBottom: 10, padding: 14, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  quickIcon: { width: 44, height: 44, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#E8F3FB" },
-  quickIconGreen: { backgroundColor: "#EDF7E7" },
-  quickIconText: { color: colors.brand, fontSize: 22, fontWeight: "800" },
-  quickIconTextGreen: { color: colors.accent, fontSize: 15 },
-  quickCopy: { flex: 1, marginLeft: 13 },
-  quickTitle: { color: colors.ink, fontSize: 14, fontWeight: "800" },
-  quickText: { color: colors.muted, fontSize: 12, marginTop: 3 },
-  chevron: { color: "#94A3B8", fontSize: 28 },
+  modulesCta: { flexDirection: "row", alignItems: "center", margin: 20, padding: 16, borderRadius: 19, backgroundColor: colors.brandDark },
+  modulesIcon: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.brand },
+  modulesCopy: { flex: 1, marginHorizontal: 13 },
+  modulesTitle: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
+  modulesText: { color: "#C9DEEF", fontSize: 11, lineHeight: 16, marginTop: 4 },
 });

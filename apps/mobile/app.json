@@ -37,12 +37,28 @@
       },
       "predictiveBackGestureEnabled": true
     },
+    "androidNavigationBar": {
+      "backgroundColor": "#FFFFFF",
+      "barStyle": "dark-content",
+      "enforceContrast": false
+    },
     "web": {
       "output": "static",
       "favicon": "./assets/images/brand-mark.png"
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enableBundleCompression": true,
+            "gifEnabled": false
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {

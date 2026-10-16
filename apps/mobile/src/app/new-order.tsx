@@ -56,7 +56,6 @@ export default function NewOrderScreen() {
   useEffect(() => {
     let current = true;
     if (status !== "authenticated") return () => { current = false; };
-    setLoading(true);
     async function load() {
       try {
         const [companiesResponse, customersResponse] = await Promise.all([
@@ -82,9 +81,7 @@ export default function NewOrderScreen() {
 
   useEffect(() => {
     let current = true;
-    setProducts([]); setLines([]); setProductId("");
     if (status !== "authenticated" || !form.companyId) return () => { current = false; };
-    setProductsLoading(true);
     const path = isAdmin ? `/api/admin/products?company_id=${form.companyId}` : `/api/products?company_id=${form.companyId}`;
     api<{ products: Product[] }>(path as `/api/${string}`)
       .then((response) => { if (current) setProducts((response.products ?? []).filter((item) => active(item.active))); })
@@ -106,6 +103,13 @@ export default function NewOrderScreen() {
   if (status === "unavailable") return <Redirect href="/" />;
 
   function update<K extends keyof Form>(key: K, value: Form[K]) { setForm((current) => ({ ...current, [key]: value })); }
+  function changeCompany(value: string) {
+    update("companyId", value);
+    setProducts([]);
+    setLines([]);
+    setProductId("");
+    setProductsLoading(Boolean(value));
+  }
   function validateStep() {
     setError("");
     if (step === 0 && (!form.companyId || !form.customerId || (isAdmin && !form.sellerId))) {
@@ -162,7 +166,7 @@ export default function NewOrderScreen() {
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           {step === 0 ? <FormSection title="Responsáveis pelo pedido" subtitle="As opções respeitam as permissões e associações da sua conta.">
             {isAdmin ? <SelectField label="Representante *" value={form.sellerId} options={sellerOptions} onChange={(value) => update("sellerId", value)} searchable /> : null}
-            <SelectField label="Empresa *" value={form.companyId} options={companyOptions} onChange={(value) => update("companyId", value)} searchable />
+            <SelectField label="Empresa *" value={form.companyId} options={companyOptions} onChange={changeCompany} searchable />
             <SelectField label="Cliente *" value={form.customerId} options={customerOptions} onChange={(value) => update("customerId", value)} searchable />
             <SelectField label="Tipo de pedido" value={form.orderType} options={[{ value: "Venda de Mercadoria", label: "Venda de Mercadoria" }, { value: "Bonificação", label: "Bonificação" }]} onChange={(value) => update("orderType", value)} />
           </FormSection> : null}

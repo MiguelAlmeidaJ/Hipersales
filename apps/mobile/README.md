@@ -41,3 +41,9 @@ pnpm --filter @hipersales/mobile validate:release
 ## API versionada
 
 Configure `EXPO_PUBLIC_API_URL` com a base `https://api.hipersalesweb.com.br/api/v1`. No desenvolvimento local, por exemplo, use `http://192.168.0.10:3110/api/v1`. Para preservar configurações anteriores, o app acrescenta `/api/v1` automaticamente quando a variável contém apenas a origem do servidor.
+
+Configure também `EXPO_PUBLIC_WEB_URL` para a origem do portal. Os módulos administrativos que ainda não possuem experiência nativa abrem diretamente sua rota autenticada no web.
+
+## Tamanho do Android
+
+O perfil `preview` gera um APK universal para instalação direta e, por isso, inclui binários para diferentes aparelhos. O perfil `production` gera AAB: a Play Store entrega somente a arquitetura e os recursos necessários para cada dispositivo. Builds release também usam R8, remoção de recursos não utilizados e compressão do bundle JavaScript.

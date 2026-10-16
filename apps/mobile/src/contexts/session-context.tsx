@@ -52,8 +52,10 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     let active = true;
-    restore().catch(() => { if (active) setStatus("unavailable"); });
-    return () => { active = false; };
+    const timer = setTimeout(() => {
+      restore().catch(() => { if (active) setStatus("unavailable"); });
+    }, 0);
+    return () => { active = false; clearTimeout(timer); };
   }, [restore]);
 
   useEffect(() => {
