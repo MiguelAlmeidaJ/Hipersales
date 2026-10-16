@@ -18,10 +18,12 @@ import { RolesGuard } from "./common/guards/roles.guard.js";
 import { SessionGuard } from "./common/guards/session.guard.js";
 import { DatabaseModule } from "./database/database.module.js";
 import { HealthController } from "./health/health.controller.js";
+import { NotificationsModule } from "./notifications/notifications.module.js";
 
 @Module({
   imports: [
     DatabaseModule,
+    NotificationsModule,
     ThrottlerModule.forRoot([{ name: "default", ttl: 60_000, limit: 120 }]),
     AuthModule,
     CatalogModule,

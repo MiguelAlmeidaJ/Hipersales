@@ -4,7 +4,7 @@ Revisado em 14/10/2026. Este documento é operacional, não substitui revisão j
 
 ## Estado técnico
 
-- [x] Identificadores fixos: `br.com.hipermix.hipersales` em Android e iOS.
+- [x] Identificadores fixos: `br.com.hipersales` em Android e iOS.
 - [x] Expo SDK 57, que compila e aponta para Android API 36.
 - [x] Versões nativas iniciais (`versionCode: 1` e `buildNumber: 1`).
 - [x] Produção em Android App Bundle (`.aab`) via EAS.

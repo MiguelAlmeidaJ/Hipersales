@@ -5,6 +5,7 @@ import { DatabaseRepository } from "../database/database.repository.js";
 
 type Row = Record<string, unknown>;
 type Line = { label: string; value: unknown };
+const SOLD_STATUSES_SQL = "'pedido_aprovado','em_producao','faturado','entregue'";
 
 function money(value: unknown): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value || 0));
@@ -108,6 +109,7 @@ export class DocumentsService {
         if (document.y > 700) document.addPage();
         document.fillColor("#0D6FD8").fontSize(12).text(section.title).moveDown(0.25);
         for (const line of section.lines) {
+          if (document.y > 735) document.addPage();
           document.fillColor("#617287").fontSize(8).text(line.label.toUpperCase(), { continued: true });
           document.fillColor("#102035").fontSize(10).text(`  ${String(line.value ?? "-")}`).moveDown(0.2);
         }
@@ -270,18 +272,66 @@ export class DocumentsService {
     const customer = await this.database.db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=?")
       .get(customerId, user.tenant_id) as Row | undefined;
     if (!customer) throw new NotFoundException("Cliente nao encontrado.");
-    const rows = await this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,co.name company_name,
+    const rows = await this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,p.payment_terms,co.name company_name,
       COALESCE(SUM(pi.quantity*pi.negotiated_price),0) total FROM proposals p JOIN companies co ON co.id=p.company_id
       LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE p.customer_id=? AND p.tenant_id=?
-      GROUP BY p.order_number,p.status,p.created_at,co.name ORDER BY p.created_at DESC`).all(customerId, user.tenant_id) as Row[];
-    const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
-    const buffer = await this.pdf(`Desempenho - ${customer.legal_name}`, `Gerado em ${safeDate(new Date().toISOString())}`, [
+      GROUP BY p.order_number,p.status,p.created_at,p.payment_terms,co.name ORDER BY p.created_at DESC`).all(customerId, user.tenant_id) as Row[];
+    const soldStatuses=new Set(["pedido_aprovado","em_producao","faturado","entregue"]);
+    const sold=rows.filter(row=>soldStatuses.has(String(row.status)));
+    const total = sold.reduce((sum, row) => sum + Number(row.total || 0), 0);
+    const dates=sold.map(row=>new Date(String(row.created_at))).filter(date=>!Number.isNaN(date.valueOf())).sort((a,b)=>a.valueOf()-b.valueOf());
+    const intervals=dates.slice(1).map((date,index)=>(date.valueOf()-dates[index]!.valueOf())/86_400_000);
+    const termAverages=sold.map(row=>String(row.payment_terms||"").match(/\d{1,3}/g)?.map(Number).filter(day=>day<=365)??[])
+      .filter(days=>days.length).map(days=>days.reduce((sum,day)=>sum+day,0)/days.length);
+    const averagePayment=termAverages.length?termAverages.reduce((sum,days)=>sum+days,0)/termAverages.length:0;
+    const products=await this.database.db.prepare(`SELECT TOP (10) pr.code,pr.name,
+      SUM(pi.quantity) quantity,SUM(pi.quantity*pi.negotiated_price) revenue
+      FROM proposals p JOIN proposal_items pi ON pi.proposal_id=p.id JOIN products pr ON pr.id=pi.product_id
+      WHERE p.customer_id=? AND p.tenant_id=? AND p.status IN (${SOLD_STATUSES_SQL})
+      GROUP BY pr.code,pr.name ORDER BY revenue DESC`).all(customerId,user.tenant_id) as Row[];
+    const companies=await this.database.db.prepare(`SELECT co.name,COUNT_BIG(*) order_count,
+      COALESCE(SUM(pi.total),0) revenue FROM proposals p JOIN companies co ON co.id=p.company_id
+      LEFT JOIN (SELECT proposal_id,SUM(quantity*negotiated_price) total FROM proposal_items GROUP BY proposal_id) pi ON pi.proposal_id=p.id
+      WHERE p.customer_id=? AND p.tenant_id=? AND p.status IN (${SOLD_STATUSES_SQL})
+      GROUP BY co.name ORDER BY revenue DESC`).all(customerId,user.tenant_id) as Row[];
+    const statuses=new Map<string,number>();for(const row of rows)statuses.set(String(row.status),1+(statuses.get(String(row.status))||0));
+    const labels:Record<string,string>={em_analise:"Em analise",pedido_aprovado:"Aprovado",em_producao:"Em producao",faturado:"Faturado",entregue:"Entregue",recusado:"Recusado"};
+    const buffer = await this.pdf(`Analise do cliente - ${customer.legal_name}`, `Check-up comercial gerado em ${safeDate(new Date().toISOString())}`, [
       { title: "Cliente", lines: [{ label: "Razao social", value: customer.legal_name }, { label: "CNPJ", value: customer.cnpj },
-        { label: "Pedidos", value: rows.length }, { label: "Faturamento", value: money(total) }] },
-      { title: "Historico", lines: rows.map((row) => ({ label: `#${row.order_number} - ${row.company_name}`,
+        { label:"Status cadastral",value:customer.status|| (customer.active?"Ativo":"Inativo") },
+        { label: "Pedidos realizados", value: rows.length },{label:"Pedidos validos",value:sold.length}, { label: "Faturamento acumulado", value: money(total) },
+        {label:"Ticket medio",value:money(sold.length?total/sold.length:0)},{label:"Primeira compra",value:dates.length?dateOnly(dates[0]):"-"},
+        {label:"Ultima compra",value:dates.length?dateOnly(dates.at(-1)):"-"},{label:"Intervalo medio entre compras",value:intervals.length?`${Math.round(intervals.reduce((a,b)=>a+b,0)/intervals.length)} dias`:"-"},
+        {label:"Prazo medio de pagamento",value:averagePayment?`${Math.round(averagePayment)} dias`:"Nao identificado"}] },
+      {title:"Situacao dos pedidos",lines:[...statuses].map(([status,count])=>({label:labels[status]||status,value:count}))},
+      {title:"Produtos mais comprados",lines:products.length?products.map(row=>({label:`${row.code} - ${row.name}`,value:`${Number(row.quantity||0).toLocaleString("pt-BR")} unidades | ${money(row.revenue)}`})):[{label:"Historico",value:"Sem produtos vendidos"}]},
+      {title:"Compras por industria",lines:companies.length?companies.map(row=>({label:String(row.name),value:`${row.order_count} pedidos | ${money(row.revenue)}`})):[{label:"Historico",value:"Sem compras aprovadas"}]},
+      { title: "Ultimos pedidos", lines: rows.slice(0,20).map((row) => ({ label: `#${row.order_number} - ${row.company_name}`,
         value: `${safeDate(row.created_at)} | ${row.status} | ${money(row.total)}` })) },
     ]);
     return { buffer, name: String(customer.legal_name || `cliente-${customerId}`) };
+  }
+
+  async customerRegistration(user:PublicUser,customerId:number):Promise<{buffer:Buffer;name:string}> {
+    const customer=await this.database.db.prepare("SELECT * FROM customers WHERE id=? AND tenant_id=?")
+      .get(customerId,user.tenant_id) as Row|undefined;
+    if(!customer) throw new NotFoundException("Cliente nao encontrado.");
+    const payload=object(customer.form_payload);
+    const raw=(...keys:string[])=>payloadField(payload,...keys);
+    const field=(...keys:string[])=>raw(...keys)||"-";
+    const sellers=await this.database.db.prepare(`SELECT u.name,u.email,u.communication_email FROM customer_sellers cs
+      JOIN users u ON u.id=cs.seller_id WHERE cs.customer_id=? AND u.tenant_id=? ORDER BY u.name`)
+      .all(customerId,user.tenant_id) as Row[];
+    const buffer=await this.pdf(`Ficha cadastral - ${customer.legal_name}`,`Cliente #${customer.id} | Emitida em ${safeDate(new Date().toISOString())}`,[
+      {title:"Identificacao",lines:[{label:"Status",value:customer.status|| (customer.active?"Ativo":"Inativo")},{label:"Razao social",value:customer.legal_name},{label:"Nome fantasia",value:customer.trade_name},{label:"CNPJ",value:customer.cnpj},{label:"Inscricao estadual",value:customer.state_registration},{label:"Inscricao municipal",value:field("municipal_registration")},{label:"Regime fiscal",value:field("tax_regime")},{label:"Ramo de atividade",value:field("business_sector")},{label:"Rede",value:field("network")},{label:"Grupo economico",value:field("economic_group")},{label:"Beneficio fiscal",value:field("tax_benefit")},{label:"Qual beneficio",value:field("tax_benefit_description")}]},
+      {title:"Endereco e atendimento",lines:[{label:"Logradouro",value:raw("address","street")||customer.address||"-"},{label:"Numero",value:field("address_number","number")},{label:"Complemento",value:field("complement")},{label:"Bairro",value:field("neighborhood")},{label:"Cidade",value:field("city")},{label:"UF",value:field("state")},{label:"CEP",value:field("zip_code")},{label:"Regiao de atendimento",value:field("service_region")},{label:"Endereco de entrega",value:field("delivery_address")},{label:"Advertencias de recebimento",value:field("delivery_warnings")}]},
+      {title:"Compras",lines:[{label:"Responsavel",value:field("buyer_contact","contact_person")},{label:"Telefone 1",value:field("buyer_phone_1","phone_1")},{label:"Telefone 2",value:field("buyer_phone_2","phone_2")},{label:"E-mail",value:field("buyer_email","purchase_email")}]},
+      {title:"Financeiro",lines:[{label:"Responsavel",value:field("finance_contact")},{label:"Telefone 1",value:field("finance_phone_1")},{label:"Telefone 2",value:field("finance_phone_2")},{label:"E-mail",value:field("finance_email","billing_email")}]},
+      {title:"Logistica",lines:[{label:"Responsavel",value:field("logistics_contact")},{label:"Telefone",value:field("logistics_phone")},{label:"Telefone agendamento",value:field("scheduling_phone")},{label:"E-mail XML",value:field("xml_email")}]},
+      {title:"Observacoes",lines:[{label:"Informacoes adicionais",value:field("additional_notes","notes")}]},
+      {title:"Representantes vinculados",lines:sellers.length?sellers.map(seller=>({label:String(seller.name),value:first(seller.communication_email,seller.email)})):[{label:"Representantes",value:"Nenhum representante vinculado"}]},
+    ]);
+    return {buffer,name:String(customer.legal_name||`cliente-${customerId}`)};
   }
 
   async report(user: PublicUser, query: Record<string, string | undefined>): Promise<Buffer> {

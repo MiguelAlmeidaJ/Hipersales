@@ -4,6 +4,7 @@ import { DatabaseRepository } from "../database/database.repository.js";
 import { CnpjLookupService } from "./cnpj-lookup.service.js";
 import { customerAddress, customerText } from "./customer-fields.js";
 import { cnpjDigits, isValidCnpj } from "./cnpj-validation.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 export type RegistrationInput = Record<string, unknown> & {
   legal_name?: string;
@@ -17,6 +18,7 @@ export class RegistrationSubmissionService {
   constructor(
     private readonly database: DatabaseRepository,
     private readonly lookup: CnpjLookupService,
+    private readonly appNotifications: NotificationsService,
   ) {}
 
   async submit(user: PublicUser, input: RegistrationInput) {
@@ -93,6 +95,11 @@ export class RegistrationSubmissionService {
         "vendas@hipermixrepresentacoes.com.br,thallesmachadocomercial@gmail.com",
         `SOLICITACAO DE CADASTRO ${name}`, body, new Date().toISOString(),
       );
+      await this.appNotifications.notifyAdmins(user.tenant_id,{
+        kind:"customer_request",title:"Novo cliente solicitado",
+        body:`${name} foi enviado por ${user.name} para analise.`,route:"/approvals",
+        data:{requestId:Number(result.lastInsertRowid)},
+      });
       return { id: Number(result.lastInsertRowid), message: "Solicitacao enviada para o back office." };
     });
   }

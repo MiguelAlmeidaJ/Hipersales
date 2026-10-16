@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/com
 import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { ProposalNotificationService } from "./proposal-notification.service.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 type Item = {product_id:number;quantity:number;negotiated_price:number};
 type Input = {company_id:number;customer_id:number;seller_id?:number;order_type:string;purchase_order?:string;commission_percent?:unknown;invoice_type?:string;tax_operator_invoice?:boolean;freight_type:string;delivery_type:string;scheduled_delivery_date?:string;discount_percent?:unknown;discount_on?:string;payment_terms?:string;notes?:string;items:Item[]};
@@ -24,7 +25,8 @@ function discountOn(value:string|undefined) {
 }
 @Injectable()
 export class ProposalCreationService {
-  constructor(private readonly database:DatabaseRepository, private readonly notifications:ProposalNotificationService){}
+  constructor(private readonly database:DatabaseRepository, private readonly notifications:ProposalNotificationService,
+    private readonly appNotifications:NotificationsService){}
 
   create(user:PublicUser,data:Input) {
     if(!["dev","admin","seller"].includes(user.role)) throw new ForbiddenException("Envio de proposta indisponivel para este usuario.");
@@ -84,6 +86,11 @@ export class ProposalCreationService {
       if(hasAdminAccess(user.role) && !await db.prepare("SELECT 1 FROM customer_sellers WHERE customer_id=? AND seller_id=?").get(customerId,sellerId))
         await db.prepare("INSERT INTO customer_sellers (customer_id,seller_id) VALUES (?,?)").run(customerId,sellerId);
       await this.notifications.queueNewProposal(user.tenant_id,proposalId);
+      await this.appNotifications.notifyAdmins(user.tenant_id,{
+        kind:"proposal_created",title:"Nova proposta para analisar",
+        body:`Pedido #${orderNumber} foi enviado e aguarda analise.`,route:"/(app)/orders",
+        data:{proposalId,orderNumber},
+      },hasAdminAccess(user.role)?user.id:undefined);
       return {id:proposalId,order_number:orderNumber,status:"em_analise",company_id:companyId,
         customer_id:customerId,message:hasAdminAccess(user.role)?"Pedido criado pela gestao.":"Proposta enviada para analise."};
     });

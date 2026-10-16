@@ -18,6 +18,8 @@ function enrich(row: CustomerRow): CustomerRow {
     address: customerText(row.address, customerAddress(payload)),
     phone: customerText(row.phone, customerField(payload, "phone", "buyer_phone_1", "finance_phone_1", "logistics_phone_1", "representative_phone")),
     email: customerText(row.email, customerField(payload, "email", "buyer_email", "billing_email", "xml_email", "representative_email")),
+    status: customerText(row.status, row.active ? "ativo" : "inativo"),
+    seller_ids: String(row.seller_ids ?? "").split(",").map(Number).filter(id=>Number.isSafeInteger(id)&&id>0),
   };
 }
 
@@ -56,6 +58,8 @@ export class CustomersService {
       (SELECT COUNT(*) FROM customer_sellers cs WHERE cs.customer_id=c.id) AS seller_count,
       (SELECT STRING_AGG(u.name,', ') FROM customer_sellers cs JOIN users u ON u.id=cs.seller_id
        WHERE cs.customer_id=c.id) AS seller_names
+      ,(SELECT STRING_AGG(CONVERT(NVARCHAR(20),u.id),',') FROM customer_sellers cs JOIN users u ON u.id=cs.seller_id
+       WHERE cs.customer_id=c.id) AS seller_ids
       FROM customers c WHERE c.tenant_id=? AND (? IS NULL OR c.active=?)
       AND (?='' OR c.legal_name LIKE ? OR c.trade_name LIKE ? OR c.cnpj LIKE ? OR c.phone LIKE ?)
       ORDER BY c.legal_name`).all(user.tenant_id,filter,filter,term.trim(),like,like,like,like);

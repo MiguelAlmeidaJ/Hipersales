@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import type { PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { ProposalStatusNotificationsService } from "./proposal-status-notifications.service.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 type Data = Record<string, unknown>;
 const labels: Record<string,string> = {
@@ -49,7 +50,8 @@ export function normalizeProposalStatus(status:unknown,previous:string) {
  */
 @Injectable()
 export class ProposalUpdateService {
-  constructor(private readonly database:DatabaseRepository, private readonly notifications:ProposalStatusNotificationsService) {}
+  constructor(private readonly database:DatabaseRepository, private readonly notifications:ProposalStatusNotificationsService,
+    private readonly appNotifications:NotificationsService) {}
   update(user:PublicUser,id:number,data:Data) {
     if(!Number.isSafeInteger(id)||id<1||!data||typeof data!=="object"||Array.isArray(data))
       throw new BadRequestException("Pedido invalido.");
@@ -103,6 +105,11 @@ export class ProposalUpdateService {
         await db.prepare("INSERT INTO proposal_events (proposal_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?)")
           .run(id,status,labels[status],String(data.admin_notes||""),user.id,new Date().toISOString());
         await this.notifications.queue(user.tenant_id,id,status);
+        await this.appNotifications.notifyUser(user.tenant_id,Number(previous.seller_id),{
+          kind:"proposal_status",title:labels[status] ?? "Pedido atualizado",
+          body:`O pedido #${String(previous.order_number || id)} mudou de status.`,route:"/(app)/orders",
+          data:{proposalId:id,status},
+        });
       }
       return {message:status!==oldStatus?"Status atualizado.":"Pedido atualizado."};
     });

@@ -26,6 +26,13 @@ export class DocumentsController {
   }
 
   @Roles("admin")
+  @Get("admin/customers/:id/registration/pdf")
+  async customerRegistration(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,@Res() response:Response) {
+    const result=await this.documents.customerRegistration(request.user,id);
+    send(response,`ficha-cadastral-${result.name}.pdf`,result.buffer);
+  }
+
+  @Roles("admin")
   @Get("admin/customers/:id/performance/pdf")
   async customer(@Req() request: AuthenticatedRequest, @Param("id", ParseIntPipe) id: number, @Res() response: Response) {
     const result = await this.documents.customerPerformance(request.user, id);

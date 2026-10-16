@@ -7,6 +7,14 @@ import { bindParameters, prepareSelect } from "./query-parameters.js";
 type Row = Record<string, unknown>;
 type QueryClient = PrismaService | Prisma.TransactionClient;
 export type ClaimedOutboxRow = { id: number; tenant_id: number; recipients: string; subject: string; body: string };
+export type ClaimedPushNotification = {
+  id: number;
+  user_id: number;
+  title: string;
+  body: string;
+  route: string | null;
+  data: string | null;
+};
 
 export type RunResult = { changes: number; lastInsertRowid: number };
 
@@ -72,6 +80,7 @@ export class DatabaseRepository {
       "tenants", "users", "companies", "customers", "products", "registration_requests",
       "proposals", "proposal_items", "email_outbox", "proposal_events", "occurrences",
       "occurrence_attachments", "occurrence_events", "seller_goals",
+      "push_tokens", "notifications",
     ]);
     const identityInsert = insert && identityTables.has(insert[1]!.toLowerCase());
     if (identityInsert && !/\bOUTPUT\s+INSERTED\./i.test(command)) {
@@ -111,5 +120,20 @@ export class DatabaseRepository {
       SET attempts=COALESCE(attempts,0)+1,
           claimed_until=DATEADD(minute,5,SYSUTCDATETIME()), error=NULL
       OUTPUT INSERTED.id,INSERTED.tenant_id,INSERTED.recipients,INSERTED.subject,INSERTED.body;`);
+  }
+
+  async claimPushNotifications(limit = 20): Promise<ClaimedPushNotification[]> {
+    const safeLimit = Math.max(1, Math.min(100, Math.trunc(limit)));
+    return this.client.$queryRawUnsafe<ClaimedPushNotification[]>(`;WITH next_notifications AS (
+      SELECT TOP (${safeLimit}) id,user_id,title,body,route,data,push_attempts,push_claimed_until,push_error
+      FROM dbo.notifications WITH (UPDLOCK, READPAST, ROWLOCK)
+      WHERE push_sent_at IS NULL AND COALESCE(push_attempts,0) < 5
+        AND (push_claimed_until IS NULL OR push_claimed_until < SYSUTCDATETIME())
+      ORDER BY id
+    )
+    UPDATE next_notifications
+      SET push_attempts=COALESCE(push_attempts,0)+1,
+          push_claimed_until=DATEADD(minute,5,SYSUTCDATETIME()), push_error=NULL
+      OUTPUT INSERTED.id,INSERTED.user_id,INSERTED.title,INSERTED.body,INSERTED.route,INSERTED.data;`);
   }
 }

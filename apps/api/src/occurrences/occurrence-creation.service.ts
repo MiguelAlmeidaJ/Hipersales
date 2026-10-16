@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 type Data = Record<string,unknown>;
 export function decodeOccurrenceAttachments(value:unknown) {
@@ -24,7 +25,7 @@ export function decodeOccurrenceAttachments(value:unknown) {
 }
 @Injectable()
 export class OccurrenceCreationService {
-  constructor(private readonly database:DatabaseRepository){}
+  constructor(private readonly database:DatabaseRepository,private readonly appNotifications:NotificationsService){}
   create(user:PublicUser,input:Data) {
     if(!["seller","admin","dev"].includes(user.role)) throw new ForbiddenException("Permissao negada.");
     const customerId=Number(input.customer_id),sellerId=Number(input.seller_id||user.id);
@@ -67,6 +68,11 @@ export class OccurrenceCreationService {
  "Motivo: "+reason,"","Relato:",description,"",
  "Anexos: "+(attachments.length?attachments.map(a=>a.filename).join(", "):"Sem anexos."),
  ].join("\n"),now);
+      await this.appNotifications.notifyAdmins(tenant,{
+        kind:"occurrence_created",title:"Nova ocorrencia registrada",
+        body:`${display(customer.trade_name||customer.legal_name)}: ${reason}.`,route:"/occurrences",
+        data:{occurrenceId:id},
+      },hasAdminAccess(user.role)?user.id:undefined);
       return {id,message:"Ocorrencia registrada e enviada para analise."};
     });
   }

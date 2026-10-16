@@ -4,6 +4,7 @@ import { DatabaseRepository } from "../database/database.repository.js";
 import { customerAddress, customerText } from "./customer-fields.js";
 import { isValidCnpj } from "./cnpj-validation.js";
 import { ApprovalNotificationsService } from "./approval-notifications.service.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 type Data = Record<string, unknown>;
 
@@ -15,7 +16,8 @@ const cnpjDigits = (v: unknown) => String(v ?? "").replace(/\D/g, "");
 
 @Injectable()
 export class RegistrationReviewService {
-  constructor(private readonly database: DatabaseRepository, private readonly notifications: ApprovalNotificationsService) {}
+  constructor(private readonly database: DatabaseRepository, private readonly notifications: ApprovalNotificationsService,
+    private readonly appNotifications: NotificationsService) {}
 
   review(user: PublicUser, id: number, data: Data) {
     if (!Number.isSafeInteger(id) || id <= 0 || !data || typeof data !== "object" || Array.isArray(data))
@@ -83,7 +85,7 @@ export class RegistrationReviewService {
         if (existing) {
           customerId = existing.id;
           await db.prepare(`UPDATE customers SET legal_name=?,trade_name=?,state_registration=?,address=?,
-            phone=?,email=?,form_payload=?,active=1 WHERE id=? AND tenant_id=?`).run(
+            phone=?,email=?,form_payload=?,active=1,status='ativo' WHERE id=? AND tenant_id=?`).run(
               editable.legal_name as string,editable.trade_name as string,
               editable.state_registration as string,address,editable.phone_1 as string,
               editable.purchase_email as string,formPayload,customerId,user.tenant_id,
@@ -104,6 +106,12 @@ export class RegistrationReviewService {
           .run(customerId,Number(original.seller_id));
         if (original.status !== "aprovada") await this.notifications.queue(user.tenant_id,id,status);
       }
+      if (status !== String(original.status)) await this.appNotifications.notifyUser(user.tenant_id,Number(original.seller_id),{
+        kind:"customer_request_status",
+        title:status === "aprovada" ? "Cliente aprovado" : "Solicitacao atualizada",
+        body:`A solicitacao de ${String(editable.trade_name || editable.legal_name)} foi ${status}.`,
+        route:"/(app)/customers",data:{requestId:id,status},
+      });
       return {message:"Solicitacao atualizada."};
     });
   }

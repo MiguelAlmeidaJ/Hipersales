@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { hasAdminAccess, type PublicUser } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 type Row=Record<string,unknown>;
 const str=(v:unknown)=>String(v??"");
@@ -12,7 +13,7 @@ export function occurrenceStatus(value:unknown):string{
 }
 @Injectable()
 export class OccurrencesService {
-  constructor(private readonly database:DatabaseRepository){}
+  constructor(private readonly database:DatabaseRepository,private readonly appNotifications:NotificationsService){}
   async list(user:PublicUser){
     await this.cleanupExpiredAttachments(user.tenant_id);
     const db=this.database.db;
@@ -65,7 +66,7 @@ export class OccurrencesService {
       throw new BadRequestException("Ocorrencia invalida.");
     return this.database.transaction(async ()=>{
       const db=this.database.db;
-      const before=await db.prepare("SELECT status,resolution,resolved_at FROM occurrences WHERE id=? AND tenant_id=?")
+      const before=await db.prepare("SELECT status,resolution,resolved_at,seller_id FROM occurrences WHERE id=? AND tenant_id=?")
         .get(id,user.tenant_id) as Row|undefined;
       if(!before) throw new NotFoundException("Ocorrencia nao encontrada.");
       const status=occurrenceStatus(input.status||before.status);
@@ -76,9 +77,16 @@ export class OccurrencesService {
       await db.prepare("UPDATE occurrences SET status=?,resolution=?,resolved_at=?,updated_at=? WHERE id=? AND tenant_id=?")
         .run(status,resolution,resolvedAt,now,id,user.tenant_id);
       if(occurrenceStatus(before.status)!==status||str(before.resolution).trim()!==resolution||str(before.resolved_at)!==str(resolvedAt))
+      {
         await db.prepare(`INSERT INTO occurrence_events
           (occurrence_id,tenant_id,status,title,notes,created_by,created_at) VALUES (?,?,?,?,?,?,?)`)
           .run(id,user.tenant_id,status,statusNames[status],resolution||"Ocorrencia atualizada pela retaguarda.",user.id,now);
+        await this.appNotifications.notifyUser(user.tenant_id,Number(before.seller_id),{
+          kind:"occurrence_status",title:`Ocorrencia ${statusNames[status].toLowerCase()}`,
+          body:resolution||`A ocorrencia #${id} recebeu uma atualizacao.`,route:"/occurrences",
+          data:{occurrenceId:id,status},
+        });
+      }
       return {message:"Ocorrencia atualizada."};
     });
   }

@@ -283,7 +283,8 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             <div className="flex items-center justify-between border-b border-slate-100 p-5">
               <div>
                 <h3 className="text-xl font-extrabold text-slate-900">
-                  {editing !== null ? "Editar" : "Cadastrar"} {kind === "products" ? "produto" : "empresa"}
+                  {editing !== null ? "Editar" : "Cadastrar"}{" "}
+                  {kind === "products" ? "produto" : "empresa"}
                 </h3>
                 <p className="text-sm text-slate-500">
                   {kind === "products"
@@ -360,7 +361,9 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                           <select
                             className={fieldClass}
                             value={form.active ? "1" : "0"}
-                            onChange={(e) => setForm((x) => ({ ...x, active: e.target.value === "1" }))}
+                            onChange={(e) =>
+                              setForm((x) => ({ ...x, active: e.target.value === "1" }))
+                            }
                           >
                             <option value="1">Ativo</option>
                             <option value="0">Inativo</option>
@@ -371,7 +374,9 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                           <input
                             className={fieldClass}
                             value={form.product_group}
-                            onChange={(e) => setForm((x) => ({ ...x, product_group: e.target.value }))}
+                            onChange={(e) =>
+                              setForm((x) => ({ ...x, product_group: e.target.value }))
+                            }
                           />
                         </label>
                         <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
@@ -477,7 +482,9 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                             min="0"
                             step="0.01"
                             value={form.ipi_percent}
-                            onChange={(e) => setForm((x) => ({ ...x, ipi_percent: e.target.value }))}
+                            onChange={(e) =>
+                              setForm((x) => ({ ...x, ipi_percent: e.target.value }))
+                            }
                           />
                         </label>
                         <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
@@ -485,7 +492,9 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                           <select
                             className={fieldClass}
                             value={form.has_st ? "1" : "0"}
-                            onChange={(e) => setForm((x) => ({ ...x, has_st: e.target.value === "1" }))}
+                            onChange={(e) =>
+                              setForm((x) => ({ ...x, has_st: e.target.value === "1" }))
+                            }
                           >
                             <option value="0">Não</option>
                             <option value="1">Sim</option>
@@ -496,7 +505,9 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                           <input
                             className={fieldClass}
                             value={form.invoice_origin}
-                            onChange={(e) => setForm((x) => ({ ...x, invoice_origin: e.target.value }))}
+                            onChange={(e) =>
+                              setForm((x) => ({ ...x, invoice_origin: e.target.value }))
+                            }
                             placeholder="Ex.: MG"
                           />
                         </label>
@@ -510,17 +521,28 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                             Preço médio praticado
                           </p>
                           <p className="mt-1 text-2xl font-extrabold text-slate-900">
-                            {editingRecord ? money(historicalAverage) : "Será calculado pelo histórico"}
+                            {editingRecord
+                              ? money(historicalAverage)
+                              : "Será calculado pelo histórico"}
                           </p>
                           <p className="mt-1 text-xs text-slate-500">
-                            Calculado automaticamente: faturamento histórico do produto ÷ quantidade histórica vendida.
+                            Calculado automaticamente: faturamento histórico do produto ÷ quantidade
+                            histórica vendida.
                           </p>
+                          {editingRecord && historicalQuantity > 0 && (
+                            <p className="mt-2 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm">
+                              {money(historicalRevenue)} ÷ {numberPt(historicalQuantity)} ={" "}
+                              {money(historicalAverage)}
+                            </p>
+                          )}
                         </div>
                         {editingRecord && (
                           <div className="grid grid-cols-2 gap-3 text-right text-xs">
                             <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
                               <span className="block text-slate-400">Qtd. histórica</span>
-                              <strong className="text-slate-800">{numberPt(historicalQuantity)}</strong>
+                              <strong className="text-slate-800">
+                                {numberPt(historicalQuantity)}
+                              </strong>
                             </div>
                             <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
                               <span className="block text-slate-400">Faturamento</span>
@@ -594,7 +616,11 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
               setQuery(e.target.value);
               setPage(1);
             }}
-            placeholder={kind === "companies" ? "Nome ou razão social" : "Descrição, código, grupo, marca ou NCM"}
+            placeholder={
+              kind === "companies"
+                ? "Nome ou razão social"
+                : "Descrição, código, grupo, marca ou NCM"
+            }
             className="w-full min-w-0 rounded-lg border border-slate-200 p-2.5 text-sm"
           />
         </label>
@@ -688,7 +714,9 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                     <td>{x.code}</td>
                     <td>
                       {x.product_group || "—"}
-                      {x.subgroup && <span className="block text-xs text-slate-400">{x.subgroup}</span>}
+                      {x.subgroup && (
+                        <span className="block text-xs text-slate-400">{x.subgroup}</span>
+                      )}
                     </td>
                     <td>{x.unit || "UN"}</td>
                     <td>
@@ -735,7 +763,10 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             ))}
             {!visible.length && (
               <tr>
-                <td colSpan={kind === "products" ? 8 : 4} className="p-8 text-center text-sm text-slate-500">
+                <td
+                  colSpan={kind === "products" ? 8 : 4}
+                  className="p-8 text-center text-sm text-slate-500"
+                >
                   Nenhum registro encontrado.
                 </td>
               </tr>

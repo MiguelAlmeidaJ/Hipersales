@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import type { GoalPerformance, PublicUser, SaveGoalsRequest } from "@hipersales/contracts";
 import { DatabaseRepository } from "../database/database.repository.js";
 import { EnvService } from "../config/env.service.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 type DbRow = Record<string, unknown>;
 const REMINDER_DAYS = [10, 15, 20, 25, 27, 28, 29, 30];
@@ -47,6 +48,7 @@ export class GoalsService {
   constructor(
     private readonly database: DatabaseRepository,
     private readonly env: EnvService,
+    private readonly appNotifications: NotificationsService,
   ) {
     try {
       new Intl.DateTimeFormat("pt-BR", { timeZone: env.reportTimezone }).format();
@@ -99,6 +101,11 @@ export class GoalsService {
             .prepare("DELETE FROM seller_goals WHERE tenant_id = ? AND seller_id = ? AND year = ? AND month = ?")
             .run(user.tenant_id, row.seller_id, period.year, period.month);
           removed += Number(result.changes);
+          if (result.changes) await this.appNotifications.notifyUser(user.tenant_id,row.seller_id,{
+            kind:"goals_updated",title:"Metas atualizadas",
+            body:`As metas de ${String(period.month).padStart(2,"0")}/${period.year} foram removidas.`,route:"/goals",
+            data:{year:period.year,month:period.month},
+          });
           continue;
         }
         const updatedAt = new Date().toISOString();
@@ -115,6 +122,11 @@ export class GoalsService {
             salesGoal,customersGoal,positivationGoal,updatedAt,
           );
         saved += 1;
+        await this.appNotifications.notifyUser(user.tenant_id,row.seller_id,{
+          kind:"goals_updated",title:"Novas metas disponíveis",
+          body:`Suas metas de ${String(period.month).padStart(2,"0")}/${period.year} foram atualizadas.`,route:"/goals",
+          data:{year:period.year,month:period.month},
+        });
       }
       return {
         message: `Metas salvas. ${saved} representante(s) atualizado(s).`,
