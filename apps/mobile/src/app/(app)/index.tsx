@@ -1,17 +1,16 @@
 import { router, type Href } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { AppIcon, type AppIconName } from "@/components/app-icon";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { api } from "@/lib/api";
-import { webModuleUrl } from "@/lib/web-portal";
 
 type DashboardData = { summary?: Record<string, number> };
-type NativeRoute = "/new-order" | "/new-customer" | "/(app)/orders" | "/(app)/customers" | "/(app)/modules";
-type Action = { title: string; subtitle: string; icon: AppIconName; color: string; background: string; route?: NativeRoute; webSlug?: string };
+type NativeRoute = "/new-order" | "/new-customer" | "/(app)/orders" | "/(app)/customers" | "/(app)/modules" | "/occurrences" | "/goals";
+type Action = { title: string; subtitle: string; icon: AppIconName; color: string; background: string; route: NativeRoute };
 
 const labels: Record<string, string> = {
   orders: "Pedidos",
@@ -27,8 +26,8 @@ const sellerActions: Action[] = [
   { title: "Solicitar cliente", subtitle: "Novo cadastro", icon: "person-add-outline", color: "#7A5AF8", background: "#F0ECFF", route: "/new-customer" },
   { title: "Meus clientes", subtitle: "Minha carteira", icon: "people-outline", color: colors.success, background: "#E7F7F0", route: "/(app)/customers" },
   { title: "Meus pedidos", subtitle: "Acompanhar", icon: "receipt-outline", color: "#B54708", background: "#FFF1E5", route: "/(app)/orders" },
-  { title: "Ocorrência", subtitle: "Registrar situação", icon: "alert-circle-outline", color: colors.danger, background: "#FDEBEC", webSlug: "ocorrencias" },
-  { title: "Minhas metas", subtitle: "Ver objetivos", icon: "flag-outline", color: "#4C7E27", background: "#EDF7E7", webSlug: "metas" },
+  { title: "Ocorrência", subtitle: "Registrar situação", icon: "alert-circle-outline", color: colors.danger, background: "#FDEBEC", route: "/occurrences" },
+  { title: "Minhas metas", subtitle: "Ver objetivos", icon: "flag-outline", color: "#4C7E27", background: "#EDF7E7", route: "/goals" },
 ];
 
 function formatValue(key: string, value: number) {
@@ -40,17 +39,7 @@ function formatValue(key: string, value: number) {
 
 const fetchAdminDashboard = () => api<DashboardData>("/api/admin/executive-dashboard");
 
-async function openAction(action: Action) {
-  if (action.route) {
-    router.push(action.route as Href);
-    return;
-  }
-  try {
-    await Linking.openURL(webModuleUrl(action.webSlug ?? ""));
-  } catch {
-    Alert.alert("Não foi possível abrir", "Confira sua conexão e tente novamente.");
-  }
-}
+function openAction(action: Action) { router.push(action.route as Href); }
 
 export default function HomeScreen() {
   const { user } = useSession();
@@ -72,7 +61,7 @@ function SellerHome({ firstName }: { firstName: string }) {
       <Text style={styles.actionHeading}>Ações rápidas</Text>
       <View style={styles.actionGrid}>
         {sellerActions.map((action) => (
-          <Pressable key={action.title} accessibilityRole="button" onPress={() => void openAction(action)} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
+          <Pressable key={action.title} accessibilityRole="button" onPress={() => openAction(action)} style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}>
             <View style={[styles.actionIcon, { backgroundColor: action.background }]}><AppIcon name={action.icon} color={action.color} size={25} /></View>
             <Text style={styles.actionTitle}>{action.title}</Text>
             <Text style={styles.actionSubtitle}>{action.subtitle}</Text>

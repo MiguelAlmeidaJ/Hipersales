@@ -27,6 +27,9 @@ Escaneie o QR code com Expo Go ou pressione `a` para abrir o emulador Android.
 - criação de propostas em três etapas, com produtos, condições comerciais e validação antes do envio;
 - clientes com busca, dados cadastrais e ações de contato;
 - cadastro direto de clientes para administradores e solicitação para aprovação para representantes;
+- módulos nativos de empresas, produtos, aprovações, ocorrências, metas, usuários e carteiras;
+- relatórios em PDF baixados com autenticação e compartilhados pelo sistema do aparelho;
+- configurações nativas de SMTP, WhatsApp, funis e status de pedidos;
 - navegação inferior para início, pedidos, clientes e perfil;
 - identidade visual compartilhada com o portal web.
 
@@ -42,7 +45,7 @@ pnpm --filter @hipersales/mobile validate:release
 
 Configure `EXPO_PUBLIC_API_URL` com a base `https://api.hipersalesweb.com.br/api/v1`. No desenvolvimento local, por exemplo, use `http://192.168.0.10:3110/api/v1`. Para preservar configurações anteriores, o app acrescenta `/api/v1` automaticamente quando a variável contém apenas a origem do servidor.
 
-Configure também `EXPO_PUBLIC_WEB_URL` para a origem do portal. Os módulos administrativos que ainda não possuem experiência nativa abrem diretamente sua rota autenticada no web.
+Todos os módulos operacionais possuem tela nativa e usam `EXPO_PUBLIC_API_URL`; o aplicativo não depende da URL do portal web.
 
 ## Tamanho do Android
 

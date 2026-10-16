@@ -15,6 +15,15 @@ function normalizeApiUrl(value: string): string {
 
 export const apiUrl = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || emulatorUrl);
 
+export function authenticatedResource(path: `/api/${string}`) {
+  const headers: Record<string, string> = {};
+  if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
+  return {
+    url: `${apiUrl}${path.slice("/api".length)}`,
+    headers,
+  };
+}
+
 export type ApiErrorCode = "configuration" | "timeout" | "network" | "unauthorized" | "client" | "server";
 
 export class ApiError extends Error {
