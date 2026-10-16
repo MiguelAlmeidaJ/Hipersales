@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/constants/colors";
 import { SessionProvider } from "@/contexts/session-context";
+import { NotificationsProvider } from "@/contexts/notifications-context";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
@@ -19,8 +20,10 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 export default function RootLayout() {
   return (
     <SessionProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+      <NotificationsProvider>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+      </NotificationsProvider>
     </SessionProvider>
   );
 }

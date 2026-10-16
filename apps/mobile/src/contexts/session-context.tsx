@@ -16,6 +16,11 @@ type SessionContextValue = {
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
+let beforeLogoutHandler: (() => Promise<void>) | null = null;
+
+export function setBeforeLogoutHandler(handler: (() => Promise<void>) | null) {
+  beforeLogoutHandler = handler;
+}
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<SessionStatus>("loading");
@@ -83,6 +88,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const logout = useCallback(async () => {
     try {
+      await beforeLogoutHandler?.().catch(() => undefined);
       await api("/api/logout", { method: "POST" });
     } finally {
       await clearSession();

@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, T
 
 import { AppIcon, type AppIconName } from "@/components/app-icon";
 import { ScreenHeader } from "@/components/screen-header";
+import { NotificationBell } from "@/components/notification-bell";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { api } from "@/lib/api";
@@ -50,7 +51,7 @@ export default function HomeScreen() {
 function SellerHome({ firstName }: { firstName: string }) {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <ScreenHeader eyebrow="Seu espaço de trabalho" title={`Olá, ${firstName}!`} subtitle="O que você precisa fazer hoje?" />
+      <ScreenHeader eyebrow="Seu espaço de trabalho" title={`Olá, ${firstName}!`} subtitle="O que você precisa fazer hoje?" right={<NotificationBell />} />
       <View style={styles.sellerHero}>
         <View style={styles.sellerHeroIcon}><AppIcon name="briefcase-outline" color="#FFFFFF" size={28} /></View>
         <View style={styles.sellerHeroCopy}>
@@ -103,7 +104,7 @@ function AdminHome({ firstName }: { firstName: string }) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void refresh()} colors={[colors.brand]} tintColor={colors.brand} />}>
-      <ScreenHeader eyebrow="Administração" title={`Olá, ${firstName}`} subtitle="Visão geral da operação HiperSales." />
+      <ScreenHeader eyebrow="Administração" title={`Olá, ${firstName}`} subtitle="Visão geral da operação HiperSales." right={<NotificationBell />} />
       <View style={styles.adminHero}>
         <View style={styles.heroAccent} />
         <Text style={styles.heroEyebrow}>GESTÃO DA OPERAÇÃO</Text>
