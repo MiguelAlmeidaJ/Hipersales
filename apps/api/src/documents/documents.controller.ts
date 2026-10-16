@@ -40,6 +40,12 @@ export class DocumentsController {
   }
 
   @Roles("admin")
+  @Get("admin/reports/preview")
+  async reportPreview(@Req() request: AuthenticatedRequest, @Query() query: Record<string, string | undefined>) {
+    return this.documents.reportData(request.user, query);
+  }
+
+  @Roles("admin")
   @Get("admin/reports/pdf")
   async report(@Req() request: AuthenticatedRequest, @Query() query: Record<string, string | undefined>, @Res() response: Response) {
     send(response, `relatorio-${query.type || "vendas"}.pdf`, await this.documents.report(request.user, query));

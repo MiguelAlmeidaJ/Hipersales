@@ -6,6 +6,23 @@ import { DatabaseRepository } from "../database/database.repository.js";
 type Row = Record<string, unknown>;
 type Line = { label: string; value: unknown };
 const SOLD_STATUSES_SQL = "'pedido_aprovado','em_producao','faturado','entregue'";
+const BONUS_SQL = "LOWER(COALESCE(p.order_type,'')) COLLATE Latin1_General_CI_AI LIKE '%bonificacao%'";
+
+type ReportColumn = {
+  key: string;
+  label: string;
+  weight: number;
+  align?: "left" | "right";
+};
+
+export type CommercialReport = {
+  type: string;
+  title: string;
+  section: string;
+  metrics: Array<{ label: string; value: string }>;
+  columns: ReportColumn[];
+  rows: Row[];
+};
 
 function money(value: unknown): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value || 0));
@@ -334,121 +351,470 @@ export class DocumentsService {
     return {buffer,name:String(customer.legal_name||`cliente-${customerId}`)};
   }
 
-  async report(user: PublicUser, query: Record<string, string | undefined>): Promise<Buffer> {
-    const allowed = new Set(["vendas", "pedidos", "bonificacoes", "produtos_vendidos", "prazo_pagamento", "fechamento_mensal"]);
+  async reportData(
+    user: PublicUser,
+    query: Record<string, string | undefined>,
+  ): Promise<CommercialReport> {
+    const allowed = new Set([
+      "vendas",
+      "pedidos",
+      "bonificacoes",
+      "produtos_vendidos",
+      "prazo_pagamento",
+      "fechamento_mensal",
+    ]);
     const type = String(query.type || "vendas");
-    if (!allowed.has(type)) throw new BadRequestException("Tipo de relatorio invalido.");
-    const where = ["p.tenant_id=?"]; const params: Array<string | number> = [user.tenant_id];
-    for (const [key, column] of [["seller_id", "p.seller_id"], ["company_id", "p.company_id"], ["customer_id", "p.customer_id"]] as const) {
-      if (query[key]) { const value = Number(query[key]); if (!Number.isSafeInteger(value) || value < 1) throw new BadRequestException("Filtro invalido."); where.push(`${column}=?`); params.push(value); }
+    if (!allowed.has(type))
+      throw new BadRequestException("Tipo de relatório inválido.");
+
+    const where = ["p.tenant_id=?"];
+    const params: Array<string | number> = [user.tenant_id];
+    for (const [key, column] of [
+      ["seller_id", "p.seller_id"],
+      ["company_id", "p.company_id"],
+      ["customer_id", "p.customer_id"],
+    ] as const) {
+      if (!query[key]) continue;
+      const value = Number(query[key]);
+      if (!Number.isSafeInteger(value) || value < 1)
+        throw new BadRequestException("Filtro inválido.");
+      where.push(`${column}=?`);
+      params.push(value);
     }
-    if (query.status) { where.push("p.status=?"); params.push(query.status); }
-    if (query.date_from) { where.push("CAST(p.created_at AS date)>=CAST(? AS date)"); params.push(query.date_from); }
-    if (query.date_to) { where.push("CAST(p.created_at AS date)<=CAST(? AS date)"); params.push(query.date_to); }
-    const rows = await this.database.db.prepare(`SELECT p.order_number,p.status,p.created_at,u.name seller_name,c.legal_name customer_name,
-      co.name company_name,COALESCE(SUM(pi.quantity*pi.negotiated_price),0) total FROM proposals p
-      JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id JOIN companies co ON co.id=p.company_id
-      LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE ${where.join(" AND ")}
-      GROUP BY p.order_number,p.status,p.created_at,u.name,c.legal_name,co.name ORDER BY p.created_at DESC`).all(...params) as Row[];
-    const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
-    const labels: Record<string,string> = {
-      vendas:"Relatório de vendas", pedidos:"Relatório de pedidos",
-      bonificacoes:"Relatório de bonificações", produtos_vendidos:"Produtos vendidos",
-      prazo_pagamento:"Prazo de pagamento", fechamento_mensal:"Fechamento mensal",
+    if (query.status) {
+      where.push("p.status=?");
+      params.push(query.status);
+    }
+    if (query.date_from) {
+      where.push("CAST(p.created_at AS date)>=CAST(? AS date)");
+      params.push(query.date_from);
+    }
+    if (query.date_to) {
+      where.push("CAST(p.created_at AS date)<=CAST(? AS date)");
+      params.push(query.date_to);
+    }
+
+    const sum = (rows: Row[], key: string) =>
+      rows.reduce((total, row) => total + Number(row[key] || 0), 0);
+    const count = (value: number) => value.toLocaleString("pt-BR");
+    const baseOrderSelect = `SELECT p.id,p.order_number,p.order_type,p.status,p.created_at,u.name seller_name,
+      c.legal_name customer_name,co.name company_name,COALESCE(SUM(pi.quantity*pi.negotiated_price),0) total
+      FROM proposals p JOIN users u ON u.id=p.seller_id JOIN customers c ON c.id=p.customer_id
+      JOIN companies co ON co.id=p.company_id LEFT JOIN proposal_items pi ON pi.proposal_id=p.id`;
+    const orderGroup =
+      "GROUP BY p.id,p.order_number,p.order_type,p.status,p.created_at,u.name,c.legal_name,co.name ORDER BY p.created_at DESC";
+    const orderColumns: ReportColumn[] = [
+      { key: "order_number", label: "Pedido", weight: 0.7 },
+      { key: "customer_name", label: "Cliente", weight: 2.2 },
+      { key: "company_name", label: "Empresa", weight: 1.35 },
+      { key: "seller_name", label: "Representante", weight: 1.35 },
+      { key: "status_label", label: "Status", weight: 1.1 },
+      { key: "date_label", label: "Data", weight: 0.85 },
+      { key: "total_label", label: "Valor", weight: 1, align: "right" },
+    ];
+    const statusNames: Record<string, string> = {
+      em_analise: "Em análise",
+      pedido_aprovado: "Aprovado",
+      em_producao: "Em produção",
+      faturado: "Faturado",
+      entregue: "Entregue",
+      recusado: "Recusado",
     };
-    const statusNames: Record<string,string> = {
-      em_analise:"Em análise",pedido_aprovado:"Aprovado",em_producao:"Em produção",
-      faturado:"Faturado",entregue:"Entregue",recusado:"Recusado",
+    const presentOrders = (rows: Row[]) =>
+      rows.map((row) => ({
+        ...row,
+        order_number: `#${first(row.order_number)}`,
+        status_label:
+          statusNames[first(row.status)] ||
+          first(row.status).replaceAll("_", " "),
+        date_label: dateOnly(row.created_at),
+        total_label: money(row.total),
+      }));
+
+    if (type === "pedidos" || type === "vendas" || type === "bonificacoes") {
+      const conditions = [...where];
+      if (type === "vendas")
+        conditions.push(
+          `p.status IN (${SOLD_STATUSES_SQL})`,
+          `NOT (${BONUS_SQL})`,
+        );
+      if (type === "bonificacoes") conditions.push(BONUS_SQL);
+      const rawRows = (await this.database.db
+        .prepare(
+          `${baseOrderSelect} WHERE ${conditions.join(" AND ")} ${orderGroup}`,
+        )
+        .all(...params)) as Row[];
+      const total = sum(rawRows, "total");
+      const customers = new Set(rawRows.map((row) => row.customer_name)).size;
+      const titles: Record<string, string> = {
+        pedidos: "Relatório de pedidos",
+        vendas: "Relatório de vendas",
+        bonificacoes: "Relatório de bonificações",
+      };
+      const sections: Record<string, string> = {
+        pedidos: "Pedidos",
+        vendas: "Vendas efetivadas",
+        bonificacoes: "Pedidos de bonificação",
+      };
+      return {
+        type,
+        title: titles[type],
+        section: sections[type],
+        metrics: [
+          {
+            label:
+              type === "bonificacoes"
+                ? "Bonificações"
+                : type === "vendas"
+                  ? "Vendas"
+                  : "Pedidos",
+            value: count(rawRows.length),
+          },
+          { label: "Clientes", value: count(customers) },
+          { label: "Valor total", value: money(total) },
+          {
+            label: "Ticket médio",
+            value: money(rawRows.length ? total / rawRows.length : 0),
+          },
+        ],
+        columns: orderColumns,
+        rows: presentOrders(rawRows),
+      };
+    }
+
+    const soldWhere = [
+      ...where,
+      `p.status IN (${SOLD_STATUSES_SQL})`,
+      `NOT (${BONUS_SQL})`,
+    ];
+    if (type === "produtos_vendidos") {
+      const rawRows = (await this.database.db
+        .prepare(
+          `SELECT pr.code product_code,pr.name product_name,
+        SUM(pi.quantity) quantity,CASE WHEN SUM(pi.quantity)=0 THEN 0 ELSE SUM(pi.quantity*pi.negotiated_price)/SUM(pi.quantity) END average_price,
+        SUM(pi.quantity*pi.negotiated_price) revenue FROM proposals p JOIN proposal_items pi ON pi.proposal_id=p.id
+        JOIN products pr ON pr.id=pi.product_id
+        WHERE ${soldWhere.join(" AND ")} GROUP BY pr.id,pr.code,pr.name ORDER BY revenue DESC`,
+        )
+        .all(...params)) as Row[];
+      const quantity = sum(rawRows, "quantity");
+      const revenue = sum(rawRows, "revenue");
+      return {
+        type,
+        title: "Produtos vendidos",
+        section: "Desempenho por produto",
+        metrics: [
+          { label: "Produtos", value: count(rawRows.length) },
+          { label: "Quantidade", value: count(quantity) },
+          { label: "Faturamento", value: money(revenue) },
+          {
+            label: "Preço médio geral",
+            value: money(quantity ? revenue / quantity : 0),
+          },
+        ],
+        columns: [
+          { key: "product_code", label: "Código", weight: 0.9 },
+          { key: "product_name", label: "Produto", weight: 2.6 },
+          {
+            key: "quantity_label",
+            label: "Quantidade",
+            weight: 1,
+            align: "right",
+          },
+          {
+            key: "average_price_label",
+            label: "Preço médio",
+            weight: 1.1,
+            align: "right",
+          },
+          {
+            key: "revenue_label",
+            label: "Faturamento",
+            weight: 1.2,
+            align: "right",
+          },
+        ],
+        rows: rawRows.map((row) => ({
+          ...row,
+          quantity_label: Number(row.quantity || 0).toLocaleString("pt-BR"),
+          average_price_label: money(row.average_price),
+          revenue_label: money(row.revenue),
+        })),
+      };
+    }
+
+    if (type === "prazo_pagamento") {
+      const rawRows = (await this.database.db
+        .prepare(
+          `SELECT COALESCE(NULLIF(LTRIM(RTRIM(p.payment_terms)),''),'Não informado') payment_terms,
+        COUNT_BIG(DISTINCT p.id) order_count,COALESCE(SUM(pi.quantity*pi.negotiated_price),0) revenue
+        FROM proposals p LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE ${soldWhere.join(" AND ")}
+        GROUP BY COALESCE(NULLIF(LTRIM(RTRIM(p.payment_terms)),''),'Não informado') ORDER BY revenue DESC`,
+        )
+        .all(...params)) as Row[];
+      const orders = sum(rawRows, "order_count");
+      const revenue = sum(rawRows, "revenue");
+      return {
+        type,
+        title: "Prazo de pagamento",
+        section: "Resultados por condição de pagamento",
+        metrics: [
+          { label: "Condições", value: count(rawRows.length) },
+          { label: "Pedidos", value: count(orders) },
+          { label: "Faturamento", value: money(revenue) },
+          {
+            label: "Ticket médio",
+            value: money(orders ? revenue / orders : 0),
+          },
+        ],
+        columns: [
+          { key: "payment_terms", label: "Condição de pagamento", weight: 3 },
+          {
+            key: "order_count_label",
+            label: "Pedidos",
+            weight: 1,
+            align: "right",
+          },
+          {
+            key: "ticket_label",
+            label: "Ticket médio",
+            weight: 1.2,
+            align: "right",
+          },
+          {
+            key: "revenue_label",
+            label: "Faturamento",
+            weight: 1.3,
+            align: "right",
+          },
+        ],
+        rows: rawRows.map((row) => ({
+          ...row,
+          order_count_label: count(Number(row.order_count || 0)),
+          ticket_label: money(
+            Number(row.order_count)
+              ? Number(row.revenue) / Number(row.order_count)
+              : 0,
+          ),
+          revenue_label: money(row.revenue),
+        })),
+      };
+    }
+
+    const rawRows = (await this.database.db
+      .prepare(
+        `SELECT YEAR(p.created_at) report_year,MONTH(p.created_at) report_month,
+      COUNT_BIG(DISTINCT p.id) order_count,COALESCE(SUM(pi.quantity*pi.negotiated_price),0) revenue
+      FROM proposals p LEFT JOIN proposal_items pi ON pi.proposal_id=p.id WHERE ${soldWhere.join(" AND ")}
+      GROUP BY YEAR(p.created_at),MONTH(p.created_at) ORDER BY report_year DESC,report_month DESC`,
+      )
+      .all(...params)) as Row[];
+    const orders = sum(rawRows, "order_count");
+    const revenue = sum(rawRows, "revenue");
+    return {
+      type,
+      title: "Fechamento mensal",
+      section: "Consolidado por mês",
+      metrics: [
+        { label: "Meses", value: count(rawRows.length) },
+        { label: "Pedidos", value: count(orders) },
+        { label: "Faturamento", value: money(revenue) },
+        { label: "Ticket médio", value: money(orders ? revenue / orders : 0) },
+      ],
+      columns: [
+        { key: "period_label", label: "Competência", weight: 2 },
+        {
+          key: "order_count_label",
+          label: "Pedidos",
+          weight: 1,
+          align: "right",
+        },
+        {
+          key: "ticket_label",
+          label: "Ticket médio",
+          weight: 1.2,
+          align: "right",
+        },
+        {
+          key: "revenue_label",
+          label: "Faturamento",
+          weight: 1.3,
+          align: "right",
+        },
+      ],
+      rows: rawRows.map((row) => ({
+        ...row,
+        period_label: `${String(row.report_month).padStart(2, "0")}/${row.report_year}`,
+        order_count_label: count(Number(row.order_count || 0)),
+        ticket_label: money(
+          Number(row.order_count)
+            ? Number(row.revenue) / Number(row.order_count)
+            : 0,
+        ),
+        revenue_label: money(row.revenue),
+      })),
     };
-    return new Promise<Buffer>((resolve,reject)=>{
-      const doc = new PDFDocument({size:"A4",layout:"landscape",margin:34,bufferPages:true,
-        info:{Title:labels[type],Author:"HiperSales"}});
-      const chunks:Buffer[]=[];
-      doc.on("data",(chunk:Buffer)=>chunks.push(chunk));
-      doc.on("end",()=>resolve(Buffer.concat(chunks)));
-      doc.on("error",reject);
-      const left=34, pageWidth=doc.page.width-68;
-      const headerColumns=[
-        {name:"PEDIDO",width:65},
-        {name:"CLIENTE",width:210},
-        {name:"EMPRESA",width:115},
-        {name:"REPRESENTANTE",width:108},
-        {name:"STATUS",width:105},
-        {name:"DATA",width:78},
-        {name:"VALOR",width:pageWidth-681},
-      ];
-      const ellipsis=(value:unknown,width:number)=>{
-        const raw=first(value)||"-";
-        if(doc.widthOfString(raw)<=width)return raw;
-        let low=0,high=raw.length;
-        while(low<high){
-          const middle=Math.ceil((low+high)/2);
-          if(doc.widthOfString(raw.slice(0,middle)+"…")<=width)low=middle;
-          else high=middle-1;
-        }
-        return low?raw.slice(0,low).trimEnd()+"…":"…";
-      };
-      const drawHeader=()=>{
-        doc.rect(0,0,doc.page.width,8).fill("#0767B4");
-        doc.fillColor("#0767B4").font("Helvetica-Bold").fontSize(14).text("HiperSales",left,27);
-        doc.fillColor("#132238").fontSize(20).text(labels[type],left,60);
-        doc.fillColor("#65758B").font("Helvetica").fontSize(9)
-          .text("Gerado em "+safeDate(new Date().toISOString()),left,88);
-        doc.roundedRect(left,111,pageWidth,54,8).fill("#F2F7FB");
-        doc.fillColor("#64748B").font("Helvetica-Bold").fontSize(8)
-          .text("REGISTROS",left+16,122).text("VALOR TOTAL",left+210,122);
-        doc.fillColor("#0B2A63").fontSize(15)
-          .text(String(rows.length),left+16,136)
-          .text(money(total),left+210,136);
-        doc.fillColor("#132238").fontSize(11).text("Pedidos",left,184);
-        drawTableHeader(206);
-      };
-      const drawTableHeader=(y:number)=>{
-        doc.rect(left,y,pageWidth,28).fill("#E8F0F7");
-        let x=left;
-        doc.font("Helvetica-Bold").fontSize(8).fillColor("#34465C");
-        for(const column of headerColumns){
-          doc.text(column.name,x+7,y+9,{width:column.width-12,lineBreak:false});
-          x+=column.width;
-        }
-      };
-      drawHeader();
-      let y=240;
-      rows.forEach((row,index)=>{
-        if(y+30>doc.page.height-48){
-          doc.addPage();
-          doc.fillColor("#0767B4").font("Helvetica-Bold").fontSize(12).text("HiperSales  /  "+labels[type],left,28);
-          drawTableHeader(55);
-          y=89;
-        }
-        if(index%2===0)doc.rect(left,y,pageWidth,30).fill("#FAFCFE");
-        const columns=[
-          "#"+first(row.order_number),first(row.customer_name),first(row.company_name),
-          first(row.seller_name),statusNames[first(row.status)]||first(row.status).replaceAll("_"," "),
-          dateOnly(row.created_at),money(row.total),
-        ];
-        let x=left;
-        doc.font("Helvetica").fontSize(8).fillColor("#26354B");
-        columns.forEach((value,i)=>{
-          const w=headerColumns[i].width;
-          doc.text(ellipsis(value,w-14),x+7,y+10,{width:w-14,height:12,lineBreak:false,align:i===6?"right":"left"});
-          x+=w;
-        });
-        doc.moveTo(left,y+30).lineTo(left+pageWidth,y+30).lineWidth(.35).strokeColor("#E2E8F0").stroke();
-        y+=30;
+  }
+
+  async report(
+    user: PublicUser,
+    query: Record<string, string | undefined>,
+  ): Promise<Buffer> {
+    const report = await this.reportData(user, query);
+    return new Promise<Buffer>((resolve, reject) => {
+      const doc = new PDFDocument({
+        size: "A4",
+        layout: "landscape",
+        margin: 34,
+        bufferPages: true,
+        info: { Title: report.title, Author: "HiperSales" },
       });
-      if(rows.length===0){
-        doc.font("Helvetica").fontSize(10).fillColor("#64748B")
-          .text("Nenhum registro encontrado para os filtros selecionados.",left,251,{width:pageWidth,align:"center"});
-      }
-      const pageRange=doc.bufferedPageRange();
-      for(let page=pageRange.start;page<pageRange.start+pageRange.count;page++){
+      const chunks: Buffer[] = [];
+      doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", reject);
+      const left = 34;
+      const pageWidth = doc.page.width - 68;
+      const weightTotal = report.columns.reduce(
+        (total, column) => total + column.weight,
+        0,
+      );
+      const columns = report.columns.map((column) => ({
+        ...column,
+        width: (pageWidth * column.weight) / weightTotal,
+      }));
+      const ellipsis = (value: unknown, width: number) => {
+        const raw = first(value) || "-";
+        if (doc.widthOfString(raw) <= width) return raw;
+        let low = 0,
+          high = raw.length;
+        while (low < high) {
+          const middle = Math.ceil((low + high) / 2);
+          if (doc.widthOfString(`${raw.slice(0, middle)}…`) <= width)
+            low = middle;
+          else high = middle - 1;
+        }
+        return low ? `${raw.slice(0, low).trimEnd()}…` : "…";
+      };
+      const drawTableHeader = (y: number) => {
+        doc.rect(left, y, pageWidth, 28).fill("#E8F0F7");
+        let x = left;
+        doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#34465C");
+        for (const column of columns) {
+          doc.text(column.label.toUpperCase(), x + 7, y + 9, {
+            width: column.width - 14,
+            align: column.align || "left",
+            lineBreak: false,
+          });
+          x += column.width;
+        }
+      };
+      doc.rect(0, 0, doc.page.width, 8).fill("#0767B4");
+      doc
+        .fillColor("#0767B4")
+        .font("Helvetica-Bold")
+        .fontSize(14)
+        .text("HiperSales", left, 27);
+      doc.fillColor("#132238").fontSize(20).text(report.title, left, 60);
+      doc
+        .fillColor("#65758B")
+        .font("Helvetica")
+        .fontSize(9)
+        .text(`Gerado em ${safeDate(new Date().toISOString())}`, left, 88);
+      doc.roundedRect(left, 111, pageWidth, 58, 8).fill("#F2F7FB");
+      const metricWidth = pageWidth / Math.max(report.metrics.length, 1);
+      report.metrics.forEach((metric, index) => {
+        const x = left + index * metricWidth + 16;
+        doc
+          .fillColor("#64748B")
+          .font("Helvetica-Bold")
+          .fontSize(7.5)
+          .text(metric.label.toUpperCase(), x, 122, {
+            width: metricWidth - 24,
+          });
+        doc
+          .fillColor("#0B2A63")
+          .fontSize(14)
+          .text(metric.value, x, 139, { width: metricWidth - 24 });
+      });
+      doc.fillColor("#132238").fontSize(11).text(report.section, left, 188);
+      drawTableHeader(210);
+      let y = 244;
+      report.rows.forEach((row, index) => {
+        if (y + 30 > doc.page.height - 48) {
+          doc.addPage();
+          doc
+            .fillColor("#0767B4")
+            .font("Helvetica-Bold")
+            .fontSize(12)
+            .text(`HiperSales  /  ${report.title}`, left, 28);
+          drawTableHeader(55);
+          y = 89;
+        }
+        if (index % 2 === 0) doc.rect(left, y, pageWidth, 30).fill("#FAFCFE");
+        let x = left;
+        doc.font("Helvetica").fontSize(8).fillColor("#26354B");
+        for (const column of columns) {
+          doc.text(
+            ellipsis(row[column.key], column.width - 14),
+            x + 7,
+            y + 10,
+            {
+              width: column.width - 14,
+              height: 12,
+              lineBreak: false,
+              align: column.align || "left",
+            },
+          );
+          x += column.width;
+        }
+        doc
+          .moveTo(left, y + 30)
+          .lineTo(left + pageWidth, y + 30)
+          .lineWidth(0.35)
+          .strokeColor("#E2E8F0")
+          .stroke();
+        y += 30;
+      });
+      if (!report.rows.length)
+        doc
+          .font("Helvetica")
+          .fontSize(10)
+          .fillColor("#64748B")
+          .text(
+            "Nenhum registro encontrado para os filtros selecionados.",
+            left,
+            255,
+            { width: pageWidth, align: "center" },
+          );
+      const pageRange = doc.bufferedPageRange();
+      for (
+        let page = pageRange.start;
+        page < pageRange.start + pageRange.count;
+        page += 1
+      ) {
         doc.switchToPage(page);
-        doc.moveTo(left,doc.page.height-32).lineTo(left+pageWidth,doc.page.height-32).strokeColor("#DCE5EE").stroke();
-        doc.font("Helvetica").fontSize(8).fillColor("#64748B")
-          .text("HiperSales • Relatório comercial",left,doc.page.height-24,{lineBreak:false});
-        doc.text("Página "+(page+1)+" de "+pageRange.count,left+pageWidth-105,doc.page.height-24,
-          {width:105,align:"right",lineBreak:false});
+        doc
+          .moveTo(left, doc.page.height - 32)
+          .lineTo(left + pageWidth, doc.page.height - 32)
+          .strokeColor("#DCE5EE")
+          .stroke();
+        doc
+          .font("Helvetica")
+          .fontSize(8)
+          .fillColor("#64748B")
+          .text(
+            "HiperSales • Relatório comercial",
+            left,
+            doc.page.height - 24,
+            { lineBreak: false },
+          );
+        doc.text(
+          `Página ${page + 1} de ${pageRange.count}`,
+          left + pageWidth - 105,
+          doc.page.height - 24,
+          { width: 105, align: "right", lineBreak: false },
+        );
       }
       doc.end();
     });

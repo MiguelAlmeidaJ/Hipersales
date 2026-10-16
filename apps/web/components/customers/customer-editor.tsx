@@ -239,7 +239,8 @@ export default function CustomerEditor() {
   );
   const pages = Math.max(1, Math.ceil(visible.length / pageSize)),
     currentPage = Math.min(page, pages),
-    paged = visible.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    paged = visible.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    editingCustomer = editing ? rows.find((customer) => customer.id === editing) : undefined;
   function reset() {
     setEditing(null);
     setForm({ ...empty, seller_ids: [] });
@@ -681,7 +682,31 @@ export default function CustomerEditor() {
                     {error}
                   </p>
                 ) : null}
-                <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white py-4">
+                <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 bg-white py-4">
+                  {editingCustomer ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={Boolean(downloadBusy)}
+                        onClick={() => void pdf(editingCustomer, "registration")}
+                        className="rounded-xl border border-blue-200 px-4 py-3 text-sm font-bold text-blue-700 disabled:opacity-50"
+                      >
+                        {downloadBusy === `registration-${editingCustomer.id}`
+                          ? "Gerando…"
+                          : "Ficha cadastral PDF"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={Boolean(downloadBusy)}
+                        onClick={() => void pdf(editingCustomer, "performance")}
+                        className="rounded-xl border border-emerald-200 px-4 py-3 text-sm font-bold text-emerald-700 disabled:opacity-50"
+                      >
+                        {downloadBusy === `performance-${editingCustomer.id}`
+                          ? "Gerando…"
+                          : "Análise do cliente PDF"}
+                      </button>
+                    </>
+                  ) : null}
                   <button
                     type="button"
                     onClick={reset}
