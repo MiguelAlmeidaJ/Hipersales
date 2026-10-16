@@ -37,3 +37,7 @@ Os documentos de privacidade, conteúdo de loja e processo de release ficam em [
 ```bash
 pnpm --filter @hipersales/mobile validate:release
 ```
+
+## API versionada
+
+Configure `EXPO_PUBLIC_API_URL` com a base `https://api.hipersalesweb.com.br/api/v1`. No desenvolvimento local, por exemplo, use `http://192.168.0.10:3110/api/v1`. Para preservar configurações anteriores, o app acrescenta `/api/v1` automaticamente quando a variável contém apenas a origem do servidor.

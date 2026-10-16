@@ -2,7 +2,7 @@ import { Controller,Get,Req } from "@nestjs/common";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
 import { DatabaseRepository } from "../database/database.repository.js";
-@Controller("api/admin")
+@Controller(["api/admin", "api/v1/admin"])
 export class OutboxController {
  constructor(private readonly database:DatabaseRepository){}
  @Roles("admin")

@@ -18,7 +18,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 
-import { api, type SessionUser } from "@/lib/api";
+import { api, apiPath, type SessionUser } from "@/lib/api";
 import OrderAdmin from "./order-admin";
 import ProposalForm from "./proposal-form";
 
@@ -442,7 +442,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
                   Linha do tempo
                 </button>
                 <a
-                  href={`/api/proposals/${order.id}/pdf`}
+                  href={apiPath(`/api/proposals/${order.id}/pdf`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
@@ -515,7 +515,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
                 <FiX size={16}/> Fechar
               </button>
-              <a href={`/api/proposals/${timelineOrder.id}/pdf`} target="_blank" rel="noopener noreferrer"
+              <a href={apiPath(`/api/proposals/${timelineOrder.id}/pdf`)} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl bg-[#0767b4] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#073c96]">
                 <FiFileText size={16}/> Abrir PDF
               </a>
@@ -545,7 +545,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
                 className="rounded-xl bg-[#0767b4] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#073c96]"
                 target="_blank"
                 rel="noreferrer"
-                href={`/api/proposals/${current.id}/pdf`}
+                href={apiPath(`/api/proposals/${current.id}/pdf`)}
               >
                 Gerar PDF
               </a>

@@ -5,7 +5,7 @@ import { Roles } from "../common/decorators/roles.decorator.js";
 import { OccurrencesService } from "./occurrences.service.js";
 import { OccurrenceCreationService } from "./occurrence-creation.service.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class OccurrencesController {
   constructor(private readonly occurrences:OccurrencesService,private readonly creation:OccurrenceCreationService){}
   @Post("occurrences")

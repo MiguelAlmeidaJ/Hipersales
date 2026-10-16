@@ -6,10 +6,10 @@ validem os mesmos payloads durante a migracao para NestJS.
 
 | Fronteira | Contrato preservado |
 | --- | --- |
-| Web → API | mesmas rotas `/api/*`, JSON, cookies e codigos HTTP |
+| Web → API | rotas versionadas `/api/v1/*`, JSON, cookies e codigos HTTP |
 | API → SQL Server | schema e migrations versionados pelo Prisma |
 | API → Evolution | `apikey`, `/instance/*`, `/message/sendText/{instance}`, `/webhook/set/{instance}` |
-| Evolution → API | `POST /api/evolution/webhook?token=...` |
+| Evolution → API | `POST /api/v1/evolution/webhook?token=...` |
 | Hospedagem | `HOST`, `PORT`, `SQLSERVER_DATABASE_URL`, `HYPERSALES_PUBLIC_URL` |
 
 Nao alterar os contratos sem testes de caracterizacao, migracao versionada e revisao explicita. Os nomes das instancias WhatsApp seguem `hipersales-tenant-{id}` para preservar o isolamento atual por tenant.

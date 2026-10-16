@@ -11,8 +11,12 @@ export class ApiError extends Error {
   }
 }
 
+export function apiPath(path: `/api/${string}`): `/api/v1/${string}` {
+  return `/api/v1/${path.slice("/api/".length)}`;
+}
+
 export async function api<T>(path: `/api/${string}`, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(apiPath(path), {
     ...options,
     credentials: "same-origin",
     cache: "no-store",

@@ -3,7 +3,7 @@ import { Public } from "../common/decorators/public.decorator.js";
 import { IntegrationsService } from "./integrations.service.js";
 
 @Public()
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class InternalIntegrationsController {
   constructor(private readonly integrations: IntegrationsService) {}
 

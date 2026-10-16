@@ -2,10 +2,18 @@ import { Platform } from "react-native";
 
 const emulatorUrl = Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000";
 const defaultTimeoutMs = 15_000;
+const apiVersion = "v1";
 let sessionToken: string | null = null;
 let unauthorizedHandler: (() => void) | null = null;
 
-export const apiUrl = (process.env.EXPO_PUBLIC_API_URL || emulatorUrl).replace(/\/$/, "");
+function normalizeApiUrl(value: string): string {
+  const url = value.replace(/\/$/, "");
+  if (url.endsWith(`/api/${apiVersion}`)) return url;
+  if (url.endsWith("/api")) return `${url}/${apiVersion}`;
+  return `${url}/api/${apiVersion}`;
+}
+
+export const apiUrl = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || emulatorUrl);
 
 export type ApiErrorCode = "configuration" | "timeout" | "network" | "unauthorized" | "client" | "server";
 
@@ -43,7 +51,7 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
 
   try {
     const { timeoutMs: _timeoutMs, ...fetchOptions } = options;
-    const response = await fetch(`${apiUrl}${path}`, { ...fetchOptions, headers, signal: controller.signal });
+    const response = await fetch(`${apiUrl}${path.slice("/api".length)}`, { ...fetchOptions, headers, signal: controller.signal });
     const data: unknown = await response.json().catch(() => ({}));
     if (!response.ok) {
       const message =

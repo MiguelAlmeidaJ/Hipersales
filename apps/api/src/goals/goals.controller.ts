@@ -5,7 +5,7 @@ import type { AuthenticatedRequest } from "../common/http/authenticated-request.
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 import { GoalsService } from "./goals.service.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class GoalsController {
   constructor(private readonly goals: GoalsService) {}
 

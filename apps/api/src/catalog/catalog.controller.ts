@@ -7,7 +7,7 @@ import { CatalogService } from "./catalog.service.js";
 import { CatalogTransferService } from "./catalog-transfer.service.js";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class CatalogController {
   constructor(private readonly catalog: CatalogService, private readonly transfers: CatalogTransferService) {}
 

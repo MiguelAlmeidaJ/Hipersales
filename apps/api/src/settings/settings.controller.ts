@@ -7,7 +7,7 @@ import { SettingsService } from "./settings.service.js";
 import { IntegrationsService } from "./integrations.service.js";
 
 @Roles("admin")
-@Controller("api/admin/settings")
+@Controller(["api/admin/settings", "api/v1/admin/settings"])
 export class SettingsController {
   constructor(private readonly settings: SettingsService, private readonly integrations: IntegrationsService) {}
 

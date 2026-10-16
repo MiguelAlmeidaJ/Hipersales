@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
-import { api } from "@/lib/api";
+import { api, apiPath } from "@/lib/api";
 
 const reportTypes = [
   ["vendas", "Vendas"],
@@ -54,7 +54,7 @@ export default function ReportsView() {
     if (company) q.set("company_id", company);
     if (customer) q.set("customer_id", customer);
     if (status) q.set("status", status);
-    setUrl(`/api/admin/reports/pdf?${q.toString()}`);
+    setUrl(apiPath(`/api/admin/reports/pdf?${q.toString()}`));
   }
   const field = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5";
   return (

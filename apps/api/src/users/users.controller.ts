@@ -11,7 +11,7 @@ import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 import { UsersService } from "./users.service.js";
 
 @Roles("admin")
-@Controller("api/admin/users")
+@Controller(["api/admin/users", "api/v1/admin/users"])
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 

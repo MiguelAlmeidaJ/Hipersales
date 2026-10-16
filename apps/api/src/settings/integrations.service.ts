@@ -83,7 +83,7 @@ export class IntegrationsService {
   private async configureWebhook(tenantId: number, instance: string): Promise<Row> {
     const token = encodeURIComponent(this.env.whatsappInternalToken);
     return this.evolution("POST", `/webhook/set/${encodeURIComponent(instance)}`, { webhook: {
-      enabled: true, url: `${this.env.publicUrl.origin}/api/evolution/webhook?token=${token}`,
+      enabled: true, url: `${this.env.publicUrl.origin}/api/v1/evolution/webhook?token=${token}`,
       webhook_by_events: false, webhook_base64: false, events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE"],
     }}, true);
   }

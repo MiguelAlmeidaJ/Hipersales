@@ -39,3 +39,7 @@ A suíte de homologação integrada requer `TEST_DATABASE_URL` apontando exclusi
 Rotas são autenticadas por padrão. Use `@Public()` somente em webhooks ou endpoints explicitamente públicos e `@Roles("admin")` nas operações administrativas. O perfil `dev` herda acesso administrativo, mas permanece invisível para `admin` e `seller`; consulte [`docs/access-control.md`](../../docs/access-control.md).
 
 Os workers podem ser desligados separadamente com `HIPERSALES_OUTBOX_WORKER=false` e `HIPERSALES_SCHEDULED_JOBS=false`.
+
+## Versionamento HTTP
+
+O contrato público atual usa o prefixo `/api/v1` e devolve o cabeçalho `X-API-Version: v1`. As rotas históricas sob `/api/*` continuam ativas durante a transição de clientes instalados, mas novos consumidores devem usar somente `/api/v1/*`. Mudanças incompatíveis de payload ou autenticação devem ser publicadas em uma nova versão.

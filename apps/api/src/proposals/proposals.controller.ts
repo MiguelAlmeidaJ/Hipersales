@@ -6,7 +6,7 @@ import { ProposalUpdateService } from "./proposal-update.service.js";
 import { ProposalDeletionService } from "./proposal-deletion.service.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class ProposalsController {
   constructor(private readonly proposals: ProposalsService, private readonly creation: ProposalCreationService, private readonly updates:ProposalUpdateService, private readonly deletion:ProposalDeletionService) {}
 

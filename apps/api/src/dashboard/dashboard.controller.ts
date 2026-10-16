@@ -3,7 +3,7 @@ import { Roles } from "../common/decorators/roles.decorator.js";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { DashboardService } from "./dashboard.service.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class DashboardController {
   constructor(private readonly dashboard: DashboardService) {}
 

@@ -11,7 +11,7 @@ import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 import { AssignmentsService } from "./assignments.service.js";
 
 @Roles("admin")
-@Controller("api/admin")
+@Controller(["api/admin", "api/v1/admin"])
 export class AssignmentsController {
   constructor(private readonly assignments: AssignmentsService) {}
 

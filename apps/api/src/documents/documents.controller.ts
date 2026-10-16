@@ -10,7 +10,7 @@ function send(response: Response, filename: string, content: Buffer): void {
   response.end(content);
 }
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class DocumentsController {
   constructor(private readonly documents: DocumentsService) {}
 

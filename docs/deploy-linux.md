@@ -8,7 +8,7 @@
 - SQL Server: Docker, somente 127.0.0.1:14333, banco interno 1433
 - Evolution API: Docker, somente 127.0.0.1:8081
 
-As rotas /api/* do Next.js são redirecionadas internamente à API pelo `apps/web/next.config.ts`. **Não** configure `NEXT_PUBLIC_API_URL` nem direcione o navegador à API diretamente. O login usa cookie de sessão no host da Web e a rota /api é encaminhada ao backend pelo servidor Next. Os dois serviços têm endereços DNS próprios para testes e integrações.
+As rotas `/api/v1/*` do Next.js são redirecionadas internamente à API pelo `apps/web/next.config.ts`. **Não** configure `NEXT_PUBLIC_API_URL` nem direcione o navegador à API diretamente. O login usa cookie de sessão no host da Web e a rota `/api/v1` é encaminhada ao backend pelo servidor Next. Os dois serviços têm endereços DNS próprios para testes e integrações.
 
 ## 1. Pré-requisitos
 
@@ -112,11 +112,11 @@ O Certbot gerencia a configuração HTTPS e renovação. Após emitir, teste:
 ```bash
 sudo nginx -t
 curl -I https://web.hipersalesweb.com.br
-curl -I https://api.hipersalesweb.com.br/api/me
-curl -I https://web.hipersalesweb.com.br/api/me
+curl -I https://api.hipersalesweb.com.br/api/v1/me
+curl -I https://web.hipersalesweb.com.br/api/v1/me
 ```
 
-As rotas `/api/me` podem responder 401 sem sessão; isso confirma que há uma API respondendo. Verifique o login no navegador e PDF de pedido. A API pública isolada **não** compartilha automaticamente cookie com o frontend — é esperado.
+As rotas `/api/v1/me` podem responder 401 sem sessão; isso confirma que há uma API respondendo. Verifique o login no navegador e PDF de pedido. A API pública isolada **não** compartilha automaticamente cookie com o frontend — é esperado.
 
 ## 4. Atualização
 

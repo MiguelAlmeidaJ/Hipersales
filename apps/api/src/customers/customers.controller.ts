@@ -9,7 +9,7 @@ import { RegistrationReviewService } from "./registration-review.service.js";
 import { RegistrationSubmissionService, type RegistrationInput } from "./registration-submission.service.js";
 import { CustomersWriteService, type CustomerInput } from "./customers-write.service.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class CustomersController {
   constructor(private readonly customers: CustomersService, private readonly writes: CustomersWriteService, private readonly cnpjLookup: CnpjLookupService, private readonly registration: CustomerRegistrationService, private readonly requests: RegistrationRequestsService, private readonly submissions: RegistrationSubmissionService, private readonly reviews: RegistrationReviewService) {}
 

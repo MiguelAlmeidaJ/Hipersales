@@ -80,14 +80,15 @@ suite("API homologation", () => {
     expect(login.body.user).toMatchObject({ role: "admin", tenant_name: "HiperMix" });
     await agent.get("/api/me").expect(200);
 
-    const mobileLogin = await request(app.getHttpServer()).post("/api/mobile/login")
+    const mobileLogin = await request(app.getHttpServer()).post("/api/v1/mobile/login")
       .send({ username: "test.admin", password: "Database-Test-123!" }).expect(200);
+    expect(mobileLogin.headers["x-api-version"]).toBe("v1");
     expect(mobileLogin.body).toMatchObject({ user: { role: "admin" } });
     expect(mobileLogin.body.session_token).toMatch(/^[A-Za-z0-9_-]{32,256}$/);
     const authorization = `Bearer ${mobileLogin.body.session_token}`;
-    await request(app.getHttpServer()).get("/api/me").set("Authorization", authorization).expect(200);
-    await request(app.getHttpServer()).post("/api/logout").set("Authorization", authorization).expect(200);
-    await request(app.getHttpServer()).get("/api/me").set("Authorization", authorization).expect(401);
+    await request(app.getHttpServer()).get("/api/v1/me").set("Authorization", authorization).expect(200);
+    await request(app.getHttpServer()).post("/api/v1/logout").set("Authorization", authorization).expect(200);
+    await request(app.getHttpServer()).get("/api/v1/me").set("Authorization", authorization).expect(401);
   });
 
   it("allows dev administration while hiding dev users from admins", async () => {

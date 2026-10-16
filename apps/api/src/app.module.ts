@@ -13,6 +13,7 @@ import { SettingsModule } from "./settings/settings.module.js";
 import { DocumentsModule } from "./documents/documents.module.js";
 import { JobsModule } from "./jobs/jobs.module.js";
 import { CsrfMiddleware } from "./common/middleware/csrf.middleware.js";
+import { ApiVersionMiddleware } from "./common/middleware/api-version.middleware.js";
 import { RolesGuard } from "./common/guards/roles.guard.js";
 import { SessionGuard } from "./common/guards/session.guard.js";
 import { DatabaseModule } from "./database/database.module.js";
@@ -43,6 +44,6 @@ import { HealthController } from "./health/health.controller.js";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(CsrfMiddleware).forRoutes("*path");
+    consumer.apply(ApiVersionMiddleware, CsrfMiddleware).forRoutes("*path");
   }
 }

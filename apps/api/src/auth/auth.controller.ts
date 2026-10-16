@@ -16,7 +16,7 @@ import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 import { AuthService } from "./auth.service.js";
 import { getSessionToken } from "./session-token.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 

@@ -1,5 +1,8 @@
+import Constants from "expo-constants";
+import { Image } from "expo-image";
 import { Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -11,14 +14,17 @@ void SplashScreen.preventAutoHideAsync();
 export default function IndexScreen() {
   const { status, user, restore } = useSession();
 
-  useEffect(() => {
-    if (status !== "loading") void SplashScreen.hideAsync();
-  }, [status]);
+  useEffect(() => { void SplashScreen.hideAsync(); }, []);
 
   if (status === "loading") {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color={colors.brand} size="large" />
+        <StatusBar style="light" />
+        <Image source={require("../../assets/images/brand-mark.png")} style={styles.brandMark} contentFit="contain" />
+        <Text style={styles.brandName}>HiperSales</Text>
+        <Text style={styles.tagline}>Gestão comercial na palma da mão</Text>
+        <ActivityIndicator color="#FFFFFF" size="small" style={styles.spinner} />
+        <Text style={styles.loadingVersion}>Beta • v{Constants.expoConfig?.version ?? "0.1.0"}</Text>
       </View>
     );
   }
@@ -39,7 +45,12 @@ export default function IndexScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.canvas },
+  loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.brandDark, padding: 24 },
+  brandMark: { width: 164, height: 164 },
+  brandName: { color: "#FFFFFF", fontSize: 28, fontWeight: "900", marginTop: 8 },
+  tagline: { color: "rgba(255,255,255,0.8)", fontSize: 14, marginTop: 5 },
+  spinner: { marginTop: 28 },
+  loadingVersion: { position: "absolute", bottom: 32, color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: "600" },
   errorState: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.canvas, padding: 28 },
   errorTitle: { color: colors.ink, fontSize: 22, fontWeight: "900", textAlign: "center" },
   errorText: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 10 },

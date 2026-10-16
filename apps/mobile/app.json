@@ -32,8 +32,8 @@
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#EDF5FC",
-        "foregroundImage": "./assets/images/brand-mark.png"
+        "backgroundColor": "#073C96",
+        "foregroundImage": "./assets/images/android-adaptive-foreground.png"
       },
       "predictiveBackGestureEnabled": true
     },
@@ -48,7 +48,7 @@
         {
           "backgroundColor": "#073C96",
           "image": "./assets/images/brand-mark.png",
-          "imageWidth": 180
+          "imageWidth": 156
         }
       ],
       [

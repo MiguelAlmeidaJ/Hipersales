@@ -3,7 +3,7 @@ import type { HealthResponse } from "@hipersales/contracts";
 import { Public } from "../common/decorators/public.decorator.js";
 import { DatabaseRepository } from "../database/database.repository.js";
 
-@Controller("api")
+@Controller(["api", "api/v1"])
 export class HealthController {
   constructor(private readonly database: DatabaseRepository) {}
 

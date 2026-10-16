@@ -79,4 +79,4 @@ Preserve o `.env` e faça backup do banco antes de migrations em produção. Dep
 
 O Docker Compose executa SQL Server para o HiperSales e PostgreSQL + Redis para a Evolution API. API em 127.0.0.1:3110, Web em 127.0.0.1:3111 e Evolution em 127.0.0.1:8081. Use proxy reverso TLS e não exponha bancos, Redis ou Evolution publicamente.
 
-Os endpoints `/api/*` e os dados persistidos permanecem intactos.
+O contrato atual fica em `/api/v1/*`. Os endpoints legados `/api/*` continuam temporariamente compatíveis e os dados persistidos permanecem intactos.
