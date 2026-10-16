@@ -58,17 +58,15 @@ export default function NewOrderScreen() {
     if (status !== "authenticated") return () => { current = false; };
     async function load() {
       try {
-        const [companiesResponse, customersResponse] = await Promise.all([
+        const [companiesResponse, customersResponse, sellersResponse] = await Promise.all([
           api<{ companies: Company[] }>(isAdmin ? "/api/admin/companies" : "/api/companies"),
           api<{ customers: Customer[] }>(isAdmin ? "/api/admin/customers" : "/api/customers"),
+          isAdmin ? api<{ users: Seller[] }>("/api/admin/users") : Promise.resolve({ users: [] }),
         ]);
         if (!current) return;
         setCompanies((companiesResponse.companies ?? []).filter((item) => active(item.active)));
         setCustomers((customersResponse.customers ?? []).filter((item) => active(item.active)));
-        if (isAdmin) {
-          const sellersResponse = await api<{ users: Seller[] }>("/api/admin/users");
-          if (current) setSellers((sellersResponse.users ?? []).filter((item) => item.role === "seller" && active(item.active)));
-        }
+        setSellers((sellersResponse.users ?? []).filter((item) => item.role === "seller" && active(item.active)));
       } catch (cause) {
         if (current) setError(cause instanceof Error ? cause.message : "Falha ao carregar dados comerciais.");
       } finally {
@@ -115,6 +113,15 @@ export default function NewOrderScreen() {
     if (step === 0 && (!form.companyId || !form.customerId || (isAdmin && !form.sellerId))) {
       setError(isAdmin ? "Selecione representante, empresa e cliente." : "Selecione empresa e cliente."); return false;
     }
+    if (step === 0 && !bonus && !form.paymentTerms.trim()) {
+      setError("Informe a condição de pagamento."); return false;
+    }
+    if (step === 0 && form.deliveryType === "Entrega Programada" && !validIsoDate(form.scheduledDate)) {
+      setError("Informe uma data programada válida no formato AAAA-MM-DD."); return false;
+    }
+    if (step === 0 && [form.discountPercent, form.commissionPercent].some((value) => !Number.isFinite(decimal(value)) || decimal(value) < 0 || decimal(value) > 100)) {
+      setError("Desconto e comissão devem estar entre 0 e 100%."); return false;
+    }
     if (step === 1 && (!lines.length || lines.some((line) => !(decimal(line.quantity) > 0) || decimal(line.price) < 0 || !Number.isFinite(decimal(line.price))))) {
       setError("Inclua ao menos um produto e confira quantidades e preços."); return false;
     }
@@ -160,16 +167,27 @@ export default function NewOrderScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <View style={styles.header}><Pressable accessibilityLabel="Voltar" accessibilityRole="button" onPress={() => step ? setStep(step - 1) : router.back()} style={styles.back}><Text style={styles.backText}>‹</Text></Pressable><View style={styles.headerCopy}><Text style={styles.eyebrow}>NOVA PROPOSTA · ETAPA {step + 1}/3</Text><Text style={styles.title}>{["Cliente e empresa", "Produtos", "Condições"][step]}</Text></View></View>
+      <View style={styles.header}><Pressable accessibilityLabel="Voltar" accessibilityRole="button" onPress={() => step ? setStep(step - 1) : router.back()} style={styles.back}><Text style={styles.backText}>‹</Text></Pressable><View style={styles.headerCopy}><Text style={styles.eyebrow}>NOVA PROPOSTA · ETAPA {step + 1}/3</Text><Text style={styles.title}>{["Dados da proposta", "Produtos", "Revisão"][step]}</Text></View></View>
       <View style={styles.progress}><View style={[styles.progressValue, { width: `${((step + 1) / 3) * 100}%` }]} /></View>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          {step === 0 ? <FormSection title="Responsáveis pelo pedido" subtitle="As opções respeitam as permissões e associações da sua conta.">
+          {step === 0 ? <><FormSection title="Responsáveis pelo pedido" subtitle="As opções respeitam as permissões e associações da sua conta.">
             {isAdmin ? <SelectField label="Representante *" value={form.sellerId} options={sellerOptions} onChange={(value) => update("sellerId", value)} searchable /> : null}
             <SelectField label="Empresa *" value={form.companyId} options={companyOptions} onChange={changeCompany} searchable />
             <SelectField label="Cliente *" value={form.customerId} options={customerOptions} onChange={(value) => update("customerId", value)} searchable />
             <SelectField label="Tipo de pedido" value={form.orderType} options={[{ value: "Venda de Mercadoria", label: "Venda de Mercadoria" }, { value: "Bonificação", label: "Bonificação" }]} onChange={(value) => update("orderType", value)} />
-          </FormSection> : null}
+          </FormSection><FormSection title="Entrega e faturamento">
+              <SelectField label="Frete" value={form.freightType} options={[{ value: "CIF - Pago pela Industria", label: "CIF - Pago pela Indústria" }, { value: "FOB - Pago pelo Cliente", label: "FOB - Pago pelo Cliente" }]} onChange={(value) => update("freightType", value)} />
+              <SelectField label="Entrega" value={form.deliveryType} options={[{ value: "Entrega Imediata", label: "Entrega Imediata" }, { value: "Entrega Programada", label: "Entrega Programada" }]} onChange={(value) => update("deliveryType", value)} />
+              {form.deliveryType === "Entrega Programada" ? <Field label="Data programada *" value={form.scheduledDate} onChangeText={(value) => update("scheduledDate", value)} placeholder="AAAA-MM-DD" keyboardType="numbers-and-punctuation" maxLength={10} /> : null}
+              <Field label="Pedido de compra" value={form.purchaseOrder} onChangeText={(value) => update("purchaseOrder", value)} maxLength={100} />
+              <Field label="Tipo de nota" value={form.invoiceType} onChangeText={(value) => update("invoiceType", value)} maxLength={100} />
+              <View style={styles.switchRow}><View style={styles.switchCopy}><Text style={styles.switchLabel}>Nota fiscal do operador tributário</Text><Text style={styles.switchHint}>Marque quando a nota fiscal for emitida pelo operador.</Text></View><Switch value={form.taxOperatorInvoice} onValueChange={(value) => update("taxOperatorInvoice", value)} trackColor={{ false: "#CBD5E1", true: "#83BCE2" }} thumbColor={form.taxOperatorInvoice ? colors.brand : "#FFFFFF"} /></View>
+            </FormSection>{!bonus ? <FormSection title="Condições comerciais">
+              <Field label="Pagamento *" value={form.paymentTerms} onChangeText={(value) => update("paymentTerms", value)} maxLength={180} />
+              <View style={styles.twoColumns}><View style={styles.column}><Field label="Comissão (%)" value={form.commissionPercent} onChangeText={(value) => update("commissionPercent", value)} keyboardType="decimal-pad" /></View><View style={styles.column}><Field label="Desconto (%)" value={form.discountPercent} onChangeText={(value) => update("discountPercent", value)} keyboardType="decimal-pad" /></View></View>
+              <SelectField label="Aplicar desconto em" value={form.discountOn} options={["Sem descontos", "Produtos", "Pedido"].map((value) => ({ value, label: value }))} onChange={(value) => update("discountOn", value)} />
+            </FormSection> : <View style={styles.bonusNotice}><Text style={styles.bonusText}>Bonificação: pagamento, comissão e desconto serão enviados zerados.</Text></View>}</> : null}
 
           {step === 1 ? <>
             <FormSection title="Adicionar produtos" subtitle={form.companyId ? `${products.length} produtos disponíveis para a empresa.` : "Selecione uma empresa na etapa anterior."}>
@@ -186,19 +204,14 @@ export default function NewOrderScreen() {
           </> : null}
 
           {step === 2 ? <>
-            <FormSection title="Entrega e faturamento">
-              <SelectField label="Frete" value={form.freightType} options={[{ value: "CIF - Pago pela Industria", label: "CIF - Pago pela Indústria" }, { value: "FOB - Pago pelo Cliente", label: "FOB - Pago pelo Cliente" }]} onChange={(value) => update("freightType", value)} />
-              <SelectField label="Entrega" value={form.deliveryType} options={[{ value: "Entrega Imediata", label: "Entrega Imediata" }, { value: "Entrega Programada", label: "Entrega Programada" }]} onChange={(value) => update("deliveryType", value)} />
-              {form.deliveryType === "Entrega Programada" ? <Field label="Data programada *" value={form.scheduledDate} onChangeText={(value) => update("scheduledDate", value)} placeholder="AAAA-MM-DD" keyboardType="numbers-and-punctuation" maxLength={10} /> : null}
-              <Field label="Pedido de compra" value={form.purchaseOrder} onChangeText={(value) => update("purchaseOrder", value)} maxLength={100} />
-              <Field label="Tipo de nota" value={form.invoiceType} onChangeText={(value) => update("invoiceType", value)} maxLength={100} />
-              <View style={styles.switchRow}><View style={styles.switchCopy}><Text style={styles.switchLabel}>Nota do operador tributário</Text><Text style={styles.switchHint}>Marque quando a nota fiscal for emitida pelo operador.</Text></View><Switch value={form.taxOperatorInvoice} onValueChange={(value) => update("taxOperatorInvoice", value)} trackColor={{ false: "#CBD5E1", true: "#83BCE2" }} thumbColor={form.taxOperatorInvoice ? colors.brand : "#FFFFFF"} /></View>
+            <FormSection title="Revisão da proposta" subtitle="Confira as condições antes do envio.">
+              <View style={styles.reviewRow}><Text style={styles.reviewLabel}>Empresa</Text><Text style={styles.reviewValue}>{companies.find(item=>String(item.id)===form.companyId)?.name||"—"}</Text></View>
+              <View style={styles.reviewRow}><Text style={styles.reviewLabel}>Cliente</Text><Text style={styles.reviewValue}>{customers.find(item=>String(item.id)===form.customerId)?.trade_name||customers.find(item=>String(item.id)===form.customerId)?.legal_name||"—"}</Text></View>
+              <View style={styles.reviewRow}><Text style={styles.reviewLabel}>Pedido</Text><Text style={styles.reviewValue}>{form.orderType}</Text></View>
+              <View style={styles.reviewRow}><Text style={styles.reviewLabel}>Frete / entrega</Text><Text style={styles.reviewValue}>{form.freightType} · {form.deliveryType}</Text></View>
+              {!bonus?<View style={styles.reviewRow}><Text style={styles.reviewLabel}>Pagamento</Text><Text style={styles.reviewValue}>{form.paymentTerms}</Text></View>:null}
+              <View style={styles.reviewRow}><Text style={styles.reviewLabel}>Itens</Text><Text style={styles.reviewValue}>{lines.length}</Text></View>
             </FormSection>
-            {!bonus ? <FormSection title="Condições comerciais">
-              <Field label="Condição de pagamento *" value={form.paymentTerms} onChangeText={(value) => update("paymentTerms", value)} maxLength={180} />
-              <View style={styles.twoColumns}><View style={styles.column}><Field label="Comissão (%)" value={form.commissionPercent} onChangeText={(value) => update("commissionPercent", value)} keyboardType="decimal-pad" /></View><View style={styles.column}><Field label="Desconto (%)" value={form.discountPercent} onChangeText={(value) => update("discountPercent", value)} keyboardType="decimal-pad" /></View></View>
-              <SelectField label="Aplicar desconto em" value={form.discountOn} options={["Sem descontos", "Produtos", "Pedido"].map((value) => ({ value, label: value }))} onChange={(value) => update("discountOn", value)} />
-            </FormSection> : null}
             <FormSection title="Observações e total">
               <Field label="Observações" value={form.notes} onChangeText={(value) => update("notes", value)} multiline maxLength={1500} />
               <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Subtotal</Text><Text style={styles.summaryValue}>{money(subtotal)}</Text></View>{discount > 0 ? <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Desconto</Text><Text style={styles.discount}>− {money(discount)}</Text></View> : null}<View style={[styles.summaryRow, styles.grandTotal]}><Text style={styles.grandTotalLabel}>Total estimado</Text><Text style={styles.grandTotalValue}>{money(total)}</Text></View>
@@ -222,5 +235,6 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }, totalLabel: { color: colors.muted, fontSize: 13, fontWeight: "700" }, totalValue: { color: colors.ink, fontSize: 19, fontWeight: "900" },
   switchRow: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 58 }, switchCopy: { flex: 1 }, switchLabel: { color: colors.ink, fontSize: 13, fontWeight: "800" }, switchHint: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 }, twoColumns: { flexDirection: "row", gap: 10 }, column: { flex: 1 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, summaryLabel: { color: colors.muted, fontSize: 13 }, summaryValue: { color: colors.ink, fontSize: 14, fontWeight: "800" }, discount: { color: colors.success, fontSize: 14, fontWeight: "800" }, grandTotal: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }, grandTotalLabel: { color: colors.ink, fontSize: 15, fontWeight: "900" }, grandTotalValue: { color: colors.brandDark, fontSize: 23, fontWeight: "900" },
+  bonusNotice: { borderRadius: 14, backgroundColor: "#EDF6FC", padding: 14 }, bonusText: { color: colors.brandDark, fontSize: 12, lineHeight: 18, fontWeight: "700" }, reviewRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 16, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: colors.border }, reviewLabel: { color: colors.muted, fontSize: 11, fontWeight: "700" }, reviewValue: { flex: 1, color: colors.ink, fontSize: 12, fontWeight: "800", textAlign: "right" },
   errorCard: { borderRadius: 13, backgroundColor: "#FDECEC", padding: 14 }, errorText: { color: colors.danger, fontSize: 13, lineHeight: 19 }, footer: { flexDirection: "row", gap: 10, marginTop: 2 }, backButton: { minWidth: 100, height: 54, alignItems: "center", justifyContent: "center", borderRadius: 15, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }, backButtonText: { color: colors.ink, fontSize: 14, fontWeight: "800" }, primaryButton: { flex: 1, height: 54, alignItems: "center", justifyContent: "center", borderRadius: 15, backgroundColor: colors.brand }, primaryButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
 });

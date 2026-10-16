@@ -3,106 +3,47 @@ import { useMemo, useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Field, FormSection } from "@/components/form-controls";
+import { AppIcon } from "@/components/app-icon";
+import { Field, FormSection, SelectField } from "@/components/form-controls";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { api } from "@/lib/api";
-import { digitsOnly, formatCnpj } from "@/lib/format";
+import { digitsOnly } from "@/lib/format";
 
 type CustomerForm = {
-  legalName: string;
-  tradeName: string;
-  cnpj: string;
-  stateRegistration: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  address: string;
-  notes: string;
+  cnpj: string; legal_name: string; trade_name: string; contact_person: string;
+  phone_1: string; phone_2: string; purchase_email: string; billing_email: string;
+  xml_email: string; state_registration: string; municipal_registration: string;
+  address: string; address_number: string; neighborhood: string; city: string;
+  state: string; zip_code: string; delivery_address: string; scheduled_delivery: string;
+  scheduling_instructions: string; delivery_warnings: string; notes: string;
 };
+type Lookup = Partial<CustomerForm> & { phone?: string; email?: string; address_line?: string; street?: string; number?: string };
+const defaultScheduling = "Descarga por ordem de chegada de segunda a sexta";
+const initial: CustomerForm = { cnpj:"",legal_name:"",trade_name:"",contact_person:"",phone_1:"",phone_2:"",purchase_email:"",billing_email:"",xml_email:"",state_registration:"",municipal_registration:"",address:"",address_number:"",neighborhood:"",city:"",state:"",zip_code:"",delivery_address:"",scheduled_delivery:"no",scheduling_instructions:defaultScheduling,delivery_warnings:"",notes:"" };
+const states = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"].map(value=>({value,label:value}));
+const yesNo = [{value:"no",label:"Não"},{value:"yes",label:"Sim"}];
+function maskCnpj(value:string){return digitsOnly(value).slice(0,14).replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\/\d{4})(\d)/,"$1-$2");}
+function maskPhone(value:string){const v=digitsOnly(value).slice(0,11);if(v.length<=2)return v.replace(/^(\d{1,2})/,"($1");if(v.length<=6)return v.replace(/^(\d{2})(\d+)/,"($1) $2");if(v.length<=10)return v.replace(/^(\d{2})(\d{4})(\d+)/,"($1) $2-$3");return v.replace(/^(\d{2})(\d{5})(\d{4})/,"($1) $2-$3");}
+function maskZip(value:string){return digitsOnly(value).slice(0,8).replace(/^(\d{5})(\d+)/,"$1-$2");}
+function isValidCnpj(value:string){const v=digitsOnly(value);if(v.length!==14||/^(\d)\1{13}$/.test(v))return false;const check=(length:number)=>{let weight=length-7,total=0;for(let index=0;index<length;index+=1){total+=Number(v[index])*weight--;if(weight<2)weight=9;}const rest=total%11;return rest<2?0:11-rest;};return check(12)===Number(v[12])&&check(13)===Number(v[13]);}
 
-const initial: CustomerForm = { legalName: "", tradeName: "", cnpj: "", stateRegistration: "", contactPerson: "", phone: "", email: "", address: "", notes: "" };
-
-export default function NewCustomerScreen() {
-  const { status, user } = useSession();
-  const [form, setForm] = useState(initial);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const isAdmin = user?.role === "admin" || user?.role === "dev";
-  const title = isAdmin ? "Cadastrar cliente" : "Solicitar cliente";
-  const valid = useMemo(() => Boolean(form.legalName.trim() && digitsOnly(form.cnpj).length === 14 && (isAdmin || (form.contactPerson.trim() && digitsOnly(form.phone).length >= 10))), [form, isAdmin]);
-
-  if (status === "anonymous") return <Redirect href="/login" />;
-  if (status === "unavailable") return <Redirect href="/" />;
-  if (status === "loading") return <SafeAreaView style={styles.loading}><ActivityIndicator size="large" color={colors.brand} /><Text style={styles.loadingText}>Preparando cadastro…</Text></SafeAreaView>;
-
-  function update<K extends keyof CustomerForm>(key: K, value: CustomerForm[K]) {
-    setForm((current) => ({ ...current, [key]: value }));
-  }
-
-  async function submit() {
-    if (!valid) {
-      setError(isAdmin ? "Informe razão social e um CNPJ válido." : "Informe razão social, CNPJ, contato e telefone com DDD.");
-      return;
-    }
-    setBusy(true);
-    setError("");
-    try {
-      const common = {
-        legal_name: form.legalName.trim(), trade_name: form.tradeName.trim(), cnpj: form.cnpj,
-        state_registration: form.stateRegistration.trim(), address: form.address.trim(), notes: form.notes.trim(),
-      };
-      const payload = isAdmin
-        ? { ...common, phone: form.phone.trim(), email: form.email.trim(), active: true }
-        : { ...common, contact_person: form.contactPerson.trim(), phone_1: form.phone.trim(), purchase_email: form.email.trim() };
-      const result = await api<{ id: number; message?: string }>(isAdmin ? "/api/admin/customers" : "/api/customer-requests", {
-        method: "POST", body: JSON.stringify(payload), timeoutMs: 30_000,
-      });
-      Alert.alert(isAdmin ? "Cliente cadastrado" : "Solicitação enviada", result.message || "Operação concluída.", [
-        { text: "OK", onPress: () => router.replace("/(app)/customers") },
-      ]);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível concluir o cadastro.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <View style={styles.header}><Pressable accessibilityLabel="Voltar" accessibilityRole="button" onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>‹</Text></Pressable><View style={styles.headerCopy}><Text style={styles.eyebrow}>CARTEIRA</Text><Text style={styles.title}>{title}</Text></View></View>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-          <FormSection title="Identificação" subtitle={isAdmin ? "O cliente será disponibilizado imediatamente." : "A solicitação seguirá para validação do back office."}>
-            <Field label="Razão social *" value={form.legalName} onChangeText={(value) => update("legalName", value)} autoCapitalize="words" maxLength={240} />
-            <Field label="Nome fantasia" value={form.tradeName} onChangeText={(value) => update("tradeName", value)} autoCapitalize="words" maxLength={240} />
-            <Field label="CNPJ *" value={form.cnpj} onChangeText={(value) => update("cnpj", formatCnpj(value))} keyboardType="number-pad" maxLength={18} hint="Digite os 14 números do CNPJ." />
-            <Field label="Inscrição estadual" value={form.stateRegistration} onChangeText={(value) => update("stateRegistration", value)} maxLength={40} />
-          </FormSection>
-          <FormSection title="Contato" subtitle="Dados utilizados pela equipe comercial.">
-            {!isAdmin ? <Field label="Pessoa de contato *" value={form.contactPerson} onChangeText={(value) => update("contactPerson", value)} autoCapitalize="words" maxLength={180} /> : null}
-            <Field label={isAdmin ? "Telefone" : "Telefone com DDD *"} value={form.phone} onChangeText={(value) => update("phone", value)} keyboardType="phone-pad" maxLength={24} />
-            <Field label="E-mail de compras" value={form.email} onChangeText={(value) => update("email", value.trim())} keyboardType="email-address" autoCapitalize="none" maxLength={254} />
-          </FormSection>
-          <FormSection title="Localização e observações">
-            <Field label="Endereço" value={form.address} onChangeText={(value) => update("address", value)} multiline maxLength={500} />
-            <Field label="Observações" value={form.notes} onChangeText={(value) => update("notes", value)} multiline maxLength={1000} />
-          </FormSection>
-          {error ? <View style={styles.errorCard}><Text style={styles.errorText}>{error}</Text></View> : null}
-          <Pressable accessibilityRole="button" disabled={busy || !valid} onPress={submit} style={[styles.submit, (busy || !valid) && styles.disabled]}>{busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>{isAdmin ? "Cadastrar cliente" : "Enviar solicitação"}</Text>}</Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+export default function NewCustomerScreen(){
+  const {status,user}=useSession();const isAdmin=user?.role==="admin"||user?.role==="dev";
+  const [form,setForm]=useState<CustomerForm>(initial),[verified,setVerified]=useState(""),[searching,setSearching]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
+  const valid=useMemo(()=>isValidCnpj(form.cnpj)&&verified===digitsOnly(form.cnpj)&&Boolean(form.legal_name.trim()&&form.contact_person.trim()&&digitsOnly(form.phone_1).length>=10&&form.purchase_email.trim())&&(form.scheduled_delivery!=="yes"||Boolean(form.scheduling_instructions.trim())),[form,verified]);
+  if(status==="anonymous")return <Redirect href="/login"/>;if(status==="unavailable")return <Redirect href="/"/>;if(status==="loading")return <SafeAreaView style={styles.loading}><ActivityIndicator size="large" color={colors.brand}/><Text style={styles.loadingText}>Preparando cadastro…</Text></SafeAreaView>;
+  function update<K extends keyof CustomerForm>(key:K,value:CustomerForm[K]){setForm(current=>({...current,[key]:value}));}
+  function changeCnpj(value:string){setVerified("");setNotice("");update("cnpj",maskCnpj(value));}
+  async function lookup(){const cnpj=digitsOnly(form.cnpj);setError("");setNotice("");if(!isValidCnpj(cnpj)){setError("CNPJ inválido. Confira os 14 dígitos informados.");return;}setSearching(true);try{const result=await api<Lookup>(`/api/integrations/cnpj?cnpj=${cnpj}`);setForm(old=>digitsOnly(old.cnpj)!==cnpj?old:{...old,legal_name:result.legal_name||old.legal_name,trade_name:result.trade_name||old.trade_name,state_registration:result.state_registration||old.state_registration,phone_1:result.phone?maskPhone(result.phone):old.phone_1,phone_2:result.phone_2?maskPhone(result.phone_2):old.phone_2,purchase_email:result.email||old.purchase_email,address:result.street||result.address_line||result.address||old.address,address_number:result.number||result.address_number||old.address_number,neighborhood:result.neighborhood||old.neighborhood,city:result.city||old.city,state:result.state||old.state,zip_code:result.zip_code?maskZip(result.zip_code):old.zip_code});setVerified(cnpj);setNotice("Consulta concluída. Confira os dados e complete as informações de contato.");}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível consultar o CNPJ.");}finally{setSearching(false);}}
+  async function submit(){if(!valid){setError(verified!==digitsOnly(form.cnpj)?"Consulte o CNPJ antes de enviar.":"Preencha razão social, contato, telefone, e-mail de compras e os dados obrigatórios.");return;}setBusy(true);setError("");try{const payload={...form,cnpj:digitsOnly(form.cnpj),...(isAdmin?{phone:form.phone_1,email:form.purchase_email,active:true}:{})};const result=await api<{id:number;message?:string}>(isAdmin?"/api/admin/customers":"/api/customer-requests",{method:"POST",body:JSON.stringify(payload),timeoutMs:30_000});Alert.alert(isAdmin?"Cliente cadastrado":"Solicitação enviada",result.message||"Operação concluída.",[{text:"OK",onPress:()=>router.replace("/(app)/customers")}]);}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível concluir o cadastro.");}finally{setBusy(false);}}
+  return <SafeAreaView style={styles.safeArea} edges={["top","bottom"]}><View style={styles.header}><Pressable accessibilityLabel="Voltar" accessibilityRole="button" onPress={()=>router.back()} style={styles.back}><AppIcon name="arrow-back" color={colors.ink} size={22}/></Pressable><View style={styles.headerCopy}><Text style={styles.eyebrow}>CADASTRO DE CLIENTES</Text><Text style={styles.title}>{isAdmin?"Cadastrar cliente":"Solicitar novo cliente"}</Text><Text style={styles.subtitle}>Consulte o CNPJ para preencher os dados automaticamente.</Text></View></View><KeyboardAvoidingView style={styles.flex} behavior={Platform.OS==="ios"?"padding":undefined}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+    <FormSection title="Consulta cadastral" subtitle="A API verifica duplicidade e consulta os provedores disponíveis."><Field label="CNPJ *" value={form.cnpj} onChangeText={changeCnpj} keyboardType="number-pad" maxLength={18} placeholder="00.000.000/0000-00"/><Pressable accessibilityRole="button" disabled={searching} onPress={()=>void lookup()} style={[styles.lookup,searching&&styles.disabled]}>{searching?<ActivityIndicator color="#FFF"/>:<AppIcon name="search" color="#FFF" size={18}/>}<Text style={styles.lookupText}>{searching?"Consultando…":"Consultar CNPJ"}</Text></Pressable>{verified?<View style={styles.verified}><AppIcon name="checkmark-circle" color={colors.success} size={18}/><Text style={styles.verifiedText}>Consulta concluída</Text></View>:null}</FormSection>
+    {!isAdmin?<FormSection title="Dados do representante"><Field label="Nome do representante" value={user?.name||""} editable={false}/><Field label="E-mail do representante" value={user?.communication_email||user?.email||""} editable={false}/></FormSection>:null}
+    <FormSection title="Dados cadastrais"><Field label="Razão social *" value={form.legal_name} onChangeText={value=>update("legal_name",value)} maxLength={240}/><Field label="Nome fantasia / fachada" value={form.trade_name} onChangeText={value=>update("trade_name",value)} maxLength={240}/><Field label="Inscrição municipal" value={form.municipal_registration} onChangeText={value=>update("municipal_registration",value)} maxLength={40}/><Field label="Inscrição estadual" value={form.state_registration} onChangeText={value=>update("state_registration",value)} maxLength={40}/><Field label="Endereço" value={form.address} onChangeText={value=>update("address",value)} maxLength={300}/><Field label="Número" value={form.address_number} onChangeText={value=>update("address_number",value)} maxLength={30}/><Field label="Bairro" value={form.neighborhood} onChangeText={value=>update("neighborhood",value)} maxLength={120}/><Field label="Cidade" value={form.city} onChangeText={value=>update("city",value)} maxLength={120}/><SelectField label="UF" value={form.state} onChange={value=>update("state",value)} options={states} searchable/><Field label="CEP" value={form.zip_code} onChangeText={value=>update("zip_code",maskZip(value))} keyboardType="number-pad" maxLength={9} placeholder="00000-000"/></FormSection>
+    <FormSection title="Contato"><Field label="Pessoa de contato *" value={form.contact_person} onChangeText={value=>update("contact_person",value)} maxLength={180}/><Field label="Telefone 1 *" value={form.phone_1} onChangeText={value=>update("phone_1",maskPhone(value))} keyboardType="phone-pad" maxLength={15}/><Field label="Telefone 2" value={form.phone_2} onChangeText={value=>update("phone_2",maskPhone(value))} keyboardType="phone-pad" maxLength={15}/><Field label="E-mail compras *" value={form.purchase_email} onChangeText={value=>update("purchase_email",value.trim())} keyboardType="email-address" autoCapitalize="none" maxLength={254}/><Field label="E-mail boletos" value={form.billing_email} onChangeText={value=>update("billing_email",value.trim())} keyboardType="email-address" autoCapitalize="none" maxLength={254}/><Field label="E-mail XML" value={form.xml_email} onChangeText={value=>update("xml_email",value.trim())} keyboardType="email-address" autoCapitalize="none" maxLength={254}/></FormSection>
+    <FormSection title="Condições de recebimento"><Field label="Endereço de entrega" value={form.delivery_address} onChangeText={value=>update("delivery_address",value)} multiline maxLength={500} hint="Se vazio, será usado o endereço de faturamento."/><SelectField label="Entrega agendada" value={form.scheduled_delivery} onChange={value=>update("scheduled_delivery",value)} options={yesNo}/><Field label={form.scheduled_delivery==="yes"?"Como agendar *":"Como agendar"} value={form.scheduling_instructions} onChangeText={value=>update("scheduling_instructions",value)} editable={form.scheduled_delivery==="yes"} multiline maxLength={500}/><Field label="Advertências para recebimento" value={form.delivery_warnings} onChangeText={value=>update("delivery_warnings",value)} multiline maxLength={1000}/><Field label="Observações adicionais" value={form.notes} onChangeText={value=>update("notes",value)} multiline maxLength={1000}/></FormSection>
+    {notice?<View style={styles.notice}><Text style={styles.noticeText}>{notice}</Text></View>:null}{error?<View style={styles.error}><Text style={styles.errorText}>{error}</Text></View>:null}<Pressable accessibilityRole="button" accessibilityState={{disabled:busy||!valid,busy}} disabled={busy||!valid} onPress={()=>void submit()} style={[styles.submit,(busy||!valid)&&styles.disabled]}>{busy?<ActivityIndicator color="#FFF"/>:<Text style={styles.submitText}>{isAdmin?"Cadastrar cliente":"Enviar solicitação"}</Text>}</Pressable>
+  </ScrollView></KeyboardAvoidingView></SafeAreaView>;
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 }, safeArea: { flex: 1, backgroundColor: colors.canvas },
-  loading: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, backgroundColor: colors.canvas }, loadingText: { color: colors.muted, fontSize: 13 },
-  header: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#EDF3F7" }, backText: { color: colors.ink, fontSize: 31, lineHeight: 33 },
-  headerCopy: { flex: 1 }, eyebrow: { color: colors.brandDark, fontSize: 9, fontWeight: "900", letterSpacing: 1.2 }, title: { color: colors.ink, fontSize: 21, fontWeight: "900", marginTop: 2 },
-  content: { gap: 14, padding: 16, paddingBottom: 38 },
-  errorCard: { borderRadius: 13, backgroundColor: "#FDECEC", padding: 14 }, errorText: { color: colors.danger, fontSize: 13, lineHeight: 19 },
-  submit: { height: 54, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.brand, marginTop: 3 }, disabled: { opacity: 0.48 }, submitText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
-});
+const styles=StyleSheet.create({flex:{flex:1},safeArea:{flex:1,backgroundColor:colors.canvas},loading:{flex:1,alignItems:"center",justifyContent:"center",gap:12,backgroundColor:colors.canvas},loadingText:{color:colors.muted,fontSize:13},header:{flexDirection:"row",alignItems:"flex-start",gap:12,paddingHorizontal:16,paddingVertical:13,backgroundColor:colors.surface,borderBottomWidth:1,borderBottomColor:colors.border},back:{width:42,height:42,borderRadius:14,alignItems:"center",justifyContent:"center",backgroundColor:"#EDF3F7"},headerCopy:{flex:1},eyebrow:{color:colors.brandDark,fontSize:9,fontWeight:"900",letterSpacing:1.2},title:{color:colors.ink,fontSize:21,fontWeight:"900",marginTop:2},subtitle:{color:colors.muted,fontSize:11,lineHeight:16,marginTop:3},content:{gap:14,padding:16,paddingBottom:38},lookup:{height:50,flexDirection:"row",gap:8,alignItems:"center",justifyContent:"center",borderRadius:14,backgroundColor:colors.brand},lookupText:{color:"#FFF",fontSize:14,fontWeight:"900"},verified:{flexDirection:"row",alignItems:"center",gap:7},verifiedText:{color:colors.success,fontSize:12,fontWeight:"800"},notice:{borderRadius:13,backgroundColor:"#E9F8F1",padding:14},noticeText:{color:colors.success,fontSize:12,lineHeight:18,fontWeight:"600"},error:{borderRadius:13,backgroundColor:"#FDECEC",padding:14},errorText:{color:colors.danger,fontSize:13,lineHeight:19},submit:{height:54,borderRadius:15,alignItems:"center",justifyContent:"center",backgroundColor:colors.brand},submitText:{color:"#FFF",fontSize:15,fontWeight:"900"},disabled:{opacity:.48}});
