@@ -241,6 +241,7 @@ model Proposal {
   customer             Customer        @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   items                ProposalItem[]
   events               ProposalEvent[]
+  invoiceFile          ProposalInvoiceFile?
   // Unicidade de order_number nao nulo aplicada por indice filtrado (veja docs/database-filtered-uniques.sql).
   @@index([tenantId, sellerId, status, createdAt])
   @@index([tenantId, companyId, createdAt])
@@ -462,4 +463,16 @@ model Notification {
   @@index([pushSentAt, pushAttempts, createdAt])
   @@index([pushClaimedUntil])
   @@map("notifications")
+}
+
+model ProposalInvoiceFile {
+  proposalId Int @id @map("proposal_id")
+  tenantId Int @map("tenant_id")
+  filename String @db.NVarChar(180)
+  mimetype String @db.NVarChar(80)
+  content Bytes @db.VarBinary(Max)
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.DateTime2
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([tenantId])
+  @@map("proposal_invoice_files")
 }
