@@ -308,7 +308,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
 
       </div>
 
-      {modalOpen && kind === "products" && (
+      {modalOpen && (
         <div
           className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]"
           onMouseDown={(e) => {
