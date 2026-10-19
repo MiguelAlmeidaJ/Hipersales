@@ -345,7 +345,7 @@ export function CatalogEditor({ kind, standalone = false, recordId }: { kind: Ki
               <button
                 type="button"
                 disabled={busy}
-                onClick={reset}
+                onClick={()=>standalone?router.push("/app/produtos"):reset()}
                 className="rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50"
               >
                 ✕
@@ -686,7 +686,7 @@ export function CatalogEditor({ kind, standalone = false, recordId }: { kind: Ki
                   <button
                     type="button"
                     className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50"
-                    onClick={reset}
+                    onClick={()=>standalone?router.push("/app/produtos"):reset()}
                     disabled={busy}
                   >
                     Cancelar
