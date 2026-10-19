@@ -48,6 +48,9 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
   const [files, setFiles] = useState<File[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [search,setSearch]=useState("");
+  const [statusFilter,setStatusFilter]=useState("all");
+  const [showCreate,setShowCreate]=useState(false);
   const [customerQuery, setCustomerQuery] = useState("");
   const [status, setStatus] = useState("aberta");
   const [resolution, setResolution] = useState("");
@@ -143,7 +146,10 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
   }
   return (
     <section className="min-w-0 space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Atendimento e suporte</p><p className="text-sm text-slate-500">Registre, acompanhe e resolva solicitações comerciais.</p></div><span className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700">{rows.length} registros</span></div>
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Atendimento e suporte</p><h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">Ocorrências</h1><p className="mt-1 text-sm text-slate-500">Consulte e acompanhe os registros comerciais.</p></div><button type="button" onClick={()=>setShowCreate(x=>!x)} className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white">{showCreate?"Fechar cadastro":"+ Nova ocorrência"}</button></header>
+      <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-500">Registros</p><p className="mt-1 text-2xl font-extrabold">{rows.length}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-500">Em andamento</p><p className="mt-1 text-2xl font-extrabold text-[#0767b4]">{rows.filter(o=>o.status==="aberta"||o.status==="em_analise").length}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-500">Solucionadas</p><p className="mt-1 text-2xl font-extrabold text-emerald-700">{rows.filter(o=>o.status==="solucionada").length}</p></div></div>
+      <div className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4"><input type="search" aria-label="Pesquisar ocorrências" className="min-w-56 flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm" placeholder="Pesquisar R.O., cliente, motivo ou CNPJ" value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label="Filtrar status" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"><option value="all">Todos os status</option>{statuses.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></div>
+      {showCreate && <>
       <form className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 xl:grid-cols-3" onSubmit={create}>
         <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
           Cliente — busque por razão social, fantasia ou CNPJ
@@ -194,7 +200,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
         <button type="submit" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={busy}>
           {busy ? "Enviando…" : "Registrar ocorrência"}
         </button>
-      </form>
+      </form></>}
       {error && (
         <p className="error" role="alert">
           {error}
@@ -202,13 +208,13 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
       )}
       {notice && <p role="status">{notice}</p>}
       <div className="grid gap-4 lg:grid-cols-2">
-        {rows.map(o=><article key={o.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        {rows.filter(o=>(statusFilter==="all"||o.status===statusFilter)&&[String(o.id),o.customer_name,o.customer_cnpj,o.reason,o.description].join(" ").toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR"))).map(o=><article key={o.id} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md">
           <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="text-lg font-bold">R.O. {String(o.id).padStart(4,"0")}</h3><p className="text-xs text-slate-500">{o.created_at?new Date(o.created_at).toLocaleString("pt-BR"):"—"}</p></div><span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">{statuses.find(s=>s[0]===o.status)?.[1]||o.status||"Aberta"}</span></div>
           <p className="mt-3 font-semibold">{o.customer_name} {o.customer_cnpj?" · "+o.customer_cnpj:""}</p>
           <p className="mt-2 text-xs font-bold uppercase text-[#0767b4]">{o.reason}</p>
-          <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600">{o.description}</p>
+          <p className="mt-3 line-clamp-5 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{o.description}</p>
           {o.resolution&&<div className="mt-3 rounded-xl bg-emerald-50 p-3"><p className="text-xs font-bold text-emerald-800">Parecer final</p><p className="whitespace-pre-wrap text-sm">{o.resolution}</p></div>}
-          <div className="mt-4 flex flex-wrap gap-2"><button type="button" className="secondary" onClick={()=>setSelected(selected===o.id?null:o.id)}>{selected===o.id?"Fechar detalhes":"Anexos e linha do tempo"}</button>{admin&&<button type="button" className="secondary" onClick={()=>{setEditing(o.id);setStatus(o.status||"aberta");setResolution(o.resolution||"");}}>Editar parecer</button>}</div>
+          <div className="mt-auto flex flex-wrap gap-2 pt-5"><button type="button" className="secondary" onClick={()=>setSelected(selected===o.id?null:o.id)}>{selected===o.id?"Fechar detalhes":"Anexos e linha do tempo"}</button>{admin&&<button type="button" className="secondary" onClick={()=>{setEditing(o.id);setStatus(o.status||"aberta");setResolution(o.resolution||"");}}>Editar parecer</button>}</div>
           <button type="button" className="secondary mt-3" onClick={()=>void downloadApiFile(`/api/occurrences/${o.id}/pdf`,`ocorrencia-${o.id}.pdf`).catch(e=>setError(e instanceof Error?e.message:"Falha ao gerar PDF"))}>PDF da ocorrência</button>
           {selected===o.id&&<div className="mt-4 space-y-4 border-t pt-4"><div><h4 className="text-sm font-bold">Anexos</h4>{o.attachments?.length?o.attachments.map(a=><button type="button" key={a.id} className="mt-2 block text-left text-sm text-[#0767b4] underline" onClick={()=>void downloadApiFile(`/api/occurrences/${o.id}/attachments/${a.id}`,a.filename).catch(e=>setError(e instanceof Error?e.message:"Falha ao baixar anexo"))}>{a.filename}</button>):<p className="text-sm text-slate-500">Sem anexos disponíveis.</p>}</div><div><h4 className="text-sm font-bold">Linha do tempo</h4>{o.timeline?.map((e,i)=><div key={e.id||i} className="mt-2 border-l-2 border-[#0767b4] pl-3"><p className="text-sm font-semibold">{e.title}</p><p className="text-xs text-slate-500">{e.created_at?new Date(e.created_at).toLocaleString("pt-BR"):""} · {e.created_by_name||"Sistema"}</p><p className="whitespace-pre-wrap text-sm">{e.notes}</p></div>)}</div></div>}
         </article>)}

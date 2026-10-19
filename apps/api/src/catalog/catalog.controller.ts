@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req, Res, Post, Patch, Delete, Param, Body, ParseIntPipe } from "@nestjs/common";
+import { BadGatewayException, BadRequestException, Controller, Get, Query, Req, Res, Post, Patch, Delete, Param, Body, ParseIntPipe } from "@nestjs/common";
 import { companyMutationSchema, productImportSchema, productMutationSchema,
   type CompanyMutation, type ProductImport, type ProductMutation } from "@hipersales/contracts";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
@@ -55,6 +55,31 @@ export class CatalogController {
     response.setHeader("Content-Disposition",`attachment; filename="ficha-empresa-${id}.pdf"`);
     response.setHeader("Cache-Control","no-store");
     response.send(buffer);
+  }
+
+  @Roles("admin")
+  @Get("admin/companies/lookup-cnpj")
+  async lookupCnpj(@Query("cnpj") input:string){
+    const cnpj=String(input||"").replace(/[^0-9]/g,"");
+    if(cnpj.length!==14)throw new BadRequestException("Informe um CNPJ com 14 dígitos.");
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),6500);
+    try{
+      const response=await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`,{signal:controller.signal,headers:{Accept:"application/json"}});
+      if(response.status===404)throw new BadRequestException("CNPJ não encontrado.");
+      if(!response.ok)throw new BadGatewayException("Consulta de CNPJ indisponível. Tente novamente.");
+      const info=await response.json() as Record<string,unknown>;
+      const str=(key:string)=>typeof info[key]==="string"?String(info[key]).trim():"";
+      return {company:{
+        legal_name:str("razao_social"),trade_name:str("nome_fantasia"),name:str("nome_fantasia")||str("razao_social"),
+        cnpj, address:[str("descricao_tipo_de_logradouro"),str("logradouro")].filter(Boolean).join(" "),
+        address_number:str("numero"),address_complement:str("complemento"),district:str("bairro"),
+        city:str("municipio"),state:str("uf"),postal_code:str("cep"),phone:str("ddd_telefone_1"),email:str("email")
+      },source:"BrasilAPI"};
+    }catch(error){
+      if(error instanceof BadRequestException||error instanceof BadGatewayException)throw error;
+      throw new BadGatewayException("Não foi possível consultar o CNPJ neste momento.");
+    }finally{clearTimeout(timeout);}
   }
 
   @Roles("admin")

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { api, downloadApiFile } from "@/lib/api";
 
 type Item = {
@@ -303,13 +304,8 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
           <p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Catálogo</p>
           <p className="text-sm text-slate-500">{records.length} registros cadastrados</p>
         </div>
-        <button
-          type="button"
-          className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white hover:bg-[#073c96]"
-          onClick={openNew}
-        >
-          + {kind === "products" ? "Novo produto" : "Nova empresa"}
-        </button>
+        {kind === "companies" ? <Link href="/app/empresas/nova" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white">+ Nova empresa</Link> : <button type="button" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white" onClick={openNew}>+ Novo produto</button>}
+
       </div>
 
       {modalOpen && (
@@ -845,13 +841,8 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                 </td>
                 <td>
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                      onClick={() => edit(x)}
-                    >
-                      Editar
-                    </button>
+                    {kind==="companies" ? <Link href={`/app/empresas/${x.id}`} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Editar</Link> : <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50" onClick={()=>edit(x)}>Editar</button>}
+
                     {kind === "companies" && (
                       <button type="button" className="rounded-lg border border-[#0767b4] px-3 py-1.5 text-xs font-semibold text-[#0767b4]" onClick={()=>void downloadApiFile(`/api/admin/companies/${x.id}/pdf`,`ficha-empresa-${x.id}.pdf`).catch(e=>setError(e instanceof Error?e.message:"Não foi possível gerar a ficha."))}>
                         Ficha PDF

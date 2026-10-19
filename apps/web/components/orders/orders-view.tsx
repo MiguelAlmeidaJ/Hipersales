@@ -20,7 +20,7 @@ import {
 
 import { api, apiPath, downloadApiFile, type SessionUser } from "@/lib/api";
 import OrderAdmin from "./order-admin";
-import ProposalForm from "./proposal-form";
+import Link from "next/link";
 
 type Item = {
   id: number;
@@ -140,7 +140,6 @@ const formatDate = (value: string) => {
 };
 
 export default function OrdersView({ user }: { user: SessionUser }) {
-  const [showForm, setShowForm] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,25 +236,8 @@ export default function OrdersView({ user }: { user: SessionUser }) {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowForm((value) => !value)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0767b4] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#073c96]"
-        >
-          <FiPlus size={18} />
-          {showForm ? "Fechar formulário" : "Nova proposta"}
-        </button>
+        <Link href="/app/pedidos/nova" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0767b4] px-4 text-sm font-bold text-white shadow-sm transition hover:bg-[#073c96]"><FiPlus size={18}/> Nova proposta</Link>
       </div>
-
-      {showForm && (
-        <ProposalForm
-          user={user}
-          onCreated={() => {
-            setRefresh((value) => value + 1);
-            setShowForm(false);
-          }}
-        />
-      )}
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex items-center justify-between gap-3">
