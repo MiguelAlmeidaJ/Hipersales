@@ -151,6 +151,15 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
     }catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível salvar.");}
     finally{setBusy(false);}
   }
+  async function shareOrderPdf(){
+    try{
+      const resource=authenticatedResource(("/api/proposals/"+proposal.id+"/pdf") as never);
+      if(!resource.headers.Authorization)throw new Error("Sessão expirada.");
+      const result=await FileSystem.downloadAsync(resource.url,FileSystem.cacheDirectory+"pedido-"+proposal.id+".pdf",{headers:resource.headers});
+      if(result.status!==200)throw new Error("PDF do pedido não disponível.");
+      await Sharing.shareAsync(result.uri,{mimeType:"application/pdf"});
+    }catch(cause){Alert.alert("PDF do pedido",cause instanceof Error?cause.message:"Não foi possível gerar o documento.");}
+  }
   async function shareInvoice(){
     try{
       const resource=authenticatedResource(("/api/proposals/"+proposal.id+"/invoice-pdf") as never);
@@ -193,6 +202,7 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
           <Detail label="Pedido da indústria" value={proposal.industry_order_number} />
           <Detail label="Nota fiscal" value={proposal.invoice_number} />
         </View>
+        <SecondaryButton title="Compartilhar PDF do pedido" onPress={()=>void shareOrderPdf()}/>
         {proposal.has_invoice_pdf?<SecondaryButton title="Baixar nota fiscal PDF" onPress={()=>void shareInvoice()}/>:null}
         {admin && <View style={{marginVertical:15,gap:12}}>
           <SecondaryButton title={editing?"Fechar edição":"Editar dados da retaguarda"} onPress={()=>setEditing(!editing)}/>
