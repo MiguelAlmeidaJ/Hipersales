@@ -35,7 +35,7 @@ export class ProposalsService {
       c.legal_name AS customer_name, c.trade_name AS customer_trade_name,
       c.cnpj AS customer_cnpj, c.state_registration AS customer_state_registration,
       c.address AS customer_address, c.phone AS customer_phone, c.email AS customer_email,
-      co.name AS company_name
+      co.name AS company_name, co.lead_time_days AS lead_time_days
       FROM proposals p
       JOIN users u ON u.id = p.seller_id
       JOIN customers c ON c.id = p.customer_id
