@@ -18,7 +18,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 
-import { api, apiPath, type SessionUser } from "@/lib/api";
+import { api, apiPath, downloadApiFile, type SessionUser } from "@/lib/api";
 import OrderAdmin from "./order-admin";
 import ProposalForm from "./proposal-form";
 
@@ -47,6 +47,7 @@ type Order = {
   status: string;
   company_name: string;
   customer_cnpj?: string;
+  has_invoice_pdf?: number | boolean;
   lead_time_days?: number;
   customer_name: string;
   seller_name: string;
@@ -578,6 +579,7 @@ export default function OrdersView({ user }: { user: SessionUser }) {
             <div><p className="text-xs text-slate-500">Total com descontos</p><p className="font-semibold">{cash(orderTotal(current) * (1 - Number(current.discount_percent || 0)/100))}</p></div>
             <div><p className="text-xs text-slate-500">Ordem de compra</p><p className="font-semibold">{current.purchase_order || "—"}</p></div>
           </div>
+          {Boolean(current.has_invoice_pdf) && <button type="button" className="mb-4 rounded-xl border border-[#0767b4] px-4 py-2 text-sm font-semibold text-[#0767b4]" onClick={()=>void downloadApiFile(`/api/proposals/${current.id}/invoice-pdf`,`nota-fiscal-${current.id}.pdf`).catch(e=>setError(e instanceof Error?e.message:"Falha ao baixar nota fiscal"))}>Baixar PDF da nota fiscal</button>}
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div className="rounded-xl bg-slate-50 p-3">
               <dt className="text-xs font-semibold text-slate-500">Representante</dt>
