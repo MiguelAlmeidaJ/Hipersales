@@ -38,6 +38,12 @@ export type Proposal = {
   billing_date?: string | null;
   delivered_date?: string | null;
   has_invoice_pdf?: number | boolean;
+  discount_percent?: number;
+  commission_percent?: number;
+  discount_on?: string | null;
+  invoice_type?: string | null;
+  scheduled_delivery_date?: string | null;
+  tax_operator_invoice?: boolean | number;
   lead_time_days?: number;
   customer_cnpj?: string | null;
   purchase_order?: string | null;
