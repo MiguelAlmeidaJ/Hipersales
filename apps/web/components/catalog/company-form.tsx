@@ -51,7 +51,7 @@ export default function CompanyForm({id}:{id?:number}){
   async function save(event:FormEvent<HTMLFormElement>){
     event.preventDefault();setBusy(true);setError("");
     try{
-      await api(id?`/api/admin/companies/${id}`:"/api/admin/companies",{
+      await api((id?`/api/admin/companies/${id}`:"/api/admin/companies") as `/api/${string}`,{
         method:id?"PATCH":"POST",
         body:JSON.stringify({...form,lead_time_days:Number(form.lead_time_days||0)})
       });
