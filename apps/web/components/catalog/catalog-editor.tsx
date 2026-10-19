@@ -1,12 +1,27 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { api } from "@/lib/api";
+import { api, downloadApiFile } from "@/lib/api";
 
 type Item = {
   id: number;
   name: string;
   legal_name?: string;
+  trade_name?: string;
+  cnpj?: string;
+  state_registration?: string;
+  tax_regime?: string;
+  address?: string;
+  address_number?: string;
+  address_complement?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  lead_time_days?: number;
   active?: number | boolean;
   company_id?: number;
   company_name?: string;
@@ -41,6 +56,21 @@ const fieldClass =
 const emptyForm = {
   name: "",
   legal_name: "",
+  trade_name: "",
+  cnpj: "",
+  state_registration: "",
+  tax_regime: "",
+  address: "",
+  address_number: "",
+  address_complement: "",
+  district: "",
+  city: "",
+  state: "",
+  postal_code: "",
+  phone: "",
+  email: "",
+  website: "",
+  lead_time_days: "0",
   company_id: "",
   code: "",
   product_group: "",
@@ -153,6 +183,21 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
     setForm({
       name: item.name,
       legal_name: item.legal_name || "",
+      trade_name: item.trade_name || "",
+      cnpj: item.cnpj || "",
+      state_registration: item.state_registration || "",
+      tax_regime: item.tax_regime || "",
+      address: item.address || "",
+      address_number: item.address_number || "",
+      address_complement: item.address_complement || "",
+      district: item.district || "",
+      city: item.city || "",
+      state: item.state || "",
+      postal_code: item.postal_code || "",
+      phone: item.phone || "",
+      email: item.email || "",
+      website: item.website || "",
+      lead_time_days: String(item.lead_time_days ?? 0),
       company_id: String(item.company_id ?? ""),
       code: item.code || "",
       product_group: item.product_group || "",
@@ -178,7 +223,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
     try {
       const payload =
         kind === "companies"
-          ? { name: form.name, legal_name: form.legal_name, active: form.active }
+          ? { name: form.name, legal_name: form.legal_name, trade_name: form.trade_name, cnpj: form.cnpj, state_registration: form.state_registration, tax_regime: form.tax_regime, address: form.address, address_number: form.address_number, address_complement: form.address_complement, district: form.district, city: form.city, state: form.state, postal_code: form.postal_code, phone: form.phone, email: form.email, website: form.website, lead_time_days: Number(form.lead_time_days || 0), active: form.active }
           : {
               name: form.name,
               company_id: Number(form.company_id),
@@ -322,6 +367,66 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                         value={form.legal_name}
                         onChange={(e) => setForm((x) => ({ ...x, legal_name: e.target.value }))}
                       />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Nome fantasia
+                      <input className={fieldClass} value={form.trade_name} onChange={e=>setForm(x=>({...x,trade_name:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      CNPJ
+                      <input className={fieldClass} value={form.cnpj} onChange={e=>setForm(x=>({...x,cnpj:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Inscrição estadual
+                      <input className={fieldClass} value={form.state_registration} onChange={e=>setForm(x=>({...x,state_registration:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Regime fiscal
+                      <input className={fieldClass} value={form.tax_regime} onChange={e=>setForm(x=>({...x,tax_regime:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Endereço
+                      <input className={fieldClass} value={form.address} onChange={e=>setForm(x=>({...x,address:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Número
+                      <input className={fieldClass} value={form.address_number} onChange={e=>setForm(x=>({...x,address_number:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Complemento
+                      <input className={fieldClass} value={form.address_complement} onChange={e=>setForm(x=>({...x,address_complement:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Bairro
+                      <input className={fieldClass} value={form.district} onChange={e=>setForm(x=>({...x,district:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Município
+                      <input className={fieldClass} value={form.city} onChange={e=>setForm(x=>({...x,city:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      UF
+                      <input className={fieldClass} value={form.state} onChange={e=>setForm(x=>({...x,state:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      CEP
+                      <input className={fieldClass} value={form.postal_code} onChange={e=>setForm(x=>({...x,postal_code:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Telefone
+                      <input className={fieldClass} value={form.phone} onChange={e=>setForm(x=>({...x,phone:e.target.value}))} />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      E-mail
+                      <input className={fieldClass} value={form.email} onChange={e=>setForm(x=>({...x,email:e.target.value}))} type="email"/>
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Site
+                      <input className={fieldClass} value={form.website} onChange={e=>setForm(x=>({...x,website:e.target.value}))} type="text"/>
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold text-slate-600">
+                      Lead time (dias)
+                      <input type="number" min={0} max={3650} step={1} className={fieldClass} value={form.lead_time_days} onChange={e=>setForm(x=>({...x,lead_time_days:e.target.value}))}/>
                     </label>
                   </div>
                 ) : (
@@ -747,6 +852,11 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                     >
                       Editar
                     </button>
+                    {kind === "companies" && (
+                      <button type="button" className="rounded-lg border border-[#0767b4] px-3 py-1.5 text-xs font-semibold text-[#0767b4]" onClick={()=>void downloadApiFile(`/api/admin/companies/${x.id}/pdf`,`ficha-empresa-${x.id}.pdf`).catch(e=>setError(e instanceof Error?e.message:"Não foi possível gerar a ficha."))}>
+                        Ficha PDF
+                      </button>
+                    )}
                     {kind === "products" && (
                       <button
                         type="button"

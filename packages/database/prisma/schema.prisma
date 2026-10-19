@@ -82,6 +82,21 @@ model Session {
 }
 
 model Company {
+  tradeName String? @map("trade_name")
+  cnpj String?
+  stateRegistration String? @map("state_registration")
+  taxRegime String? @map("tax_regime")
+  address String?
+  addressNumber String? @map("address_number")
+  addressComplement String? @map("address_complement")
+  district String?
+  city String?
+  state String?
+  postalCode String? @map("postal_code")
+  phone String?
+  email String?
+  website String?
+  leadTimeDays Int @default(0) @map("lead_time_days")
   id          Int             @id @default(autoincrement())
   tenantId    Int             @map("tenant_id")
   name        String
