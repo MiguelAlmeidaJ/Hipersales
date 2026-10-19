@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api, downloadApiFile } from "@/lib/api";
 
 type Item = {
@@ -88,7 +89,8 @@ const emptyForm = {
   active: true,
 };
 
-export function CatalogEditor({ kind }: { kind: Kind }) {
+export function CatalogEditor({ kind, standalone = false, recordId }: { kind: Kind; standalone?: boolean; recordId?: number }) {
+  const router=useRouter();
   const [records, setRecords] = useState<Item[]>([]);
   const [companies, setCompanies] = useState<Item[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
@@ -120,6 +122,12 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
       try {
         const data = await api<{ companies?: Item[]; products?: Item[] }>(endpoint);
         if (active) setRecords(data[kind] || []);
+        if(active && standalone && kind==="products"){
+          const existing=data.products?.find(item=>item.id===recordId);
+          if(recordId&&!existing)setError("Produto não encontrado.");
+          else if(existing)edit(existing);
+          else openNew();
+        }
         if (kind === "products") {
           const c = await api<{ companies: Item[] }>("/api/admin/companies");
           if (active) setCompanies(c.companies || []);
@@ -132,7 +140,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
     return () => {
       active = false;
     };
-  }, [endpoint, kind]);
+  }, [endpoint, kind, standalone, recordId]);
 
   async function removeProduct(item: Item) {
     if (
@@ -164,6 +172,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
     setEditingRecord(null);
     setModalOpen(false);
     setForm(emptyForm);
+    if(standalone)router.push("/app/produtos");
   }
 
   function openNew() {
@@ -248,8 +257,8 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
         body: JSON.stringify(payload),
       });
       await reload();
-      reset();
-      setNotice("Dados salvos com sucesso.");
+      if(standalone){router.push("/app/produtos");router.refresh();}
+      else {reset();setNotice("Dados salvos com sucesso.");}
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao salvar");
     } finally {
@@ -288,7 +297,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
 
   return (
     <section className="min-w-0 space-y-5">
-      <div>
+      {!standalone && <><div>
         <h2 className="text-xl font-extrabold text-slate-900">
           {kind === "companies" ? "Empresas" : "Produtos"}
         </h2>
@@ -304,13 +313,14 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
           <p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Catálogo</p>
           <p className="text-sm text-slate-500">{records.length} registros cadastrados</p>
         </div>
-        {kind === "companies" ? <Link href="/app/empresas/nova" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white">+ Nova empresa</Link> : <button type="button" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white" onClick={openNew}>+ Novo produto</button>}
+        {kind === "companies" ? <Link href="/app/empresas/nova" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white">+ Nova empresa</Link> : <button type="button" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white" onClick={()=>router.push("/app/produtos/novo")}>+ Novo produto</button>}
 
       </div>
 
+      </>}
       {modalOpen && (
         <div
-          className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]"
+          className={standalone?"w-full":"fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]"}
           onMouseDown={(e) => {
             if (e.target === e.currentTarget && !busy) reset();
           }}
@@ -319,7 +329,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
             role="dialog"
             aria-modal="true"
             aria-label={kind === "products" ? "Cadastro de produto" : "Cadastro de empresa"}
-            className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className={standalone?"mx-auto w-full max-w-5xl rounded-2xl border border-slate-200 bg-white shadow-sm":"w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl"}
           >
             <div className="flex items-center justify-between border-b border-slate-100 p-5">
               <div>
@@ -343,7 +353,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
               </button>
             </div>
 
-            <div className="max-h-[78dvh] overflow-y-auto p-5">
+            <div className={standalone?"p-6 sm:p-8":"max-h-[78dvh] overflow-y-auto p-5"}>
               <form onSubmit={submit} className="space-y-6">
                 {kind === "companies" ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -696,6 +706,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
         </div>
       )}
 
+      {!standalone && <>
       {error && !modalOpen && (
         <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700" role="alert">
           {error}
@@ -841,7 +852,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
                 </td>
                 <td>
                   <div className="flex flex-wrap gap-2">
-                    {kind==="companies" ? <Link href={`/app/empresas/${x.id}`} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Editar</Link> : <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50" onClick={()=>edit(x)}>Editar</button>}
+                    {kind==="companies" ? <Link href={`/app/empresas/${x.id}`} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Editar</Link> : <button type="button" className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50" onClick={()=>router.push(`/app/produtos/${x.id}`)}>Editar</button>}
 
                     {kind === "companies" && (
                       <button type="button" className="rounded-lg border border-[#0767b4] px-3 py-1.5 text-xs font-semibold text-[#0767b4]" onClick={()=>void downloadApiFile(`/api/admin/companies/${x.id}/pdf`,`ficha-empresa-${x.id}.pdf`).catch(e=>setError(e instanceof Error?e.message:"Não foi possível gerar a ficha."))}>
@@ -899,6 +910,7 @@ export function CatalogEditor({ kind }: { kind: Kind }) {
           </button>
         </div>
       </div>
+      </>}
     </section>
   );
 }
