@@ -73,6 +73,15 @@ export function getModuleFromPath(path: string) {
   if (normalized === "/app/empresas/nova" || /^\/app\/empresas\/\d+$/.test(normalized)) {
     return modules.find((module) => module.id === "companies") ?? null;
   }
+  if(normalized==="/app/clientes/nova" || /^\/app\/clientes\/\d+$/.test(normalized)) {
+    return modules.find(module=>module.id==="customers")??null;
+  }
+  if(normalized==="/app/produtos/novo" || /^\/app\/produtos\/\d+$/.test(normalized)) {
+    return modules.find(module=>module.id==="products")??null;
+  }
+  if(normalized==="/app/ocorrencias/nova") {
+    return modules.find(module=>module.id==="occurrences")??null;
+  }
   return null;
 }
 export function visibleModules(role: string) {
