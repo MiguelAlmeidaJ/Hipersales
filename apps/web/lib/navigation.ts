@@ -62,15 +62,15 @@ export const modules: ModuleDefinition[] = [
 ];
 export const modulePath = (module: ModuleDefinition) => `/app/${module.slug}`;
 export function getModuleFromPath(path: string) {
-  const normalized = path.replace(/\\/+$, "") || "/";
+  const normalized = path.replace(/\/+$/, "") || "/";
   const exact = modules.find((module) => modulePath(module) === normalized);
   if (exact) return exact;
 
-  // Nested pages share the parent module's access policy and navigation state.
+  // Pages nested under a module inherit the existing module access policy.
   if (normalized === "/app/pedidos/nova") {
     return modules.find((module) => module.id === "orders") ?? null;
   }
-  if (normalized === "/app/empresas/nova" || /^\\/app\\/empresas\\/\\d+$/.test(normalized)) {
+  if (normalized === "/app/empresas/nova" || /^\/app\/empresas\/\d+$/.test(normalized)) {
     return modules.find((module) => module.id === "companies") ?? null;
   }
   return null;
