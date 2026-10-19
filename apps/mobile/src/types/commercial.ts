@@ -34,6 +34,12 @@ export type Proposal = {
   delivery_forecast?: string | null;
   industry_order_number?: string | null;
   invoice_number?: string | null;
+  admin_notes?: string | null;
+  billing_date?: string | null;
+  delivered_date?: string | null;
+  has_invoice_pdf?: number | boolean;
+  lead_time_days?: number;
+  customer_cnpj?: string | null;
   purchase_order?: string | null;
   notes?: string | null;
   items?: ProposalItem[];
