@@ -159,7 +159,7 @@ suite("API homologation", () => {
 
   it("persists occurrence attachments and status history", async () => {
     occurrenceId = (await agent.post("/api/occurrences").send({
-      seller_id: sellerId, customer_id: customerId, reason: "Teste",
+      seller_id: sellerId, customer_id: customerId, reason: "DIVERGÊNCIA DE QUANTIDADE",
       description: "Ocorrencia Test",
       attachments: [{ filename: "teste.txt", mimetype: "text/plain", content: "dGVzdGU=" }],
     }).expect(201)).body.id;
@@ -169,6 +169,8 @@ suite("API homologation", () => {
     expect(occurrence).toMatchObject({ status: "solucionada", resolution: "Validada" });
     const attachment = await agent.get(`/api/occurrences/${occurrenceId}/attachments/${occurrence.attachments[0].id}`).expect(200);
     expect(attachment.text).toBe("teste");
+    const pdf = await agent.get(`/api/occurrences/${occurrenceId}/pdf`).expect(200);
+    expect(pdf.headers["content-type"]).toContain("application/pdf");
   });
 
   it("serves dashboards, settings and HiperMix administration", async () => {
