@@ -439,7 +439,7 @@ export default function CustomerEditor({ standalone = false, customerId }: { sta
               </div>
               <button
                 type="button"
-                onClick={reset}
+                onClick={()=>standalone?router.push("/app/clientes"):reset()}
                 disabled={busy}
                 aria-label="Fechar"
                 className="rounded-lg border border-slate-200 px-3 py-2 font-semibold"
@@ -719,7 +719,7 @@ export default function CustomerEditor({ standalone = false, customerId }: { sta
                   ) : null}
                   <button
                     type="button"
-                    onClick={reset}
+                    onClick={()=>standalone?router.push("/app/clientes"):reset()}
                     disabled={busy}
                     className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold"
                   >
