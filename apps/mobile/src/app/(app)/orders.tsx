@@ -1,7 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import {
   FlatList,
@@ -134,6 +134,16 @@ function Detail({ label, value }: { label: string; value?: string | null }) {
 
 function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposal; onClose: () => void; admin:boolean; onSaved:()=>void }) {
   const [editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+  const [lines,setLines]=useState((proposal.items||[]).map(item=>({product_id:item.product_id,quantity:String(item.quantity),negotiated_price:String(item.negotiated_price)})));
+  const [products,setProducts]=useState<Array<{id:number;name:string;code:string;price:number}>>([]);
+  const [selectedProduct,setSelectedProduct]=useState("");
+  useEffect(()=>{
+    if(!admin||!proposal.company_id)return;
+    let active=true;
+    api<{products:Array<{id:number;name:string;code:string;price:number;company_id:number;active:boolean|number}>}>("/api/admin/products?company_id="+proposal.company_id)
+      .then(result=>{if(active)setProducts(result.products.filter(p=>p.company_id===proposal.company_id&&Boolean(p.active)));}).catch(()=>{});
+    return()=>{active=false;};
+  },[admin,proposal.company_id]);
   const [fields,setFields]=useState({status:proposal.status,admin_notes:proposal.admin_notes||"",
     delivery_forecast:proposal.delivery_forecast||"",industry_order_number:proposal.industry_order_number||"",
     invoice_number:proposal.invoice_number||"",billing_date:proposal.billing_date?.slice(0,10)||"",
@@ -146,7 +156,8 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
     try{
       const discount=Number(fields.discount_percent), commission=Number(fields.commission_percent);
       if(!Number.isFinite(discount)||discount<0||discount>100||!Number.isFinite(commission)||commission<0||commission>100)throw new Error("Revise os percentuais de desconto e comissão.");
-      await api(("/api/admin/proposals/"+proposal.id) as never,{method:"PATCH",body:JSON.stringify({...fields,discount_percent:discount,commission_percent:commission})});
+      if(!lines.length||lines.some(item=>!Number.isFinite(Number(item.quantity))||Number(item.quantity)<=0||!Number.isFinite(Number(item.negotiated_price))||Number(item.negotiated_price)<0))throw new Error("Revise quantidades e preços dos itens.");
+      await api(("/api/admin/proposals/"+proposal.id) as never,{method:"PATCH",body:JSON.stringify({...fields,discount_percent:discount,commission_percent:commission,items:lines.map(item=>({product_id:item.product_id,quantity:Number(item.quantity),negotiated_price:Number(item.negotiated_price)}))})});
       Alert.alert("Pedido","Informações atualizadas.");onSaved();
     }catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível salvar.");}
     finally{setBusy(false);}
@@ -214,6 +225,21 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
                 <TextInput multiline={key==="admin_notes"} value={fields[key]} onChangeText={value=>setFields(old=>({...old,[key]:value}))}
                   style={{borderWidth:1,borderColor:colors.border,borderRadius:12,padding:12,color:colors.ink,backgroundColor:"#fff"}}/>
               </View>)}
+            <Text style={{fontSize:16,fontWeight:"800",color:colors.ink,marginTop:9}}>Itens do pedido</Text>
+            <SelectField label="Adicionar produto" value={selectedProduct} onChange={value=>setSelectedProduct(value)} searchable
+              options={products.filter(p=>!lines.some(item=>item.product_id===p.id)).map(p=>({value:String(p.id),label:p.name,detail:p.code}))}/>
+            <SecondaryButton title="Adicionar produto selecionado" disabled={!selectedProduct}
+              onPress={()=>{const product=products.find(p=>String(p.id)===selectedProduct);if(!product)return;setLines(old=>[...old,{product_id:product.id,quantity:"1",negotiated_price:String(product.price||0)}]);setSelectedProduct("");}}/>
+            {lines.map((line,index)=><View key={line.product_id} style={{borderWidth:1,borderColor:colors.border,borderRadius:13,padding:12,gap:7}}>
+              <Text style={{fontSize:13,fontWeight:"800",color:colors.ink}}>{products.find(p=>p.id===line.product_id)?.name||proposal.items?.find(item=>item.product_id===line.product_id)?.name||"Produto "+line.product_id}</Text>
+              <Text style={{fontSize:12,color:colors.muted}}>Quantidade</Text>
+              <TextInput keyboardType="decimal-pad" value={line.quantity} onChangeText={value=>setLines(old=>old.map((item,i)=>i===index?{...item,quantity:value}:item))}
+                style={{borderWidth:1,borderColor:colors.border,borderRadius:10,padding:10,color:colors.ink}}/>
+              <Text style={{fontSize:12,color:colors.muted}}>Preço negociado</Text>
+              <TextInput keyboardType="decimal-pad" value={line.negotiated_price} onChangeText={value=>setLines(old=>old.map((item,i)=>i===index?{...item,negotiated_price:value}:item))}
+                style={{borderWidth:1,borderColor:colors.border,borderRadius:10,padding:10,color:colors.ink}}/>
+              <SecondaryButton title="Remover item" danger disabled={lines.length<=1} onPress={()=>setLines(old=>old.filter((_,i)=>i!==index))}/>
+            </View>)}
             <PrimaryButton title="Salvar alterações" busy={busy} onPress={()=>void updateOrder()}/>
             <SecondaryButton title="Anexar nota fiscal PDF" disabled={busy} onPress={()=>void uploadInvoice()}/>
           </>}
