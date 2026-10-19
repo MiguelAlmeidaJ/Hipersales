@@ -5,6 +5,21 @@ const activeSchema = z.union([z.boolean(), z.literal(0), z.literal(1)]).transfor
 export const companyMutationSchema = z.object({
   name: z.string().trim().min(1, "Informe name.").max(180),
   legal_name: z.string().trim().max(240).nullable().optional(),
+  trade_name: z.string().trim().max(180).nullable().optional(),
+  cnpj: z.string().trim().max(180).nullable().optional(),
+  state_registration: z.string().trim().max(180).nullable().optional(),
+  tax_regime: z.string().trim().max(180).nullable().optional(),
+  address: z.string().trim().max(240).nullable().optional(),
+  address_number: z.string().trim().max(180).nullable().optional(),
+  address_complement: z.string().trim().max(180).nullable().optional(),
+  district: z.string().trim().max(180).nullable().optional(),
+  city: z.string().trim().max(180).nullable().optional(),
+  state: z.string().trim().max(180).nullable().optional(),
+  postal_code: z.string().trim().max(180).nullable().optional(),
+  phone: z.string().trim().max(180).nullable().optional(),
+  email: z.string().trim().max(180).nullable().optional(),
+  website: z.string().trim().max(180).nullable().optional(),
+  lead_time_days: z.coerce.number().int().min(0).max(3650).optional().default(0),
   active: activeSchema.optional().default(true),
 }).strict();
 
