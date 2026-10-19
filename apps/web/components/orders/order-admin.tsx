@@ -156,6 +156,7 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
         throw new Error("Revise quantidades e preços dos itens.");
       if (values.delivery_type === "Entrega Programada" && !values.scheduled_delivery_date)
         throw new Error("Informe a data de entrega.");
+      if (values.discount_percent && (Number(values.discount_percent)<0 || Number(values.discount_percent)>100)) throw new Error("Desconto deve ficar entre 0% e 100%.");
       if (!isBonus && !values.payment_terms.trim())
         throw new Error("Informe a condição de pagamento.");
       const payload = {
@@ -206,11 +207,7 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
         </label>
         <label className="grid gap-1 text-sm">
           Tipo de pedido
-          <input
-            className={textfield}
-            value={values.order_type}
-            onChange={(e) => update("order_type", e.target.value)}
-          />
+          <select className={textfield} value={values.order_type} onChange={e=>update("order_type",e.target.value)}><option value="Venda">Venda</option><option value="Bonificação">Bonificação</option></select>
         </label>
         {fields
           .filter(([key]) => !isBonus || key !== "payment_terms")
