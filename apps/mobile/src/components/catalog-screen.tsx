@@ -1,3 +1,5 @@
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 
@@ -6,7 +8,7 @@ import { Card, Input, ModulePage, Notice, PrimaryButton, SecondaryButton, Sheet,
 import { SelectField } from "@/components/form-controls";
 import { EmptyState, LoadingState } from "@/components/list-states";
 import { colors } from "@/constants/colors";
-import { api } from "@/lib/api";
+import { api, authenticatedResource } from "@/lib/api";
 
 type Kind = "companies" | "products";
 type Item = { id: number; name: string; legal_name?: string; active?: boolean | number; company_id?: number; company_name?: string; code?: string; product_group?: string | null; subgroup?: string | null; unit?: string; brand?: string | null; minimum_sale_quantity?: number; weight?: number; ncm?: string | null; ipi_percent?: number; has_st?: boolean | number; invoice_origin?: string | null; price?: number; lead_time_days?: number; trade_name?: string; cnpj?: string; state_registration?: string; tax_regime?: string; address?: string; address_number?: string; address_complement?: string; district?: string; city?: string; state?: string; postal_code?: string; phone?: string; email?: string; website?: string; };
@@ -36,6 +38,16 @@ export function CatalogScreen({ kind }: { kind: Kind }) {
       setNotice("Dados consultados. Confira os campos fiscais antes de salvar.");
     }catch(cause){setError(cause instanceof Error?cause.message:"Consulta indisponível.");}
     finally{setLookupBusy(false);}
+  }
+  async function downloadCompanyPdf(){
+    if(!editing||isProduct)return;
+    try{
+      const resource=authenticatedResource(("/api/admin/companies/"+editing+"/pdf") as never);
+      if(!resource.headers.Authorization)throw new Error("Sessão expirada.");
+      const result=await FileSystem.downloadAsync(resource.url,FileSystem.cacheDirectory+"ficha-empresa-"+editing+".pdf",{headers:resource.headers});
+      if(result.status!==200)throw new Error("Não foi possível baixar a ficha.");
+      await Sharing.shareAsync(result.uri,{mimeType:"application/pdf"});
+    }catch(cause){Alert.alert("Ficha de cadastro",cause instanceof Error?cause.message:"Falha ao baixar PDF.");}
   }
   async function remove(item: Item) { setBusy(true); setError(""); try { await api(`${endpoint}/${item.id}` as `/api/${string}`, { method: "DELETE" }); await load(); setNotice("Registro excluído."); close(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Falha ao excluir."); } finally { setBusy(false); } }
   return <ModulePage title={isProduct ? "Produtos" : "Empresas"} subtitle={isProduct ? "Catálogo comercial, preços e dados fiscais." : "Indústrias representadas e situação cadastral."}>
@@ -68,7 +80,7 @@ export function CatalogScreen({ kind }: { kind: Kind }) {
       </> : null}
       {isProduct ? <><Input label="Grupo" value={form.product_group} onChangeText={(value) => setForm((x) => ({...x, product_group: value}))}/><Input label="Subgrupo" value={form.subgroup} onChangeText={(value) => setForm((x) => ({...x, subgroup: value}))}/><Input label="Unidade" value={form.unit} onChangeText={(value) => setForm((x) => ({...x, unit: value}))}/><Input label="Marca" value={form.brand} onChangeText={(value) => setForm((x) => ({...x, brand: value}))}/><Input label="Preço sugerido" keyboardType="decimal-pad" value={form.price} onChangeText={(value) => setForm((x) => ({...x, price: value}))}/><Input label="Quantidade mínima" keyboardType="decimal-pad" value={form.minimum_sale_quantity} onChangeText={(value) => setForm((x) => ({...x, minimum_sale_quantity: value}))}/><Input label="Peso" keyboardType="decimal-pad" value={form.weight} onChangeText={(value) => setForm((x) => ({...x, weight: value}))}/><Input label="NCM" value={form.ncm} onChangeText={(value) => setForm((x) => ({...x, ncm: value}))}/><Input label="IPI (%)" keyboardType="decimal-pad" value={form.ipi_percent} onChangeText={(value) => setForm((x) => ({...x, ipi_percent: value}))}/><Input label="Origem da nota" value={form.invoice_origin} onChangeText={(value) => setForm((x) => ({...x, invoice_origin: value}))}/><View style={styles.switchRow}><Text style={styles.switchLabel}>Substituição tributária (ST)</Text><Switch value={form.has_st} onValueChange={(value) => setForm((x) => ({...x, has_st: value}))}/></View></> : null}
       <View style={styles.switchRow}><Text style={styles.switchLabel}>Cadastro ativo</Text><Switch value={form.active} onValueChange={(value) => setForm((x) => ({...x, active: value}))}/></View>
-      <PrimaryButton title="Salvar" onPress={() => void save()} busy={busy}/>{editing !== null ? <SecondaryButton title="Excluir registro" danger disabled={busy} onPress={() => { const item = items.find((x) => x.id === editing); if (item) Alert.alert("Excluir registro", `Deseja excluir ${item.name}?`, [{text:"Cancelar",style:"cancel"},{text:"Excluir",style:"destructive",onPress:()=>void remove(item)}]); }}/> : null}
+      <PrimaryButton title="Salvar" onPress={() => void save()} busy={busy}/>{!isProduct && editing!==null?<SecondaryButton title="Compartilhar ficha PDF" onPress={()=>void downloadCompanyPdf()}/>:null}{editing !== null ? <SecondaryButton title="Excluir registro" danger disabled={busy} onPress={() => { const item = items.find((x) => x.id === editing); if (item) Alert.alert("Excluir registro", `Deseja excluir ${item.name}?`, [{text:"Cancelar",style:"cancel"},{text:"Excluir",style:"destructive",onPress:()=>void remove(item)}]); }}/> : null}
     </Sheet>
   </ModulePage>;
 }
