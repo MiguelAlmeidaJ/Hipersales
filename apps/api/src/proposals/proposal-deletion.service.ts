@@ -17,6 +17,7 @@ export class ProposalDeletionService {
       if (!found) throw new NotFoundException("Pedido nao encontrado.");
       await db.prepare("DELETE FROM proposal_items WHERE proposal_id=?").run(id);
       await db.prepare("DELETE FROM proposal_events WHERE proposal_id=?").run(id);
+      await db.prepare("DELETE FROM proposal_invoice_files WHERE proposal_id=? AND tenant_id=?").run(id,user.tenant_id);
       await db.prepare("DELETE FROM proposals WHERE id=? AND tenant_id=?").run(id, user.tenant_id);
       return { message: "Pedido excluido definitivamente." };
     });

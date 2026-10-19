@@ -231,6 +231,8 @@ model Proposal {
   deliveryForecast     String?         @map("delivery_forecast")
   industryOrderNumber  String?         @map("industry_order_number")
   invoiceNumber        String?         @map("invoice_number")
+  billingDate          DateTime?       @map("billing_date") @db.Date
+  deliveredDate        DateTime?       @map("delivered_date") @db.Date
   createdAt            DateTime        @default(now()) @map("created_at") @db.DateTime2
   updatedAt            DateTime        @default(now()) @updatedAt @map("updated_at") @db.DateTime2
   tenant               Tenant          @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -239,6 +241,7 @@ model Proposal {
   customer             Customer        @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   items                ProposalItem[]
   events               ProposalEvent[]
+  invoiceFile          ProposalInvoiceFile?
   // Unicidade de order_number nao nulo aplicada por indice filtrado (veja docs/database-filtered-uniques.sql).
   @@index([tenantId, sellerId, status, createdAt])
   @@index([tenantId, companyId, createdAt])
@@ -460,4 +463,16 @@ model Notification {
   @@index([pushSentAt, pushAttempts, createdAt])
   @@index([pushClaimedUntil])
   @@map("notifications")
+}
+
+model ProposalInvoiceFile {
+  proposalId Int @id @map("proposal_id")
+  tenantId Int @map("tenant_id")
+  filename String @db.NVarChar(180)
+  mimetype String @db.NVarChar(80)
+  content Bytes @db.VarBinary(Max)
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.DateTime2
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([tenantId])
+  @@map("proposal_invoice_files")
 }

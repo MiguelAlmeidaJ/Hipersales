@@ -27,6 +27,8 @@ type Order = {
   delivery_forecast?: string;
   industry_order_number?: string;
   invoice_number?: string;
+  billing_date?: string;
+  delivered_date?: string;
   payment_terms?: string;
   notes?: string;
   order_type?: string;
@@ -47,6 +49,8 @@ const fields = [
   ["delivery_forecast", "Previsão de entrega"],
   ["industry_order_number", "Número do pedido na indústria"],
   ["invoice_number", "Nota fiscal"],
+  ["billing_date", "Data de faturamento"],
+  ["delivered_date", "Data da entrega"],
   ["payment_terms", "Condição de pagamento"],
   ["notes", "Observações do pedido"],
   ["purchase_order", "Pedido de compra"],
@@ -64,6 +68,8 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
     delivery_forecast: order.delivery_forecast || "",
     industry_order_number: order.industry_order_number || "",
     invoice_number: order.invoice_number || "",
+    billing_date: order.billing_date?.slice(0,10) || "",
+    delivered_date: order.delivered_date?.slice(0,10) || "",
     payment_terms: order.payment_terms || "",
     notes: order.notes || "",
     purchase_order: order.purchase_order || "",
@@ -86,6 +92,7 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
     })),
   );
   const [pick, setPick] = useState("");
+  const [invoiceFile,setInvoiceFile]=useState<File|null>(null);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
@@ -131,6 +138,21 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
     ]);
     setPick("");
   }
+  async function uploadInvoice(){
+    if(!invoiceFile)return;
+    setBusy(true);setError("");
+    try{
+      if(invoiceFile.size>10*1024*1024 || !invoiceFile.name.toLowerCase().endsWith(".pdf"))throw new Error("Selecione um PDF de até 10 MB.");
+      const base64=await new Promise<string>((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=()=>resolve(String(reader.result).split(",")[1]||"");
+        reader.onerror=()=>reject(new Error("Falha ao ler arquivo."));
+        reader.readAsDataURL(invoiceFile);
+      });
+      await api(`/api/admin/proposals/${order.id}/invoice-pdf`,{method:"POST",body:JSON.stringify({filename:invoiceFile.name,content:base64})});
+      setNotice("PDF da nota fiscal anexado.");setInvoiceFile(null);onSaved();
+    }catch(e){setError(e instanceof Error?e.message:"Falha ao anexar PDF");}finally{setBusy(false);}
+  }
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
@@ -150,6 +172,7 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
         throw new Error("Revise quantidades e preços dos itens.");
       if (values.delivery_type === "Entrega Programada" && !values.scheduled_delivery_date)
         throw new Error("Informe a data de entrega.");
+      if (values.discount_percent && (Number(values.discount_percent)<0 || Number(values.discount_percent)>100)) throw new Error("Desconto deve ficar entre 0% e 100%.");
       if (!isBonus && !values.payment_terms.trim())
         throw new Error("Informe a condição de pagamento.");
       const payload = {
@@ -181,7 +204,12 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
       onSubmit={submit}
       className="mt-6 space-y-5 rounded-xl border border-blue-200 bg-blue-50/30 p-5"
     >
-      <h3 className="text-lg font-semibold">Editar pedido e itens</h3>
+      <h3 className="text-lg font-semibold">Ações da retaguarda · Editar pedido e itens</h3>
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <label className="block text-sm font-semibold text-slate-800">PDF da nota fiscal (até 10 MB)</label>
+        <input type="file" accept="application/pdf,.pdf" className="mt-2 block w-full text-sm" onChange={e=>setInvoiceFile(e.target.files?.[0]||null)}/>
+        <button type="button" disabled={!invoiceFile||busy} onClick={()=>void uploadInvoice()} className="mt-3 rounded-lg bg-[#0767b4] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Anexar nota fiscal</button>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <label className="grid gap-1 text-sm">
           Status
@@ -200,11 +228,7 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
         </label>
         <label className="grid gap-1 text-sm">
           Tipo de pedido
-          <input
-            className={textfield}
-            value={values.order_type}
-            onChange={(e) => update("order_type", e.target.value)}
-          />
+          <select className={textfield} value={values.order_type} onChange={e=>update("order_type",e.target.value)}><option value="Venda">Venda</option><option value="Bonificação">Bonificação</option></select>
         </label>
         {fields
           .filter(([key]) => !isBonus || key !== "payment_terms")
@@ -213,7 +237,8 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
               {title}
               <input
                 className={textfield}
-                type={key === "scheduled_delivery_date" ? "date" : "text"}
+                type={["scheduled_delivery_date","billing_date","delivered_date"].includes(key) ? "date" : "text"}
+                disabled={key === "scheduled_delivery_date" && values.delivery_type !== "Entrega Programada"}
                 value={values[key]}
                 onChange={(e) => update(key, e.target.value)}
               />

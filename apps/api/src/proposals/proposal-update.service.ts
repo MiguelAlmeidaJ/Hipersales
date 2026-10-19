@@ -13,7 +13,7 @@ const rank:Record<string,number>={em_analise:0,pedido_aprovado:1,recusado:1,em_p
 const alias:Record<string,string>={proposta_enviada:"em_analise",proposta_recusada:"recusado"};
 const columns=["status","admin_notes","delivery_forecast","industry_order_number","invoice_number","order_type",
   "purchase_order","commission_percent","invoice_type","tax_operator_invoice","freight_type",
-  "delivery_type","scheduled_delivery_date","discount_percent","discount_on","payment_terms","notes"] as const;
+  "delivery_type","scheduled_delivery_date","billing_date","delivered_date","discount_percent","discount_on","payment_terms","notes"] as const;
 function parsePercentage(value:unknown):number {
   let raw=String(value??"").trim().replace(/[%\s]/g,"");
   if(raw.includes(",")&&raw.includes(".")) raw=raw.replace(/\./g,"").replace(",",".");
@@ -74,6 +74,12 @@ export class ProposalUpdateService {
       patch.tax_operator_invoice=Object.prototype.hasOwnProperty.call(data,"tax_operator_invoice")
         ?Number(data.tax_operator_invoice===true||data.tax_operator_invoice===1||data.tax_operator_invoice==="true"):Number(previous.tax_operator_invoice||0);
       if(patch.delivery_type!=="Entrega Programada") patch.scheduled_delivery_date=null;
+      for(const field of ["billing_date","delivered_date"] as const) {
+        const date=patch[field];
+        if(date===null || date==="") { patch[field]=null; continue; }
+        if(typeof date!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date)))
+          throw new BadRequestException("Data de faturamento ou entrega invalida.");
+      }
       if(isBonus(patch.order_type)) {
         patch.payment_terms="";patch.commission_percent=0;patch.discount_percent=0;patch.discount_on="Sem descontos";
       } else if(!String(patch.payment_terms||"").trim()) {

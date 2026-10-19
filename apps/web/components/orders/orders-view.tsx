@@ -18,7 +18,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 
-import { api, apiPath, type SessionUser } from "@/lib/api";
+import { api, apiPath, downloadApiFile, type SessionUser } from "@/lib/api";
 import OrderAdmin from "./order-admin";
 import ProposalForm from "./proposal-form";
 
@@ -46,6 +46,9 @@ type Order = {
   order_number?: number;
   status: string;
   company_name: string;
+  customer_cnpj?: string;
+  has_invoice_pdf?: number | boolean;
+  lead_time_days?: number;
   customer_name: string;
   seller_name: string;
   order_type: string;
@@ -82,6 +85,12 @@ const orderTotal = (order: Order) =>
     0,
   );
 
+const deadline = (date: string, days: number) => {
+  const start = new Date(date);
+  if (Number.isNaN(start.getTime()) || !Number.isFinite(days)) return "—";
+  start.setUTCDate(start.getUTCDate() + days);
+  return formatDate(start.toISOString());
+};
 const statusLabel = (value: string) => {
   const labels: Record<string, string> = {
     em_analise: "Em análise",
@@ -559,6 +568,18 @@ export default function OrdersView({ user }: { user: SessionUser }) {
             </div>
           </div>
 
+          <div className="mb-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+            <div><p className="text-xs text-slate-500">Empresa fornecedora</p><p className="font-semibold">{current.company_name}</p></div>
+            <div><p className="text-xs text-slate-500">Cliente / CNPJ</p><p className="font-semibold">{current.customer_name} {current.customer_cnpj ? "· "+current.customer_cnpj : ""}</p></div>
+            <div><p className="text-xs text-slate-500">Emissão</p><p className="font-semibold">{formatDate(current.created_at)}</p></div>
+            <div><p className="text-xs text-slate-500">Lead time da empresa</p><p className="font-semibold">{current.lead_time_days ?? 0} dias</p></div>
+            <div><p className="text-xs text-slate-500">Data limite de entrega (estimada)</p><p className="font-semibold">{deadline(current.created_at,Number(current.lead_time_days??0))}</p></div>
+            <div><p className="text-xs text-slate-500">Previsão de entrega</p><p className="font-semibold">{current.delivery_forecast ? formatDate(current.delivery_forecast) : "—"}</p></div>
+            <div><p className="text-xs text-slate-500">Total sem descontos</p><p className="font-semibold">{cash(orderTotal(current))}</p></div>
+            <div><p className="text-xs text-slate-500">Total com descontos</p><p className="font-semibold">{cash(orderTotal(current) * (1 - Number(current.discount_percent || 0)/100))}</p></div>
+            <div><p className="text-xs text-slate-500">Ordem de compra</p><p className="font-semibold">{current.purchase_order || "—"}</p></div>
+          </div>
+          {Boolean(current.has_invoice_pdf) && <button type="button" className="mb-4 rounded-xl border border-[#0767b4] px-4 py-2 text-sm font-semibold text-[#0767b4]" onClick={()=>void downloadApiFile(`/api/proposals/${current.id}/invoice-pdf`,`nota-fiscal-${current.id}.pdf`).catch(e=>setError(e instanceof Error?e.message:"Falha ao baixar nota fiscal"))}>Baixar PDF da nota fiscal</button>}
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div className="rounded-xl bg-slate-50 p-3">
               <dt className="text-xs font-semibold text-slate-500">Representante</dt>

@@ -147,6 +147,7 @@ export class CatalogService {
         const proposalIds = proposals.map((proposal) => Number(proposal.id));
         await this.database.db.prepare(`DELETE FROM proposal_items WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
         await this.database.db.prepare(`DELETE FROM proposal_events WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
+        await this.database.db.prepare(`DELETE FROM proposal_invoice_files WHERE proposal_id IN (${placeholders})`).run(...proposalIds);
         await this.database.db.prepare(`DELETE FROM proposals WHERE id IN (${placeholders})`).run(...proposalIds);
       }
 
