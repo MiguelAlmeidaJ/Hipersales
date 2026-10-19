@@ -360,8 +360,8 @@ export default function CustomerEditor({ standalone = false, customerId }: { sta
         }),
       });
       await load();
-      reset();
-      setNotice(result.message || "Cliente salvo.");
+      if(standalone){router.push("/app/clientes");router.refresh();}
+      else {reset();setNotice(result.message || "Cliente salvo.");}
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível salvar o cliente.");
     } finally {
@@ -409,7 +409,7 @@ export default function CustomerEditor({ standalone = false, customerId }: { sta
         </div>
         <button
           type="button"
-          onClick={openNew}
+          onClick={()=>router.push("/app/clientes/nova")}
           className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white hover:bg-[#073c96]"
         >
           + Novo cliente
@@ -831,7 +831,7 @@ export default function CustomerEditor({ standalone = false, customerId }: { sta
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => edit(customer)}
+                        onClick={() => router.push(`/app/clientes/${customer.id}`)}
                         className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold"
                       >
                         Editar
