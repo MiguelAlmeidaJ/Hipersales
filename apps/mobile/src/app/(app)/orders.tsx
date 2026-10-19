@@ -1,7 +1,11 @@
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { useCallback, useMemo, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import {
   FlatList,
+  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -16,7 +20,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ErrorState, LoadingState } from "@/components/list-states";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
-import { api } from "@/lib/api";
+import { api, authenticatedResource } from "@/lib/api";
+import { useSession } from "@/contexts/session-context";
+import { SelectField } from "@/components/form-controls";
+import { PrimaryButton, SecondaryButton } from "@/components/module-ui";
 import { dateTime, money, shortDate } from "@/lib/format";
 import type { Proposal } from "@/types/commercial";
 
@@ -48,6 +55,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function OrdersScreen() {
+  const {user}=useSession(); const admin=user?.role==="admin"||user?.role==="dev";
   const [orders, setOrders] = useState<Proposal[]>([]);
   const [selected, setSelected] = useState<Proposal | null>(null);
   const [query, setQuery] = useState("");
@@ -114,7 +122,7 @@ export default function OrdersScreen() {
       )}
 
       <Modal visible={Boolean(selected)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
-        {selected ? <OrderDetails proposal={selected} onClose={() => setSelected(null)} /> : null}
+        {selected ? <OrderDetails proposal={selected} admin={admin} onSaved={()=>{setSelected(null);void load(true);}} onClose={() => setSelected(null)} /> : null}
       </Modal>
     </View>
   );
@@ -124,7 +132,43 @@ function Detail({ label, value }: { label: string; value?: string | null }) {
   return <View style={styles.detail}><Text style={styles.detailLabel}>{label}</Text><Text style={styles.detailValue}>{value || "—"}</Text></View>;
 }
 
-function OrderDetails({ proposal, onClose }: { proposal: Proposal; onClose: () => void }) {
+function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposal; onClose: () => void; admin:boolean; onSaved:()=>void }) {
+  const [editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+  const [fields,setFields]=useState({status:proposal.status,admin_notes:proposal.admin_notes||"",
+    delivery_forecast:proposal.delivery_forecast||"",industry_order_number:proposal.industry_order_number||"",
+    invoice_number:proposal.invoice_number||"",billing_date:proposal.billing_date?.slice(0,10)||"",
+    delivered_date:proposal.delivered_date?.slice(0,10)||""});
+  async function updateOrder(){
+    setBusy(true);setError("");
+    try{
+      await api(("/api/admin/proposals/"+proposal.id) as never,{method:"PATCH",body:JSON.stringify(fields)});
+      Alert.alert("Pedido","Informações atualizadas.");onSaved();
+    }catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível salvar.");}
+    finally{setBusy(false);}
+  }
+  async function shareInvoice(){
+    try{
+      const resource=authenticatedResource(("/api/proposals/"+proposal.id+"/invoice-pdf") as never);
+      if(!resource.headers.Authorization)throw new Error("Sessão expirada.");
+      const target=FileSystem.cacheDirectory+"nota-fiscal-"+proposal.id+".pdf";
+      const result=await FileSystem.downloadAsync(resource.url,target,{headers:resource.headers});
+      if(result.status!==200)throw new Error("A nota fiscal não pôde ser obtida.");
+      await Sharing.shareAsync(result.uri,{mimeType:"application/pdf"});
+    }catch(cause){Alert.alert("Nota fiscal",cause instanceof Error?cause.message:"Falha no arquivo.");}
+  }
+  async function uploadInvoice(){
+    try{
+      const selected=await DocumentPicker.getDocumentAsync({type:"application/pdf",copyToCacheDirectory:true});
+      if(selected.canceled||!selected.assets.length)return;
+      const file=selected.assets[0];
+      if((file.size||0)>10*1024*1024)throw new Error("O PDF deve ter até 10 MB.");
+      setBusy(true);setError("");
+      const content=await FileSystem.readAsStringAsync(file.uri,{encoding:FileSystem.EncodingType.Base64});
+      await api(("/api/admin/proposals/"+proposal.id+"/invoice-pdf") as never,{method:"POST",body:JSON.stringify({filename:file.name,content}),timeoutMs:60000});
+      Alert.alert("Nota fiscal","PDF anexado com sucesso.");onSaved();
+    }catch(cause){setError(cause instanceof Error?cause.message:"Falha ao anexar nota fiscal.");}
+    finally{setBusy(false);}
+  }
   return (
     <SafeAreaView style={styles.modal} edges={["top", "bottom"]}>
       <View style={styles.modalHeader}><View><Text style={styles.modalEyebrow}>DETALHES DO PEDIDO</Text><Text style={styles.modalTitle}>{orderNumber(proposal)}</Text></View><Pressable accessibilityLabel="Fechar detalhes" onPress={onClose} style={styles.close}><Text style={styles.closeText}>×</Text></Pressable></View>
@@ -141,6 +185,22 @@ function OrderDetails({ proposal, onClose }: { proposal: Proposal; onClose: () =
           <Detail label="Pedido da indústria" value={proposal.industry_order_number} />
           <Detail label="Nota fiscal" value={proposal.invoice_number} />
         </View>
+        {proposal.has_invoice_pdf?<SecondaryButton title="Baixar nota fiscal PDF" onPress={()=>void shareInvoice()}/>:null}
+        {admin && <View style={{marginVertical:15,gap:12}}>
+          <SecondaryButton title={editing?"Fechar edição":"Editar dados da retaguarda"} onPress={()=>setEditing(!editing)}/>
+          {editing && <>
+            <SelectField label="Status do pedido" value={fields.status} onChange={value=>setFields(old=>({...old,status:value}))}
+              options={Object.entries(statusLabels).map(([value,label])=>({value,label}))}/>
+            {([["industry_order_number","Pedido na indústria"],["invoice_number","Número da NF"],["delivery_forecast","Previsão de entrega"],["billing_date","Data do faturamento (AAAA-MM-DD)"],["delivered_date","Data da entrega (AAAA-MM-DD)"],["admin_notes","Observações da retaguarda"]] as const).map(([key,label])=>
+              <View key={key} style={{gap:5}}><Text style={{fontSize:12,color:colors.muted,fontWeight:"700"}}>{label}</Text>
+                <TextInput multiline={key==="admin_notes"} value={fields[key]} onChangeText={value=>setFields(old=>({...old,[key]:value}))}
+                  style={{borderWidth:1,borderColor:colors.border,borderRadius:12,padding:12,color:colors.ink,backgroundColor:"#fff"}}/>
+              </View>)}
+            <PrimaryButton title="Salvar alterações" busy={busy} onPress={()=>void updateOrder()}/>
+            <SecondaryButton title="Anexar nota fiscal PDF" disabled={busy} onPress={()=>void uploadInvoice()}/>
+          </>}
+          {error?<Text style={{color:colors.danger,fontSize:13}}>{error}</Text>:null}
+        </View>}
         <Text style={styles.sectionTitle}>Itens ({proposal.items?.length ?? 0})</Text>
         {(proposal.items ?? []).map((item) => <View key={item.id} style={styles.itemRow}><View style={styles.itemCopy}><Text style={styles.itemName}>{item.name}</Text><Text style={styles.itemMeta}>{item.code} · {item.quantity} {item.unit || "un."} × {money(item.negotiated_price)}</Text></View><Text style={styles.itemTotal}>{money(item.quantity * item.negotiated_price)}</Text></View>)}
         {proposal.notes ? <><Text style={styles.sectionTitle}>Observações</Text><Text style={styles.notes}>{proposal.notes}</Text></> : null}
