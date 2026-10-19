@@ -172,7 +172,6 @@ export function CatalogEditor({ kind, standalone = false, recordId }: { kind: Ki
     setEditingRecord(null);
     setModalOpen(false);
     setForm(emptyForm);
-    if(standalone)router.push("/app/produtos");
   }
 
   function openNew() {
