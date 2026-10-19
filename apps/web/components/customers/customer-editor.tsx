@@ -255,7 +255,6 @@ export default function CustomerEditor({ standalone = false, customerId }: { sta
     setForm({ ...empty, seller_ids: [] });
     setModalOpen(false);
     setError("");
-    if(standalone)router.push("/app/clientes");
   }
   function openNew() {
     reset();
