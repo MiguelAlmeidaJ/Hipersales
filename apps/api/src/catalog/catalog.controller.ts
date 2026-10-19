@@ -1,15 +1,17 @@
-import { Controller, Get, Query, Req, Post, Patch, Delete, Param, Body, ParseIntPipe } from "@nestjs/common";
+import { Controller, Get, Query, Req, Res, Post, Patch, Delete, Param, Body, ParseIntPipe } from "@nestjs/common";
 import { companyMutationSchema, productImportSchema, productMutationSchema,
   type CompanyMutation, type ProductImport, type ProductMutation } from "@hipersales/contracts";
 import type { AuthenticatedRequest } from "../common/http/authenticated-request.js";
 import { Roles } from "../common/decorators/roles.decorator.js";
 import { CatalogService } from "./catalog.service.js";
+import { CompanyPdfService } from "./company-pdf.service.js";
+import type { Response } from "express";
 import { CatalogTransferService } from "./catalog-transfer.service.js";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe.js";
 
 @Controller(["api", "api/v1"])
 export class CatalogController {
-  constructor(private readonly catalog: CatalogService, private readonly transfers: CatalogTransferService) {}
+  constructor(private readonly catalog: CatalogService, private readonly transfers: CatalogTransferService, private readonly pdf:CompanyPdfService) {}
 
   @Get("companies")
   companies(@Req() request: AuthenticatedRequest) {
@@ -45,6 +47,16 @@ export class CatalogController {
   ) {
     return this.catalog.adminProducts(request.user, companyId, search, active);
   }
+  @Roles("admin")
+  @Get("admin/companies/:id/pdf")
+  async companyPdf(@Req() request:AuthenticatedRequest,@Param("id",ParseIntPipe) id:number,@Res() response:Response){
+    const buffer=await this.pdf.generate(request.user,id);
+    response.setHeader("Content-Type","application/pdf");
+    response.setHeader("Content-Disposition",`attachment; filename="ficha-empresa-${id}.pdf"`);
+    response.setHeader("Cache-Control","no-store");
+    response.send(buffer);
+  }
+
   @Roles("admin")
   @Post("admin/companies")
   createCompany(@Req() request:AuthenticatedRequest,@Body(new ZodValidationPipe(companyMutationSchema)) data:CompanyMutation) {
