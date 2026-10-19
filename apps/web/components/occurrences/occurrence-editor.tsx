@@ -158,16 +158,17 @@ export default function OccurrenceEditor({ user, standalone = false }: { user: S
       <form className="mx-auto max-w-4xl space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9" onSubmit={create}>
         <div className="grid gap-5 md:grid-cols-2"><label className="grid min-w-0 gap-2 text-sm font-semibold text-slate-700">
           Cliente — busque por razão social, fantasia ou CNPJ
-          <input value={customerQuery} onChange={e=>setCustomerQuery(e.target.value)} placeholder="Buscar cliente..." />
-          <select required value={form.customer_id} onChange={e=>setForm(v=>({...v,customer_id:e.target.value}))}>
+          <input className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0767b4] focus:ring-2 focus:ring-blue-100" value={customerQuery} onChange={e=>setCustomerQuery(e.target.value)} placeholder="Buscar cliente..." />
+          <select className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0767b4] focus:ring-2 focus:ring-blue-100" required value={form.customer_id} onChange={e=>setForm(v=>({...v,customer_id:e.target.value}))}>
             <option value="">Selecione o cliente</option>
             {customers.filter(c=>Boolean(c.active)&&(String(c.legal_name||"")+" "+String(c.trade_name||"")+" "+String(c.cnpj||"")).toLocaleLowerCase("pt-BR").includes(customerQuery.toLocaleLowerCase("pt-BR"))).map(c=><option key={c.id} value={c.id}>{c.legal_name} {c.cnpj?" · "+c.cnpj:""}</option>)}
           </select>
         </label>
         {admin && (
-          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Representante
             <select
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0767b4] focus:ring-2 focus:ring-blue-100"
               required
               value={form.seller_id}
               onChange={(e) => setForm((v) => ({ ...v, seller_id: e.target.value }))}
@@ -183,24 +184,26 @@ export default function OccurrenceEditor({ user, standalone = false }: { user: S
         )}
         </div><label className="grid gap-2 text-sm font-semibold text-slate-700">
           Motivo da ocorrência
-          <select required value={form.reason} onChange={e=>setForm(v=>({...v,reason:e.target.value}))}><option value="">Selecione o motivo</option>{reasons.map(r=><option key={r} value={r}>{r}</option>)}</select>
+          <select className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0767b4] focus:ring-2 focus:ring-blue-100" required value={form.reason} onChange={e=>setForm(v=>({...v,reason:e.target.value}))}><option value="">Selecione o motivo</option>{reasons.map(r=><option key={r} value={r}>{r}</option>)}</select>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Relato da ocorrência
-          <textarea
+          <textarea className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0767b4] focus:ring-2 focus:ring-blue-100 min-h-48 resize-y leading-relaxed"
             required
             rows={6}
             value={form.description}
             onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))}
           />
         </label>
-        <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
+        <label className="grid gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-sm font-semibold text-slate-700">
           Anexos (até 25 MB no total)
-          <input
+          <p className="text-xs font-normal text-slate-500">Você pode selecionar imagens, vídeos e documentos para complementar o relato.</p>
+          <input className="block w-full rounded-xl border border-slate-200 bg-white p-3 text-sm"
             type="file"
             multiple
             onChange={(e) => setFiles(Array.from(e.target.files || []))}
           />
+          {files.length>0 && <p className="text-xs text-[#0767b4]">{files.length} arquivo(s) selecionado(s) · {(files.reduce((total,file)=>total+file.size,0)/1048576).toFixed(1)} MB</p>}
         </label>
         <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-5"><Link href="/app/ocorrencias" className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold">Cancelar</Link><button type="submit" className="rounded-xl bg-[#0767b4] px-7 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={busy}>
           {busy ? "Enviando…" : "Registrar ocorrência"}
