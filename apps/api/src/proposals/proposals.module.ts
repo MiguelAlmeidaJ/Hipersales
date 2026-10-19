@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ProposalInvoiceService } from "./proposal-invoice.service.js";
 import { ProposalDeletionService } from "./proposal-deletion.service.js";
 import { ProposalStatusNotificationsService } from "./proposal-status-notifications.service.js";
 import { ProposalUpdateService } from "./proposal-update.service.js";
@@ -9,6 +10,6 @@ import { ProposalCreationService } from "./proposal-creation.service.js";
 
 @Module({
   controllers: [ProposalsController],
-  providers: [ProposalsService, ProposalCreationService, ProposalNotificationService, ProposalUpdateService, ProposalStatusNotificationsService, ProposalDeletionService],
+  providers: [ProposalsService, ProposalCreationService, ProposalNotificationService, ProposalUpdateService, ProposalStatusNotificationsService, ProposalDeletionService,ProposalInvoiceService],
 })
 export class ProposalsModule {}
