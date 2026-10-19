@@ -1,12 +1,14 @@
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { useCallback, useMemo, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
-import { FlatList, Linking, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Alert, Linking, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EmptyState, ErrorState, LoadingState } from "@/components/list-states";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
-import { api } from "@/lib/api";
+import { api, authenticatedResource } from "@/lib/api";
 import { useSession } from "@/contexts/session-context";
 import { digitsOnly, formatCnpj } from "@/lib/format";
 import type { Customer } from "@/types/commercial";
@@ -92,6 +94,15 @@ function CustomerCard({ customer, onPress }: { customer: Customer; onPress: () =
 }
 
 function CustomerDetails({ customer, onClose, isAdmin }: { customer: Customer; onClose: () => void; isAdmin:boolean }) {
+  async function shareCustomerPdf(kind:"registration"|"performance"){
+    try{
+      const resource=authenticatedResource(("/api/admin/customers/"+customer.id+"/"+kind+"/pdf") as never);
+      if(!resource.headers.Authorization)throw new Error("Sessão expirada.");
+      const result=await FileSystem.downloadAsync(resource.url,FileSystem.cacheDirectory+kind+"-cliente-"+customer.id+".pdf",{headers:resource.headers});
+      if(result.status!==200)throw new Error("Não foi possível obter o documento.");
+      await Sharing.shareAsync(result.uri,{mimeType:"application/pdf"});
+    }catch(cause){Alert.alert("Documento do cliente",cause instanceof Error?cause.message:"Falha no download.");}
+  }
   const phone = customer.phone ? digitsOnly(customer.phone) : "";
   const whatsappPhone = phone.startsWith("55") ? phone : `55${phone}`;
   const canCall = phone.length >= 8;
@@ -113,7 +124,11 @@ function CustomerDetails({ customer, onClose, isAdmin }: { customer: Customer; o
           {canEmail ? <Pressable accessibilityRole="link" onPress={() => Linking.openURL(`mailto:${customer.email}`)} style={styles.action}><Text style={styles.actionSymbol}>@</Text><Text style={styles.actionText}>E-mail</Text></Pressable> : null}
         </View> : null}
 
-        {isAdmin?<Pressable accessibilityRole="button" onPress={()=>{onClose();router.push({pathname:"/new-customer",params:{id:String(customer.id)}});}} style={styles.action}><Text style={styles.actionText}>Editar cadastro</Text></Pressable>:null}
+        {isAdmin?<View style={{gap:9,marginVertical:12}}>
+          <Pressable accessibilityRole="button" onPress={()=>{onClose();router.push({pathname:"/new-customer",params:{id:String(customer.id)}});}} style={styles.action}><Text style={styles.actionText}>Editar cadastro</Text></Pressable>
+          <Pressable accessibilityRole="button" onPress={()=>void shareCustomerPdf("registration")} style={styles.action}><Text style={styles.actionText}>Ficha do cliente (PDF)</Text></Pressable>
+          <Pressable accessibilityRole="button" onPress={()=>void shareCustomerPdf("performance")} style={styles.action}><Text style={styles.actionText}>Análise do cliente (PDF)</Text></Pressable>
+        </View>:null}
         <Text style={styles.sectionTitle}>Dados cadastrais</Text>
         <InfoRow label="Razão social" value={customer.legal_name} />
         <InfoRow label="CNPJ" value={formatCnpj(customer.cnpj)} />
