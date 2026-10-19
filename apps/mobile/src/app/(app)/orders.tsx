@@ -140,7 +140,7 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
   useEffect(()=>{
     if(!admin||!proposal.company_id)return;
     let active=true;
-    api<{products:Array<{id:number;name:string;code:string;price:number;company_id:number;active:boolean|number}>}>("/api/admin/products?company_id="+proposal.company_id)
+    api<{products:Array<{id:number;name:string;code:string;price:number;company_id:number;active:boolean|number}>}>(("/api/admin/products?company_id="+proposal.company_id) as never)
       .then(result=>{if(active)setProducts(result.products.filter(p=>p.company_id===proposal.company_id&&Boolean(p.active)));}).catch(()=>{});
     return()=>{active=false;};
   },[admin,proposal.company_id]);
