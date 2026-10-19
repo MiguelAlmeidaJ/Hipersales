@@ -231,6 +231,8 @@ model Proposal {
   deliveryForecast     String?         @map("delivery_forecast")
   industryOrderNumber  String?         @map("industry_order_number")
   invoiceNumber        String?         @map("invoice_number")
+  billingDate          DateTime?       @map("billing_date") @db.Date
+  deliveredDate        DateTime?       @map("delivered_date") @db.Date
   createdAt            DateTime        @default(now()) @map("created_at") @db.DateTime2
   updatedAt            DateTime        @default(now()) @updatedAt @map("updated_at") @db.DateTime2
   tenant               Tenant          @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
