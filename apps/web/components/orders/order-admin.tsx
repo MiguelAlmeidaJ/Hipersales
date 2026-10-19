@@ -27,6 +27,8 @@ type Order = {
   delivery_forecast?: string;
   industry_order_number?: string;
   invoice_number?: string;
+  billing_date?: string;
+  delivered_date?: string;
   payment_terms?: string;
   notes?: string;
   order_type?: string;
@@ -47,6 +49,8 @@ const fields = [
   ["delivery_forecast", "Previsão de entrega"],
   ["industry_order_number", "Número do pedido na indústria"],
   ["invoice_number", "Nota fiscal"],
+  ["billing_date", "Data de faturamento"],
+  ["delivered_date", "Data da entrega"],
   ["payment_terms", "Condição de pagamento"],
   ["notes", "Observações do pedido"],
   ["purchase_order", "Pedido de compra"],
@@ -64,6 +68,8 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
     delivery_forecast: order.delivery_forecast || "",
     industry_order_number: order.industry_order_number || "",
     invoice_number: order.invoice_number || "",
+    billing_date: order.billing_date?.slice(0,10) || "",
+    delivered_date: order.delivered_date?.slice(0,10) || "",
     payment_terms: order.payment_terms || "",
     notes: order.notes || "",
     purchase_order: order.purchase_order || "",
@@ -181,7 +187,7 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
       onSubmit={submit}
       className="mt-6 space-y-5 rounded-xl border border-blue-200 bg-blue-50/30 p-5"
     >
-      <h3 className="text-lg font-semibold">Editar pedido e itens</h3>
+      <h3 className="text-lg font-semibold">Ações da retaguarda · Editar pedido e itens</h3>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <label className="grid gap-1 text-sm">
           Status
@@ -213,7 +219,8 @@ export default function OrderAdmin({ order, onSaved }: { order: Order; onSaved: 
               {title}
               <input
                 className={textfield}
-                type={key === "scheduled_delivery_date" ? "date" : "text"}
+                type={["scheduled_delivery_date","billing_date","delivered_date"].includes(key) ? "date" : "text"}
+                disabled={key === "scheduled_delivery_date" && values.delivery_type !== "Entrega Programada"}
                 value={values[key]}
                 onChange={(e) => update(key, e.target.value)}
               />
