@@ -114,27 +114,23 @@ export class CatalogService {
     }
   }
 
-  async createCompany(user: PublicUser, data: {name:string;legal_name?:string|null;active?:boolean}): Promise<{id:number;message:string}> {
-    const name = String(data.name ?? "").trim();
-    if (!name) throw new BadRequestException("Informe name.");
-    try {
-      const row = await this.database.db.prepare("INSERT INTO companies (tenant_id,name,legal_name,active) VALUES (?,?,?,?)")
-        .run(user.tenant_id, name, data.legal_name ?? null, data.active === false ? 0 : 1);
-      return {id:Number(row.lastInsertRowid),message:"Empresa cadastrada."};
-    } catch { throw new ConflictException("Nao foi possivel cadastrar a empresa."); }
+
+  async createCompany(user: PublicUser, data: {name:string;legal_name?:string|null;active?:boolean;trade_name?:string|null;cnpj?:string|null;state_registration?:string|null;tax_regime?:string|null;address?:string|null;address_number?:string|null;address_complement?:string|null;district?:string|null;city?:string|null;state?:string|null;postal_code?:string|null;phone?:string|null;email?:string|null;website?:string|null;lead_time_days?:number}): Promise<{id:number;message:string}> {
+    const name=String(data.name??"").trim();
+    if(!name) throw new BadRequestException("Informe o nome da empresa.");
+    const result=await this.database.db.prepare(
+      "INSERT INTO companies (tenant_id,name,legal_name,trade_name,cnpj,state_registration,tax_regime,address,address_number,address_complement,district,city,state,postal_code,phone,email,website,lead_time_days,active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+    ).run(user.tenant_id,name,nullableText(data.legal_name),nullableText(data.trade_name),nullableText(data.cnpj),nullableText(data.state_registration),nullableText(data.tax_regime),nullableText(data.address),nullableText(data.address_number),nullableText(data.address_complement),nullableText(data.district),nullableText(data.city),nullableText(data.state),nullableText(data.postal_code),nullableText(data.phone),nullableText(data.email),nullableText(data.website),Number(data.lead_time_days??0),data.active===false?0:1);
+    return {id:Number(result.lastInsertRowid),message:"Empresa cadastrada."};
   }
 
-  async updateCompany(user: PublicUser, id:number, data:{name:string;legal_name?:string|null;active?:boolean}): Promise<{id:number;message:string}> {
+  async updateCompany(user:PublicUser,id:number,data:{name:string;legal_name?:string|null;active?:boolean;trade_name?:string|null;cnpj?:string|null;state_registration?:string|null;tax_regime?:string|null;address?:string|null;address_number?:string|null;address_complement?:string|null;district?:string|null;city?:string|null;state?:string|null;postal_code?:string|null;phone?:string|null;email?:string|null;website?:string|null;lead_time_days?:number}):Promise<{id:number;message:string}> {
     const name=String(data.name??"").trim();
-    if(!name) throw new BadRequestException("Informe name.");
-    try {
-      const row=await this.database.db.prepare("UPDATE companies SET name=?,legal_name=?,active=? WHERE id=? AND tenant_id=?")
-        .run(name,data.legal_name??null,data.active===false?0:1,id,user.tenant_id);
-      if(!row.changes) throw new NotFoundException("Empresa nao encontrada.");
-    } catch(error) {
-      if(error instanceof NotFoundException) throw error;
-      throw new ConflictException("Nao foi possivel atualizar a empresa.");
-    }
+    if(!name) throw new BadRequestException("Informe o nome da empresa.");
+    const result=await this.database.db.prepare(
+      "UPDATE companies SET name=?,legal_name=?,trade_name=?,cnpj=?,state_registration=?,tax_regime=?,address=?,address_number=?,address_complement=?,district=?,city=?,state=?,postal_code=?,phone=?,email=?,website=?,lead_time_days=?,active=? WHERE id=? AND tenant_id=?"
+    ).run(name,nullableText(data.legal_name),nullableText(data.trade_name),nullableText(data.cnpj),nullableText(data.state_registration),nullableText(data.tax_regime),nullableText(data.address),nullableText(data.address_number),nullableText(data.address_complement),nullableText(data.district),nullableText(data.city),nullableText(data.state),nullableText(data.postal_code),nullableText(data.phone),nullableText(data.email),nullableText(data.website),Number(data.lead_time_days??0),data.active===false?0:1,id,user.tenant_id);
+    if(!result.changes) throw new NotFoundException("Empresa nao encontrada.");
     return {id,message:"Empresa atualizada."};
   }
 
