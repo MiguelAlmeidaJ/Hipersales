@@ -4,6 +4,8 @@ import { DatabaseRepository } from "../database/database.repository.js";
 import { NotificationsService } from "../notifications/notifications.service.js";
 
 type Data = Record<string,unknown>;
+const allowedReasons = ["PRODUTO AVARIADO","DIVERGÊNCIA DE PRODUTO","DIVERGÊNCIA DE QUANTIDADE","FALTA DE PRODUTO NO PEDIDO","DIVERGÊNCIA DE PREÇOS","PROBLEMAS COM A NOTA FISCAL","PROBLEMAS COM O BOLETO","PAGAMENTO DE VERBAS","DESCONTOS NÃO CONCEDIDOS","DEVOLUÇÃO DE MERCADORIAS","ATRASO NA ENTREGA","CANCELAMENTO DE PEDIDO","OUTROS MOTIVOS"];
+
 export function decodeOccurrenceAttachments(value:unknown) {
   if(value==null) return [] as {filename:string;mimetype:string;content:Buffer}[];
   if(!Array.isArray(value)) throw new BadRequestException("Anexos invalidos.");
@@ -32,6 +34,7 @@ export class OccurrenceCreationService {
     const reason=String(input.reason||"").trim(),description=String(input.description||"").trim();
     if(!Number.isSafeInteger(customerId)||!Number.isSafeInteger(sellerId)||!reason||!description)
       throw new BadRequestException("Informe cliente, motivo e relato.");
+    if (!allowedReasons.includes(reason.toLocaleUpperCase("pt-BR"))) throw new BadRequestException("Selecione um motivo de ocorrencia valido.");
     const attachments=decodeOccurrenceAttachments(input.attachments);
     return this.database.transaction(async ()=>{
       const db=this.database.db,tenant=user.tenant_id;
