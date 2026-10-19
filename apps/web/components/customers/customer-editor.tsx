@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api, downloadApiFile } from "@/lib/api";
 
 type Customer = {
@@ -174,7 +176,8 @@ function SelectField({
   );
 }
 
-export default function CustomerEditor() {
+export default function CustomerEditor({ standalone = false, customerId }: { standalone?: boolean; customerId?: number }) {
+  const router=useRouter();
   const [rows, setRows] = useState<Customer[]>([]),
     [sellers, setSellers] = useState<Seller[]>([]),
     [form, setForm] = useState<Form>({ ...empty }),
@@ -207,6 +210,12 @@ export default function CustomerEditor() {
         if (active) {
           setRows(customers.customers || []);
           setSellers((users.users || []).filter((user) => user.role === "seller" && user.active));
+          if(standalone){
+            const existing=customers.customers.find(item=>item.id===customerId);
+            if(customerId && !existing){setError("Cliente não encontrado.");return;}
+            if(existing)edit(existing);
+            else openNew();
+          }
         }
       })
       .catch((cause) => {
@@ -216,7 +225,7 @@ export default function CustomerEditor() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [standalone,customerId]);
   const visible = useMemo(
     () =>
       rows.filter((customer) => {
@@ -246,6 +255,7 @@ export default function CustomerEditor() {
     setForm({ ...empty, seller_ids: [] });
     setModalOpen(false);
     setError("");
+    if(standalone)router.push("/app/clientes");
   }
   function openNew() {
     reset();
@@ -384,7 +394,7 @@ export default function CustomerEditor() {
   }
   return (
     <section className="min-w-0 space-y-5">
-      <div>
+      {!standalone && <><div>
         <h2 className="text-xl font-extrabold text-slate-900">Cadastro de clientes</h2>
         <p className="mt-1 text-sm text-slate-500">
           Cadastro fiscal, comercial, logístico e vínculo com representantes.
@@ -405,9 +415,10 @@ export default function CustomerEditor() {
           + Novo cliente
         </button>
       </div>
+      </>}
       {modalOpen ? (
         <div
-          className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]"
+          className={standalone?"w-full":"fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-[2px]"}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !busy) reset();
           }}
@@ -416,7 +427,7 @@ export default function CustomerEditor() {
             role="dialog"
             aria-modal="true"
             aria-label="Cadastro de cliente"
-            className="flex max-h-[94dvh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className={standalone?"mx-auto w-full max-w-6xl rounded-2xl border border-slate-200 bg-white shadow-sm":"flex max-h-[94dvh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"}
           >
             <div className="flex items-start justify-between border-b border-slate-100 px-5 py-4 sm:px-7">
               <div>
@@ -437,7 +448,7 @@ export default function CustomerEditor() {
                 ×
               </button>
             </div>
-            <form onSubmit={submit} className="overflow-y-auto p-5 sm:p-7">
+            <form onSubmit={submit} className={standalone?"p-5 sm:p-8":"overflow-y-auto p-5 sm:p-7"}>
               <div className="space-y-5">
                 <Section title="Identificação e situação">
                   <SelectField
@@ -727,6 +738,7 @@ export default function CustomerEditor() {
           </section>
         </div>
       ) : null}
+      {!standalone && <>
       {error && !modalOpen ? (
         <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
           {error}
@@ -878,6 +890,7 @@ export default function CustomerEditor() {
           </button>
         </div>
       </div>
+      </>}
     </section>
   );
 }
