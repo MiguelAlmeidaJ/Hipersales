@@ -19,6 +19,7 @@ export type ProposalTimeline = {
 
 export type Proposal = {
   id: number;
+  company_id?: number;
   order_number?: number | null;
   status: string;
   company_name: string;
