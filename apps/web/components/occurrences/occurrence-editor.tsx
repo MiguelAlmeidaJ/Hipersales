@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api, downloadApiFile, type SessionUser } from "@/lib/api";
 
 type Customer = { id: number; legal_name: string; trade_name?: string; cnpj?: string; active?: number | boolean };
@@ -39,7 +41,8 @@ async function toBase64(file: File): Promise<Attachment> {
     reader.readAsDataURL(file);
   });
 }
-export default function OccurrenceEditor({ user }: { user: SessionUser }) {
+export default function OccurrenceEditor({ user, standalone = false }: { user: SessionUser; standalone?: boolean }) {
+  const router=useRouter();
   const admin = user.role === "admin" || user.role === "dev";
   const [rows, setRows] = useState<Occurrence[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -119,6 +122,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
       setFiles([]);
       setForm({ customer_id: "", seller_id: "", reason: "", description: "" });
       setNotice(result.message || "Ocorrência registrada.");
+      if(standalone){router.push("/app/ocorrencias");router.refresh();}
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao registrar");
     } finally {
@@ -146,12 +150,13 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
   }
   return (
     <section className="min-w-0 space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Atendimento e suporte</p><h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">Ocorrências</h1><p className="mt-1 text-sm text-slate-500">Consulte e acompanhe os registros comerciais.</p></div><button type="button" onClick={()=>setShowCreate(x=>!x)} className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white">{showCreate?"Fechar cadastro":"+ Nova ocorrência"}</button></header>
+      {!standalone && <><header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Atendimento e suporte</p><h1 className="mt-1 text-2xl font-extrabold text-slate-900">Ocorrências</h1><p className="text-sm text-slate-500">Consulte e acompanhe os registros comerciais.</p></div><Link href="/app/ocorrencias/nova" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white">+ Nova ocorrência</Link></header>
       <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-500">Registros</p><p className="mt-1 text-2xl font-extrabold">{rows.length}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-500">Em andamento</p><p className="mt-1 text-2xl font-extrabold text-[#0767b4]">{rows.filter(o=>o.status==="aberta"||o.status==="em_analise").length}</p></div><div className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-xs text-slate-500">Solucionadas</p><p className="mt-1 text-2xl font-extrabold text-emerald-700">{rows.filter(o=>o.status==="solucionada").length}</p></div></div>
-      <div className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4"><input type="search" aria-label="Pesquisar ocorrências" className="min-w-56 flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm" placeholder="Pesquisar R.O., cliente, motivo ou CNPJ" value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label="Filtrar status" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"><option value="all">Todos os status</option>{statuses.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></div>
-      {showCreate && <>
-      <form className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 xl:grid-cols-3" onSubmit={create}>
-        <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
+      <div className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4"><input type="search" aria-label="Pesquisar ocorrências" className="min-w-56 flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm" placeholder="Pesquisar R.O., cliente, motivo ou CNPJ" value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label="Filtrar status" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"><option value="all">Todos os status</option>{statuses.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></div></>}
+      {standalone && <header className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-[#0767b4]">Atendimento e suporte</p><h1 className="mt-1 text-2xl font-extrabold text-slate-900">Registrar ocorrência</h1><p className="mt-1 text-sm text-slate-500">Descreva a situação e envie os documentos necessários para análise.</p></div><Link className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold" href="/app/ocorrencias">Voltar às ocorrências</Link></header>}
+      {standalone && <>
+      <form className="mx-auto max-w-4xl space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9" onSubmit={create}>
+        <div className="grid gap-5 md:grid-cols-2"><label className="grid min-w-0 gap-2 text-sm font-semibold text-slate-700">
           Cliente — busque por razão social, fantasia ou CNPJ
           <input value={customerQuery} onChange={e=>setCustomerQuery(e.target.value)} placeholder="Buscar cliente..." />
           <select required value={form.customer_id} onChange={e=>setForm(v=>({...v,customer_id:e.target.value}))}>
@@ -176,11 +181,11 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
             </select>
           </label>
         )}
-        <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-slate-600">
+        </div><label className="grid gap-2 text-sm font-semibold text-slate-700">
           Motivo da ocorrência
           <select required value={form.reason} onChange={e=>setForm(v=>({...v,reason:e.target.value}))}><option value="">Selecione o motivo</option>{reasons.map(r=><option key={r} value={r}>{r}</option>)}</select>
         </label>
-        <label className="grid gap-1.5 text-xs font-semibold text-slate-600 sm:col-span-2 xl:col-span-3">
+        <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Relato da ocorrência
           <textarea
             required
@@ -197,9 +202,9 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
             onChange={(e) => setFiles(Array.from(e.target.files || []))}
           />
         </label>
-        <button type="submit" className="rounded-xl bg-[#0767b4] px-5 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={busy}>
+        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-5"><Link href="/app/ocorrencias" className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold">Cancelar</Link><button type="submit" className="rounded-xl bg-[#0767b4] px-7 py-3 text-sm font-bold text-white disabled:opacity-50" disabled={busy}>
           {busy ? "Enviando…" : "Registrar ocorrência"}
-        </button>
+        </button></div>
       </form></>}
       {error && (
         <p className="error" role="alert">
@@ -207,7 +212,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
-      <div className="grid gap-4 lg:grid-cols-2">
+      {!standalone && <><div className="grid gap-4 lg:grid-cols-2">
         {rows.filter(o=>(statusFilter==="all"||o.status===statusFilter)&&[String(o.id),o.customer_name,o.customer_cnpj,o.reason,o.description].join(" ").toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR"))).map(o=><article key={o.id} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200 hover:shadow-md">
           <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="text-lg font-bold">R.O. {String(o.id).padStart(4,"0")}</h3><p className="text-xs text-slate-500">{o.created_at?new Date(o.created_at).toLocaleString("pt-BR"):"—"}</p></div><span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">{statuses.find(s=>s[0]===o.status)?.[1]||o.status||"Aberta"}</span></div>
           <p className="mt-3 font-semibold">{o.customer_name} {o.customer_cnpj?" · "+o.customer_cnpj:""}</p>
@@ -244,6 +249,7 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
           </button>
         </section>
       )}
+      </>}
     </section>
   );
 }
