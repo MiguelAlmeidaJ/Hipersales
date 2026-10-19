@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
-import { api, apiPath, type SessionUser } from "@/lib/api";
+import { api, downloadApiFile, type SessionUser } from "@/lib/api";
 
 type Customer = { id: number; legal_name: string; trade_name?: string; cnpj?: string; active?: number | boolean };
 type Seller = { id: number; name: string; role: string; active?: number | boolean };
@@ -209,7 +209,8 @@ export default function OccurrenceEditor({ user }: { user: SessionUser }) {
           <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600">{o.description}</p>
           {o.resolution&&<div className="mt-3 rounded-xl bg-emerald-50 p-3"><p className="text-xs font-bold text-emerald-800">Parecer final</p><p className="whitespace-pre-wrap text-sm">{o.resolution}</p></div>}
           <div className="mt-4 flex flex-wrap gap-2"><button type="button" className="secondary" onClick={()=>setSelected(selected===o.id?null:o.id)}>{selected===o.id?"Fechar detalhes":"Anexos e linha do tempo"}</button>{admin&&<button type="button" className="secondary" onClick={()=>{setEditing(o.id);setStatus(o.status||"aberta");setResolution(o.resolution||"");}}>Editar parecer</button>}</div>
-          {selected===o.id&&<div className="mt-4 space-y-4 border-t pt-4"><div><h4 className="text-sm font-bold">Anexos</h4>{o.attachments?.length?o.attachments.map(a=><a key={a.id} href={apiPath(`/api/occurrences/${o.id}/attachments/${a.id}`)} target="_blank" rel="noreferrer" className="mt-2 block text-sm text-[#0767b4] underline">{a.filename}</a>):<p className="text-sm text-slate-500">Sem anexos disponíveis.</p>}</div><div><h4 className="text-sm font-bold">Linha do tempo</h4>{o.timeline?.map((e,i)=><div key={e.id||i} className="mt-2 border-l-2 border-[#0767b4] pl-3"><p className="text-sm font-semibold">{e.title}</p><p className="text-xs text-slate-500">{e.created_at?new Date(e.created_at).toLocaleString("pt-BR"):""} · {e.created_by_name||"Sistema"}</p><p className="whitespace-pre-wrap text-sm">{e.notes}</p></div>)}</div></div>}
+          <button type="button" className="secondary mt-3" onClick={()=>void downloadApiFile(`/api/occurrences/${o.id}/pdf`,`ocorrencia-${o.id}.pdf`).catch(e=>setError(e instanceof Error?e.message:"Falha ao gerar PDF"))}>PDF da ocorrência</button>
+          {selected===o.id&&<div className="mt-4 space-y-4 border-t pt-4"><div><h4 className="text-sm font-bold">Anexos</h4>{o.attachments?.length?o.attachments.map(a=><button type="button" key={a.id} className="mt-2 block text-left text-sm text-[#0767b4] underline" onClick={()=>void downloadApiFile(`/api/occurrences/${o.id}/attachments/${a.id}`,a.filename).catch(e=>setError(e instanceof Error?e.message:"Falha ao baixar anexo"))}>{a.filename}</button>):<p className="text-sm text-slate-500">Sem anexos disponíveis.</p>}</div><div><h4 className="text-sm font-bold">Linha do tempo</h4>{o.timeline?.map((e,i)=><div key={e.id||i} className="mt-2 border-l-2 border-[#0767b4] pl-3"><p className="text-sm font-semibold">{e.title}</p><p className="text-xs text-slate-500">{e.created_at?new Date(e.created_at).toLocaleString("pt-BR"):""} · {e.created_by_name||"Sistema"}</p><p className="whitespace-pre-wrap text-sm">{e.notes}</p></div>)}</div></div>}
         </article>)}
       </div>
       {editing !== null && admin && (
