@@ -7,12 +7,14 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/list-states";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
 import { api } from "@/lib/api";
+import { useSession } from "@/contexts/session-context";
 import { digitsOnly, formatCnpj } from "@/lib/format";
 import type { Customer } from "@/types/commercial";
 
 const normalize = (value: unknown) => String(value ?? "").toLocaleLowerCase("pt-BR");
 
 export default function CustomersScreen() {
+  const {user}=useSession();const isAdmin=user?.role==="admin"||user?.role==="dev";
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selected, setSelected] = useState<Customer | null>(null);
   const [query, setQuery] = useState("");
@@ -25,7 +27,7 @@ export default function CustomersScreen() {
     else setLoading(true);
     setError("");
     try {
-      const response = await api<{ customers: Customer[] }>("/api/customers");
+      const response = await api<{ customers: Customer[] }>(isAdmin?"/api/admin/customers":"/api/customers");
       setCustomers(response.customers ?? []);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao carregar clientes.");
@@ -33,7 +35,7 @@ export default function CustomersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
@@ -65,7 +67,7 @@ export default function CustomersScreen() {
         />
       )}
       <Modal visible={Boolean(selected)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
-        {selected ? <CustomerDetails customer={selected} onClose={() => setSelected(null)} /> : null}
+        {selected ? <CustomerDetails customer={selected} isAdmin={isAdmin} onClose={() => setSelected(null)} /> : null}
       </Modal>
     </View>
   );
@@ -89,7 +91,7 @@ function CustomerCard({ customer, onPress }: { customer: Customer; onPress: () =
   );
 }
 
-function CustomerDetails({ customer, onClose }: { customer: Customer; onClose: () => void }) {
+function CustomerDetails({ customer, onClose, isAdmin }: { customer: Customer; onClose: () => void; isAdmin:boolean }) {
   const phone = customer.phone ? digitsOnly(customer.phone) : "";
   const whatsappPhone = phone.startsWith("55") ? phone : `55${phone}`;
   const canCall = phone.length >= 8;
@@ -111,6 +113,7 @@ function CustomerDetails({ customer, onClose }: { customer: Customer; onClose: (
           {canEmail ? <Pressable accessibilityRole="link" onPress={() => Linking.openURL(`mailto:${customer.email}`)} style={styles.action}><Text style={styles.actionSymbol}>@</Text><Text style={styles.actionText}>E-mail</Text></Pressable> : null}
         </View> : null}
 
+        {isAdmin?<Pressable accessibilityRole="button" onPress={()=>{onClose();router.push({pathname:"/new-customer",params:{id:String(customer.id)}});}} style={styles.action}><Text style={styles.actionText}>Editar cadastro</Text></Pressable>:null}
         <Text style={styles.sectionTitle}>Dados cadastrais</Text>
         <InfoRow label="Razão social" value={customer.legal_name} />
         <InfoRow label="CNPJ" value={formatCnpj(customer.cnpj)} />
