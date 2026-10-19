@@ -42,7 +42,7 @@ export default function CompanyForm({id}:{id?:number}){
     if(cnpj.length!==14){setError("Informe os 14 dígitos do CNPJ.");return;}
     setLooking(true);setError("");setNotice("");
     try{
-      const result=await api<{company:Partial<Record<Key,string>>>}>(`/api/admin/companies/lookup-cnpj?cnpj=${cnpj}`);
+      const result=await api<{company:Partial<Record<Key,string>>}>(`/api/admin/companies/lookup-cnpj?cnpj=${cnpj}`);
       setForm(old=>({...old,...Object.fromEntries(Object.entries(result.company).filter(([,v])=>Boolean(v))),cnpj:old.cnpj}));
       setNotice("Dados encontrados. Revise antes de salvar: inscrição estadual e regime fiscal devem ser preenchidos manualmente.");
     }catch(err){setError(err instanceof Error?err.message:"Não foi possível consultar o CNPJ.");}
