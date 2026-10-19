@@ -137,11 +137,16 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
   const [fields,setFields]=useState({status:proposal.status,admin_notes:proposal.admin_notes||"",
     delivery_forecast:proposal.delivery_forecast||"",industry_order_number:proposal.industry_order_number||"",
     invoice_number:proposal.invoice_number||"",billing_date:proposal.billing_date?.slice(0,10)||"",
-    delivered_date:proposal.delivered_date?.slice(0,10)||""});
+    delivered_date:proposal.delivered_date?.slice(0,10)||"",
+    payment_terms:proposal.payment_terms||"",freight_type:proposal.freight_type||"",delivery_type:proposal.delivery_type||"",
+    scheduled_delivery_date:proposal.scheduled_delivery_date?.slice(0,10)||"",discount_percent:String(proposal.discount_percent??0),
+    commission_percent:String(proposal.commission_percent??0),discount_on:proposal.discount_on||"Sem descontos",invoice_type:proposal.invoice_type||""});
   async function updateOrder(){
     setBusy(true);setError("");
     try{
-      await api(("/api/admin/proposals/"+proposal.id) as never,{method:"PATCH",body:JSON.stringify(fields)});
+      const discount=Number(fields.discount_percent), commission=Number(fields.commission_percent);
+      if(!Number.isFinite(discount)||discount<0||discount>100||!Number.isFinite(commission)||commission<0||commission>100)throw new Error("Revise os percentuais de desconto e comissão.");
+      await api(("/api/admin/proposals/"+proposal.id) as never,{method:"PATCH",body:JSON.stringify({...fields,discount_percent:discount,commission_percent:commission})});
       Alert.alert("Pedido","Informações atualizadas.");onSaved();
     }catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível salvar.");}
     finally{setBusy(false);}
@@ -182,6 +187,9 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
           <Detail label="Pagamento" value={proposal.payment_terms} />
           <Detail label="Frete" value={proposal.freight_type} />
           <Detail label="Entrega" value={proposal.delivery_type} />
+          <Detail label="Prazo da empresa" value={proposal.lead_time_days!=null?String(proposal.lead_time_days)+" dias":null}/>
+          <Detail label="Previsão de entrega" value={proposal.delivery_forecast} />
+          <Detail label="Desconto" value={proposal.discount_percent!=null?String(proposal.discount_percent)+"%":null}/>
           <Detail label="Pedido da indústria" value={proposal.industry_order_number} />
           <Detail label="Nota fiscal" value={proposal.invoice_number} />
         </View>
@@ -191,7 +199,7 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
           {editing && <>
             <SelectField label="Status do pedido" value={fields.status} onChange={value=>setFields(old=>({...old,status:value}))}
               options={Object.entries(statusLabels).map(([value,label])=>({value,label}))}/>
-            {([["industry_order_number","Pedido na indústria"],["invoice_number","Número da NF"],["delivery_forecast","Previsão de entrega"],["billing_date","Data do faturamento (AAAA-MM-DD)"],["delivered_date","Data da entrega (AAAA-MM-DD)"],["admin_notes","Observações da retaguarda"]] as const).map(([key,label])=>
+            {([["industry_order_number","Pedido na indústria"],["invoice_number","Número da NF"],["delivery_forecast","Previsão de entrega"],["billing_date","Data do faturamento (AAAA-MM-DD)"],["delivered_date","Data da entrega (AAAA-MM-DD)"],["admin_notes","Observações da retaguarda"],["payment_terms","Condição de pagamento"],["freight_type","Tipo de frete"],["delivery_type","Entrega"],["scheduled_delivery_date","Entrega programada (AAAA-MM-DD)"],["discount_percent","Desconto (%)"],["commission_percent","Comissão (%)"],["discount_on","Aplicação do desconto"],["invoice_type","Tipo de nota"]] as const).map(([key,label])=>
               <View key={key} style={{gap:5}}><Text style={{fontSize:12,color:colors.muted,fontWeight:"700"}}>{label}</Text>
                 <TextInput multiline={key==="admin_notes"} value={fields[key]} onChangeText={value=>setFields(old=>({...old,[key]:value}))}
                   style={{borderWidth:1,borderColor:colors.border,borderRadius:12,padding:12,color:colors.ink,backgroundColor:"#fff"}}/>
