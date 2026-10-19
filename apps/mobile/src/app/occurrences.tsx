@@ -1,6 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
+import * as Sharing from "expo-sharing";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -10,7 +11,7 @@ import { Card, Input, ModulePage, Notice, PrimaryButton, SecondaryButton, Sheet,
 import { EmptyState, LoadingState } from "@/components/list-states";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
-import { api } from "@/lib/api";
+import { api, authenticatedResource } from "@/lib/api";
 import { shortDate } from "@/lib/format";
 
 type Customer={id:number;legal_name:string;trade_name?:string;cnpj?:string;active?:boolean|number};
@@ -38,6 +39,17 @@ export default function OccurrencesScreen(){
   async function encodeAttachments():Promise<EncodedAttachment[]>{return Promise.all(attachments.map(async item=>({filename:item.filename,mimetype:item.mimetype,content:await FileSystem.readAsStringAsync(item.uri,{encoding:FileSystem.EncodingType.Base64})})));}
   async function create(){if(!form.customer_id||!form.reason.trim()||!form.description.trim()||(admin&&!form.seller_id)){setError("Preencha cliente, motivo, descrição e representante.");return;}setBusy(true);setError("");try{const encoded=await encodeAttachments();const r=await api<{message?:string}>("/api/occurrences",{method:"POST",body:JSON.stringify({customer_id:Number(form.customer_id),reason:form.reason,description:form.description,attachments:encoded,...(admin?{seller_id:Number(form.seller_id)}:{})}),timeoutMs:60_000});await load();setNotice(r.message||"Ocorrência registrada.");setCreating(false);setForm({customer_id:"",seller_id:"",reason:"",description:""});setAttachments([]);}catch(e){setError(e instanceof Error?e.message:"Falha ao registrar.");}finally{setBusy(false);}}
   async function update(){if(!editing)return;setBusy(true);setError("");try{const r=await api<{message?:string}>(`/api/admin/occurrences/${editing.id}`,{method:"PATCH",body:JSON.stringify({status,resolution})});await load();setNotice(r.message||"Status atualizado.");setEditing(null);}catch(e){setError(e instanceof Error?e.message:"Falha ao atualizar.");}finally{setBusy(false);}}
+  async function shareResource(path:`/api/${string}`,filename:string){
+    try{
+      const resource=authenticatedResource(path);
+      if(!resource.headers.Authorization)throw new Error("Sessão expirada. Faça login novamente.");
+      const target=FileSystem.cacheDirectory+filename.replace(/[^a-zA-Z0-9._-]/g,"_");
+      const result=await FileSystem.downloadAsync(resource.url,target,{headers:resource.headers});
+      if(result.status!==200)throw new Error("Não foi possível obter o arquivo.");
+      if(!await Sharing.isAvailableAsync())throw new Error("Compartilhamento indisponível neste aparelho.");
+      await Sharing.shareAsync(result.uri);
+    }catch(error){Alert.alert("Arquivo",error instanceof Error?error.message:"Falha ao abrir arquivo.");}
+  }
   function openEdit(row:Occurrence){setEditing(row);setStatus(row.status||"aberta");setResolution(row.resolution||"");setError("");}
   function closeCreate(){if(busy)return;setCreating(false);setAttachments([]);setError("");}
   return <ModulePage title="Ocorrências" subtitle="Registre e acompanhe situações comerciais."><View style={styles.top}><Text style={styles.count}>{rows.length} registros</Text><PrimaryButton title="Nova ocorrência" onPress={()=>{setCreating(true);setError("");}}/></View>{notice?<Notice>{notice}</Notice>:null}{error&&!creating&&!editing?<Notice tone="error">{error}</Notice>:null}{loading?<LoadingState/>:rows.length===0?<EmptyState title="Nenhuma ocorrência" description="As ocorrências registradas aparecerão aqui."/>:rows.map(row=><Pressable key={row.id} accessibilityRole="button" onPress={()=>setSelected(row)}><Card><View style={styles.rowTop}><Text style={styles.reason}>{row.reason||`Ocorrência #${row.id}`}</Text><StatusPill active={row.status==="solucionada"} label={statuses.find(x=>x.value===row.status)?.label||row.status||"Aberta"}/></View><Text style={styles.customer}>{row.customer_name||"Cliente não informado"}</Text><Text style={styles.description}>{row.description||"Sem descrição"}</Text><Text style={styles.date}>{row.created_at?shortDate(row.created_at):""}{row.seller_name?` · ${row.seller_name}`:""}</Text></Card></Pressable>)}
@@ -46,8 +58,9 @@ export default function OccurrencesScreen(){
       <Text style={styles.reason}>{selected?.reason}</Text><Text style={styles.customer}>{selected?.customer_name} {selected?.customer_cnpj||""}</Text>
       <Text style={styles.description}>{selected?.description}</Text>
       <Text style={styles.attachmentTitle}>Parecer final</Text><Text style={styles.description}>{selected?.resolution||"Aguardando resolução."}</Text>
-      <Text style={styles.attachmentTitle}>Anexos</Text>{selected?.attachments?.length?selected.attachments.map(a=><Text key={a.id} style={styles.description}>{a.filename}</Text>):<Text style={styles.description}>Sem anexos disponíveis.</Text>}
+      <Text style={styles.attachmentTitle}>Anexos</Text>{selected?.attachments?.length?selected.attachments.map(a=><Pressable key={a.id} accessibilityRole="button" onPress={()=>void shareResource(`/api/occurrences/${selected.id}/attachments/${a.id}`,a.filename)}><Text style={styles.customer}>📎 {a.filename} · Abrir</Text></Pressable>):<Text style={styles.description}>Sem anexos disponíveis.</Text>}
       <Text style={styles.attachmentTitle}>Linha do tempo</Text>{selected?.timeline?.map((event,index)=><View key={event.id||index} style={styles.attachmentSection}><Text style={styles.reason}>{event.title}</Text><Text style={styles.date}>{event.created_at?shortDate(event.created_at):""} · {event.created_by_name||"Sistema"}</Text><Text style={styles.description}>{event.notes}</Text></View>)}
+      {selected?<SecondaryButton title="Exportar PDF da ocorrência" onPress={()=>void shareResource(`/api/occurrences/${selected.id}/pdf`,`ocorrencia-${selected.id}.pdf`)}/>:null}
       {admin?<SecondaryButton title="Editar parecer" onPress={()=>{if(selected)openEdit(selected);setSelected(null);}}/>:null}
     </Sheet>
     <Sheet visible={editing!==null} title={`Ocorrência #${editing?.id??""}`} onClose={()=>setEditing(null)}>{error?<Notice tone="error">{error}</Notice>:null}<SelectField label="Status" value={status} onChange={setStatus} options={statuses}/><Input label="Resolução" multiline value={resolution} onChangeText={setResolution}/><PrimaryButton title="Salvar status" busy={busy} onPress={()=>void update()}/></Sheet>
