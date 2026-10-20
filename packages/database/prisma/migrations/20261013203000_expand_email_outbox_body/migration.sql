@@ -1,1 +1,0 @@
-ALTER TABLE [dbo].[email_outbox] ALTER COLUMN [body] NVARCHAR(MAX) NOT NULL;

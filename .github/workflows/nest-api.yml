@@ -1,9 +1,0 @@
-# Checks consolidated in nextjs.yml to avoid duplicate build and test jobs.
-name: API workflow notice
-on:
-  workflow_dispatch:
-jobs:
-  notice:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "The API is validated by HiperSales monorepo CI."

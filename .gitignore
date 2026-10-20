@@ -1,40 +1,60 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+example
+
+# generated native folders
+/ios
+/android
+
+# Assets shipped by the Expo starter but not used by HiperSales
+/assets/expo.icon/
+/assets/images/android-icon-*.png
+/assets/images/app-icon.jpeg
+/assets/images/expo-*.png
+/assets/images/favicon.png
+/assets/images/icon.png
+/assets/images/logo-glow.png
+/assets/images/react-logo*.png
+/assets/images/splash-icon.png
+/assets/images/tabIcons/
+/assets/images/tutorial-web.png
+
 .env
 .env.*
 !.env.example
-!.env.infrastructure.example
-__pycache__/
-*.py[cod]
-.venv/
-.tmp-venv/
-venv/
-node_modules/
-**/node_modules/
-.node_modules.corrupt/
-**/dist/
-apps/api/src/generated/prisma/
-packages/database/src/generated/prisma/
-database/
-!apps/api/src/database/
-!apps/api/src/database/**
-!packages/database/
-!packages/database/**
-packages/database/dist/
-packages/database/node_modules/
-packages/database/src/generated/
-packages/database/scripts/__pycache__/
-data/
-*.sqlite3
-*.sqlite3-*
-*.db
-*.db-*
-*.log
-*.err
-*.zip
-*.bak
-.DS_Store
-.refactor-backup/
-.whatsapp-internal-token
-
-.next/
-**/.next/
-*.tsbuildinfo
