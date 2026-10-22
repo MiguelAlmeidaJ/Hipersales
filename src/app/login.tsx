@@ -1,13 +1,12 @@
 import Constants from "expo-constants";
 import { Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useRef, useState } from "react";
-import { ActivityIndicator, Image, ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Image, ImageBackground, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
-import { apiUrl } from "@/lib/api";
 
 export default function LoginScreen() {
   const { status, user, login } = useSession();
@@ -16,8 +15,15 @@ export default function LoginScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const passwordInput = useRef<TextInput>(null);
   const appVersion = Constants.expoConfig?.version ?? "0.1.0";
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardOpen(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   if (status === "authenticated") return <Redirect href={user?.must_change_password ? "/change-password" : "/(app)"} />;
 
@@ -40,7 +46,7 @@ export default function LoginScreen() {
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <ScrollView automaticallyAdjustKeyboardInsets={Platform.OS === "ios"} contentContainerStyle={styles.scrollContent}
-            keyboardDismissMode="interactive" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={keyboardOpen}>
             <View style={styles.card}>
               <Image accessibilityLabel="HiperSales Software" source={require("../../assets/images/hipersales-logo.png")} style={styles.logoImage} resizeMode="contain" />
               <Text style={styles.eyebrow}>SUA OPERAÇÃO COMERCIAL, CONECTADA</Text>
@@ -67,7 +73,6 @@ export default function LoginScreen() {
                 {busy ? <ActivityIndicator color={colors.brandDark} /> : <Text style={styles.buttonText}>Entrar</Text>}
               </Pressable>
               <Text style={styles.version}>HiperSales • Beta • v{appVersion}</Text>
-              {__DEV__ ? <Text numberOfLines={1} style={styles.apiHint}>API: {apiUrl}</Text> : null}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -81,7 +86,7 @@ const styles = StyleSheet.create({
   overlay: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "rgba(0, 22, 24, 0.30)" },
   safeArea: { flex: 1 },
   keyboard: { flex: 1 },
-  scrollContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 20, paddingVertical: 28 },
+  scrollContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 20, paddingVertical: 16 },
   card: { width: "100%", maxWidth: 440, alignSelf: "center", borderRadius: 28, backgroundColor: "rgba(3,34,37,0.97)", paddingHorizontal: 24, paddingVertical: 28, borderWidth: 1, borderColor: "rgba(255,255,255,0.19)", shadowColor: "#00191B", shadowOpacity: 0.3, shadowRadius: 24, elevation: 12 },
   logoImage: { width: "100%", height: 74, alignSelf: "center", marginBottom: 18 },
   wordmark: { marginLeft: 2 },
@@ -102,5 +107,4 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.86 },
   disabled: { opacity: 0.65 },
   version: { color: "#B2C3C0", fontSize: 11, fontWeight: "600", textAlign: "center", marginTop: 16 },
-  apiHint: { color: "#B2C3C0", fontSize: 9, textAlign: "center", marginTop: 5 },
 });

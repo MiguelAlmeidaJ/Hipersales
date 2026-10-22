@@ -1,6 +1,4 @@
-import { Platform } from "react-native";
-
-const emulatorUrl = "https://api.hipersalesweb.com.br:18090/api/v1";
+const defaultApiUrl = "https://api.hipersalesweb.com.br/api/v1";
 const defaultTimeoutMs = 15_000;
 const apiVersion = "v1";
 let sessionToken: string | null = null;
@@ -13,7 +11,7 @@ function normalizeApiUrl(value: string): string {
   return `${url}/api/${apiVersion}`;
 }
 
-export const apiUrl = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || emulatorUrl);
+export const apiUrl = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || defaultApiUrl);
 
 export function authenticatedResource(path: `/api/${string}`) {
   const headers: Record<string, string> = {};
@@ -35,7 +33,7 @@ export async function loginExternal(usuario:string,senha:string):Promise<{access
   }catch(e){
     if(e instanceof ApiError)throw e;
     if(e instanceof Error&&e.name==="AbortError")throw new ApiError("A conexão demorou mais que o esperado.",0,"timeout");
-    throw new ApiError("Não foi possível conectar à API. Verifique HTTPS, certificado e porta 18090.",0,"network");
+    throw new ApiError("Não foi possível conectar à API. Verifique HTTPS e a disponibilidade do servidor.",0,"network");
   }finally{clearTimeout(timer);}
 }
 export type ApiErrorCode = "configuration" | "timeout" | "network" | "unauthorized" | "client" | "server";
