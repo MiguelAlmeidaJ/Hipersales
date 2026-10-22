@@ -29,14 +29,14 @@
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#073C96",
+        "backgroundColor": "#052528",
         "foregroundImage": "./assets/images/android-adaptive-foreground.png"
       },
       "predictiveBackGestureEnabled": true
     },
     "androidNavigationBar": {
-      "backgroundColor": "#FFFFFF",
-      "barStyle": "dark-content",
+      "backgroundColor": "#052528",
+      "barStyle": "light-content",
       "enforceContrast": false
     },
     "web": {
@@ -59,7 +59,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#073C96",
+          "backgroundColor": "#052528",
           "image": "./assets/images/brand-mark.png",
           "imageWidth": 156
         }
@@ -76,7 +76,7 @@
       [
         "expo-notifications",
         {
-          "color": "#0767B4",
+          "color": "#FF951E",
           "defaultChannel": "default"
         }
       ],

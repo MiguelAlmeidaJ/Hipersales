@@ -1,12 +1,13 @@
+// Identidade oficial HiperSales — Deep Navy, Tangerine, Cream e Slate.
 export const colors = {
-  brand: "#0767B4",
-  brandDark: "#073C96",
-  accent: "#76BD3D",
-  canvas: "#F5F8FB",
+  brand: "#052528",
+  brandDark: "#052528",
+  accent: "#FF951E",
+  canvas: "#FFF3E7",
   surface: "#FFFFFF",
-  ink: "#111827",
-  muted: "#64748B",
-  border: "#DFE8F0",
+  ink: "#052528",
+  muted: "#5B6B70",
+  border: "#D9E1DE",
   danger: "#DC2626",
   success: "#07875D",
 } as const;
