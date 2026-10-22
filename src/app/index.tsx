@@ -5,7 +5,6 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { BrandSymbol } from "@/components/brand";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 
@@ -20,7 +19,7 @@ export default function IndexScreen() {
     return (
       <View style={styles.loading}>
         <StatusBar style="light" />
-        <BrandSymbol width={164} height={112} />
+        <Image source={require("../../assets/images/android-adaptive-foreground.png")} style={styles.brandMark} resizeMode="contain" />
         <Text style={styles.brandName}>HiperSales</Text>
         <Text style={styles.tagline}>Sua operação comercial, conectada</Text>
         <ActivityIndicator color="#FFFFFF" size="small" style={styles.spinner} />

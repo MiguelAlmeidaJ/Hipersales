@@ -41,7 +41,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/brand-mark.png"
+      "favicon": "./assets/images/app-icon-store.png"
     },
     "plugins": [
       "expo-router",
@@ -60,8 +60,8 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#052528",
-          "image": "./assets/images/brand-mark.png",
-          "imageWidth": 156
+          "image": "./assets/images/android-adaptive-foreground.png",
+          "imageWidth": 160
         }
       ],
       [

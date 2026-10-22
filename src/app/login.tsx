@@ -2,10 +2,9 @@ import Constants from "expo-constants";
 import { Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { BrandSymbol, LoginWallpaper } from "@/components/brand";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { apiUrl } from "@/lib/api";
@@ -35,8 +34,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.background}>
-      <LoginWallpaper />
+    <ImageBackground source={require("../../assets/images/login-background.png")} style={styles.background} resizeMode="cover">
       <View style={styles.overlay} />
       <StatusBar style="light" />
       <SafeAreaView style={styles.safeArea}>
@@ -44,13 +42,7 @@ export default function LoginScreen() {
           <ScrollView automaticallyAdjustKeyboardInsets={Platform.OS === "ios"} contentContainerStyle={styles.scrollContent}
             keyboardDismissMode="interactive" keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={styles.card}>
-              <View style={styles.logo} accessibilityLabel="HiperSales Software">
-                <BrandSymbol width={77} height={58} />
-                <View style={styles.wordmark}>
-                  <Text style={styles.wordmarkText}>HiperSales</Text>
-                  <Text style={styles.software}>s o f t w a r e</Text>
-                </View>
-              </View>
+              <Image accessibilityLabel="HiperSales Software" source={require("../../assets/images/hipersales-logo.png")} style={styles.logoImage} resizeMode="contain" />
               <Text style={styles.eyebrow}>SUA OPERAÇÃO COMERCIAL, CONECTADA</Text>
               <Text style={styles.title}>Bem-vindo</Text>
               <Text style={styles.subtitle}>Sua gestão comercial em um só lugar.</Text>
@@ -80,7 +72,7 @@ export default function LoginScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -91,7 +83,7 @@ const styles = StyleSheet.create({
   keyboard: { flex: 1 },
   scrollContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 20, paddingVertical: 28 },
   card: { width: "100%", maxWidth: 440, alignSelf: "center", borderRadius: 28, backgroundColor: "rgba(3,34,37,0.97)", paddingHorizontal: 24, paddingVertical: 28, borderWidth: 1, borderColor: "rgba(255,255,255,0.19)", shadowColor: "#00191B", shadowOpacity: 0.3, shadowRadius: 24, elevation: 12 },
-  logo: { flexDirection: "row", alignItems: "center", alignSelf: "center", marginBottom: 10 },
+  logoImage: { width: "100%", height: 74, alignSelf: "center", marginBottom: 18 },
   wordmark: { marginLeft: 2 },
   wordmarkText: { fontSize: 31, fontWeight: "800", color: "#FFF3E7", letterSpacing: -1.6 },
   software: { textAlign: "right", color: "#FFF3E7", fontSize: 10, letterSpacing: 1.0, marginTop: -2 },
