@@ -1,8 +1,8 @@
-import type { MobileSessionResponse, PublicUser, SessionResponse } from "@/types/session";
+import type { PublicUser } from "@/types/session";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
-import { AppState } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
-import { api, ApiError, setSessionToken, setUnauthorizedHandler } from "@/lib/api";
+import { api, ApiError, loginExternal, setSessionToken, setUnauthorizedHandler } from "@/lib/api";
 import { readStoredSession, removeStoredSession, storeSession } from "@/lib/session-storage";
 
 type SessionStatus = "loading" | "authenticated" | "anonymous" | "unavailable";
@@ -15,6 +15,7 @@ type SessionContextValue = {
   restore: () => Promise<void>;
 };
 
+const profileKey="hipersales_api_profile";
 const SessionContext = createContext<SessionContextValue | null>(null);
 let beforeLogoutHandler: (() => Promise<void>) | null = null;
 
@@ -29,15 +30,18 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const clearSession = useCallback(async () => {
     setSessionToken(null);
     await removeStoredSession();
+    await SecureStore.deleteItemAsync(profileKey).catch(()=>undefined);
     setUser(null);
     setStatus("anonymous");
   }, []);
 
   const refresh = useCallback(async () => {
-    const response = await api<SessionResponse>("/api/me");
-    setUser(response.user);
+    const raw=await SecureStore.getItemAsync(profileKey);
+    if(!raw){await clearSession();return;}
+    await api("/api/customers");
+    setUser(JSON.parse(raw) as PublicUser);
     setStatus("authenticated");
-  }, []);
+  }, [clearSession]);
 
   const restore = useCallback(async () => {
     setStatus("loading");
@@ -68,28 +72,18 @@ export function SessionProvider({ children }: PropsWithChildren) {
     return () => setUnauthorizedHandler(null);
   }, [clearSession]);
 
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active" && status === "authenticated") refresh().catch(() => undefined);
-    });
-    return () => subscription.remove();
-  }, [refresh, status]);
-
-  const login = useCallback(async (username: string, password: string) => {
-    const response = await api<MobileSessionResponse>("/api/mobile/login", {
-      method: "POST",
-      body: JSON.stringify({ username, password }),
-    });
-    await storeSession(response.session_token);
-    setSessionToken(response.session_token);
-    setUser(response.user);
-    setStatus("authenticated");
-  }, []);
+  const login=useCallback(async(username:string,password:string)=>{
+    const response=await loginExternal(username,password);
+    const profile:PublicUser={id:response.representante?.id||0,name:response.representante?.nome||response.usuario,email:response.usuario,role:response.admin?"admin":"seller",tenant_id:1,active:true,must_change_password:false};
+    await storeSession(response.accessToken);
+    await SecureStore.setItemAsync(profileKey,JSON.stringify(profile));
+    setSessionToken(response.accessToken);setUser(profile);setStatus("authenticated");
+  },[]);
 
   const logout = useCallback(async () => {
     try {
       await beforeLogoutHandler?.().catch(() => undefined);
-      await api("/api/logout", { method: "POST" });
+      // A API externa não possui endpoint de logout.
     } finally {
       await clearSession();
     }

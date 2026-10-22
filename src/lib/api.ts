@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 
-const emulatorUrl = Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://localhost:8000";
+const emulatorUrl = "https://api.hipersalesweb.com.br:18090/api/v1";
 const defaultTimeoutMs = 15_000;
 const apiVersion = "v1";
 let sessionToken: string | null = null;
@@ -24,6 +24,20 @@ export function authenticatedResource(path: `/api/${string}`) {
   };
 }
 
+export async function loginExternal(usuario:string,senha:string):Promise<{accessToken:string;usuario:string;admin:boolean;representante?:{id:number;nome:string}}> {
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),15000);
+  try {
+    const response=await fetch(apiUrl+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({usuario,senha}),signal:controller.signal});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new ApiError(data?.erro?.mensagem||"Não foi possível autenticar.",response.status,response.status===401?"unauthorized":"client");
+    if(!data?.accessToken||!data?.usuario)throw new ApiError("Resposta de autenticação incompleta.",0,"server");
+    return data;
+  }catch(e){
+    if(e instanceof ApiError)throw e;
+    if(e instanceof Error&&e.name==="AbortError")throw new ApiError("A conexão demorou mais que o esperado.",0,"timeout");
+    throw new ApiError("Não foi possível conectar à API. Verifique HTTPS, certificado e porta 18090.",0,"network");
+  }finally{clearTimeout(timer);}
+}
 export type ApiErrorCode = "configuration" | "timeout" | "network" | "unauthorized" | "client" | "server";
 
 export class ApiError extends Error {
@@ -51,6 +65,8 @@ type ApiOptions = RequestInit & { timeoutMs?: number };
 
 export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): Promise<T> {
   ensureSecureProductionUrl();
+  const route = path === "/api/saude" ? "/saude" : path === "/api/customers" || path === "/api/admin/customers" ? "/clientes?tamanho=200" : null;
+  if (!route) throw new ApiError("Funcionalidade ainda não adaptada à API externa.",0,"configuration");
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? defaultTimeoutMs);
   const headers = new Headers(options.headers);
@@ -60,7 +76,7 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
 
   try {
     const { timeoutMs: _timeoutMs, ...fetchOptions } = options;
-    const response = await fetch(`${apiUrl}${path.slice("/api".length)}`, { ...fetchOptions, headers, signal: controller.signal });
+    const response = await fetch(`${apiUrl}${route}`, { ...fetchOptions, headers, signal: controller.signal });
     const data: unknown = await response.json().catch(() => ({}));
     if (!response.ok) {
       const message =
@@ -69,9 +85,11 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
           : response.status >= 500
             ? "O serviço está temporariamente indisponível."
             : "Não foi possível concluir a solicitação.";
+      if (typeof data === "object" && data !== null && "erro" in data && typeof (data as {erro?:{mensagem?:string}}).erro?.mensagem==="string") throw new ApiError((data as {erro:{mensagem:string}}).erro.mensagem,response.status,response.status===401?"unauthorized":"client");
       if (response.status === 401) unauthorizedHandler?.();
       throw new ApiError(message, response.status, response.status === 401 ? "unauthorized" : response.status >= 500 ? "server" : "client");
     }
+    if(path==="/api/customers"||path==="/api/admin/customers") return {customers:((data as any).itens||[]).map((c:any)=>({id:c.id,legal_name:c.razaoSocial,trade_name:c.nomeFantasia,cnpj:c.documento,phone:c.telefoneCompras1,email:c.emailCompras,active:c.statusCadastro==="APROVADO",statusCadastro:c.statusCadastro}))} as T;
     return data as T;
   } catch (cause) {
     if (cause instanceof ApiError) throw cause;
