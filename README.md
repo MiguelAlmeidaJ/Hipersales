@@ -21,6 +21,8 @@ Configure `EXPO_PUBLIC_API_URL` com o endereço acessível pelo dispositivo. O a
 
 As rotas administrativas da plataforma antiga (usuários, metas, ocorrências, configurações e manutenção de catálogo) não fazem parte da HiperSales API v1. Elas continuam disponíveis apenas no mock/legado até que o servidor publique contratos equivalentes; o app não tenta inventar chamadas incompatíveis para essas operações.
 
+Para a consulta comercial de tabelas, `GET /tabelas-preco` deve devolver somente as tabelas associadas ao representante autenticado (administradores podem usar o escopo previsto pelo servidor). O compartilhamento usa o PDF oficial retornado por `GET /tabelas-preco/{id}/pdf`; essa rota deve validar o vínculo do usuário com a tabela e responder com `Content-Type: application/pdf`.
+
 Nunca coloque chaves privadas nas variáveis `EXPO_PUBLIC_*`. Para produção, a API deve usar HTTPS. As demais configurações públicas estão em `.env.example`.
 
 ### Ambiente mock para testes web
@@ -31,7 +33,7 @@ Para navegar sem acessar a API externa, defina no `.env.local`:
 EXPO_PUBLIC_USE_MOCK_API=true
 ```
 
-Depois execute `pnpm web --clear` e entre com **demo** / **demo123**. Os dados vêm de `src/mocks/api-data.json`; novos pedidos permanecem em memória até recarregar a página. Como nenhuma requisição externa é feita nesse modo, não é necessário liberar `localhost:8081` no CORS.
+Depois execute `pnpm web --clear`. Use **demo** / **demo123** para testar a visão do vendedor ou **admin** / **admin123** para testar a gestão de metas e ocorrências. Os dados vêm de `src/mocks/api-data.json`; novos pedidos, ocorrências, pareceres e alterações de metas permanecem em memória até recarregar a página. Como nenhuma requisição externa é feita nesse modo, não é necessário liberar `localhost:8081` no CORS.
 
 Para testar contra a API real pelo web, mantenha o mock desligado e libere na API as origens `http://localhost:8081` e `http://127.0.0.1:8081` (ou a porta exibida pelo Expo).
 

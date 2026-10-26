@@ -11,7 +11,7 @@ import { Card, Input, ModulePage, Notice, PrimaryButton, SecondaryButton, Sheet,
 import { EmptyState, LoadingState } from "@/components/list-states";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
-import { api, authenticatedResource } from "@/lib/api";
+import { api, authenticatedResource, useMockApi } from "@/lib/api";
 import { shortDate } from "@/lib/format";
 
 type Customer={id:number;legal_name:string;trade_name?:string;cnpj?:string;active?:boolean|number};
@@ -42,6 +42,7 @@ export default function OccurrencesScreen(){
   async function update(){if(!editing)return;setBusy(true);setError("");try{const r=await api<{message?:string}>(`/api/admin/occurrences/${editing.id}`,{method:"PATCH",body:JSON.stringify({status,resolution})});await load();setNotice(r.message||"Status atualizado.");setEditing(null);}catch(e){setError(e instanceof Error?e.message:"Falha ao atualizar.");}finally{setBusy(false);}}
   async function shareResource(path:`/api/${string}`,filename:string){
     try{
+      if(useMockApi){Alert.alert("Arquivo de demonstração",`O registro simulado contém o arquivo ${filename}. O download real será feito pela API da retaguarda.`);return;}
       const resource=authenticatedResource(path);
       if(!resource.headers.Authorization)throw new Error("Sessão expirada. Faça login novamente.");
       const target=FileSystem.cacheDirectory+filename.replace(/[^a-zA-Z0-9._-]/g,"_");

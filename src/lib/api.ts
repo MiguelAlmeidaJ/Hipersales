@@ -139,6 +139,8 @@ function externalRoute(path: string, method = "GET"): string | null {
   if (pathname === "/api/customer-requests") return "/clientes";
   if (pathname === "/api/customer-ids") return `/clientes/atendidos/ids${query ? `?${query}` : ""}`;
   if (pathname === "/api/price-tables") return `/tabelas-preco${query ? `?${query}` : ""}`;
+  const priceTablePdfMatch = pathname.match(/^\/api\/price-tables\/(\d+)\/pdf$/);
+  if (priceTablePdfMatch) return `/tabelas-preco/${priceTablePdfMatch[1]}/pdf`;
   if (pathname === "/api/payment-terms") return "/prazos";
   if (pathname === "/api/order-products") return withDefaultPageSize("/produtos", query);
   if (pathname === "/api/orders") return method === "GET" ? withDefaultPageSize("/pedidos", query) : "/pedidos";

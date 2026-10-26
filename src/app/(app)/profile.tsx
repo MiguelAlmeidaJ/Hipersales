@@ -25,7 +25,7 @@ export default function ProfileScreen() {
         <Text style={styles.role}>{user?.role === "dev" ? "Desenvolvedor" : user?.role === "admin" ? "Administrador" : "Representante comercial"}</Text>
         <View style={styles.divider} />
         <Text style={styles.label}>E-mail / usuário</Text><Text style={styles.value}>{user?.email}</Text>
-        <Text style={styles.label}>Empresa</Text><Text style={styles.value}>{user?.tenant_name || "HiperMix"}</Text>
+        <Text style={styles.label}>Empresa</Text><Text style={styles.value}>{user?.tenant_name || "Hipersales"}</Text>
       </View>
       <View style={styles.linksCard}>
         {legalLinks.privacy ? <Pressable accessibilityRole="link" onPress={() => Linking.openURL(legalLinks.privacy)} style={styles.linkRow}><Text style={styles.linkText}>Política de privacidade</Text><Text style={styles.chevron}>›</Text></Pressable> : null}
