@@ -81,7 +81,12 @@ export async function mockApi<T>(path: `/api/${string}`, options: ApiOptions = {
   }
   const orderMatch = pathname.match(/^\/api\/orders\/(\d+)(\/status)?$/);
   if (orderMatch) { const order = orders.find((item) => Number(item.idPedido) === Number(orderMatch[1])) || orders[0]; return (orderMatch[2] ? { idPedido: order.idPedido, status: order.status, dataPedido: order.dataPedido, entregaPrevista: order.entregaPrevista } : structuredClone(order)) as T; }
-  if (pathname === "/api/customer-requests") return { id: Date.now(), message: "Solicitação mock enviada para aprovação." } as T;
+  if (pathname === "/api/customer-requests") {
+    const payload=bodyOf(options),cnpj=normalized(payload.cnpj).replace(/[^a-z0-9]/g,"");
+    const existing=data.customers.find(customer=>normalized(customer.cnpj).replace(/[^a-z0-9]/g,"")===cnpj);
+    if(existing)Object.assign(existing,{legal_name:payload.legal_name||existing.legal_name,trade_name:payload.trade_name||existing.trade_name,phone:payload.phone_1||existing.phone,email:payload.purchase_email||existing.email,address:payload.address||existing.address,active:false,statusCadastro:"AGUARDANDO APROVACAO",rejection_reason:null});
+    return { id: existing?.id||Date.now(), message: existing?"Cadastro ajustado e reenviado para aprovação.":"Solicitação mock enviada para aprovação." } as T;
+  }
   if (pathname === "/api/integrations/cnpj") return { legal_name: "Empresa Consultada no Mock Ltda", trade_name: "Empresa Mock", state_registration: "123.456.789.110", phone: "11988887777", email: "compras@empresamock.test", street: "Rua do Ambiente Web", number: "8081", neighborhood: "Centro", city: "São Paulo", state: "SP", zip_code: "01001000" } as T;
   if (pathname === "/api/notifications/unread-count") return { unread_count: notifications.filter(item=>!item.read_at).length } as T;
   if (pathname === "/api/notifications") return { notifications: structuredClone(notifications) } as T;

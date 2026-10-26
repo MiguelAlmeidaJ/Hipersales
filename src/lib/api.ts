@@ -218,11 +218,14 @@ function normalizeNotification(row: any) {
 function mapCustomerPayload(body: BodyInit | null | undefined) {
   if (typeof body !== "string") return body;
   const source = JSON.parse(body) as Record<string, unknown>;
+  const schedulingSummary = source.scheduled_delivery
+    ? `Entrega agendada: ${source.scheduled_delivery === "yes" ? "Sim" : "Não"}.${source.scheduling_instructions ? ` ${source.scheduling_instructions}` : ""}`
+    : "";
   const mapped = {
     razaoSocial: source.legal_name, nomeFantasia: source.trade_name, documento: source.cnpj,
     inscricaoEstadual: source.state_registration, logradouro: source.address, numero: source.address_number,
     bairro: source.neighborhood, cep: source.zip_code, uf: source.state, idMunicipio: source.municipality_id,
-    enderecoEntrega: source.delivery_address, advertenciasRecebimento: source.delivery_warnings,
+    enderecoEntrega: source.delivery_address, advertenciasRecebimento: [schedulingSummary, source.delivery_warnings].filter(Boolean).join("\n"),
     respCompras: source.contact_person || source.buyer_contact,
     telefoneCompras1: source.phone_1 || source.buyer_phone_1, telefoneCompras2: source.phone_2 || source.buyer_phone_2,
     emailCompras: source.purchase_email || source.buyer_email, emailFinanceiro: source.billing_email || source.finance_email,

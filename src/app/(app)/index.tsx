@@ -24,7 +24,7 @@ const labels: Record<string, string> = {
 };
 
 const sellerActions: Action[] = [
-  { title: "Nova proposta", subtitle: "Criar pedido", icon: "add-circle-outline", color: colors.brand, background: "#E8F3FB", route: "/new-order" },
+  { title: "Novo pedido", subtitle: "Criar pedido", icon: "add-circle-outline", color: colors.brand, background: "#E8F3FB", route: "/new-order" },
   { title: "Tabelas de preço", subtitle: "Consultar e compartilhar", icon: "pricetag-outline", color: "#B54708", background: "#FFF1E5", route: "/price-tables" },
   { title: "Solicitar cliente", subtitle: "Novo cadastro", icon: "person-add-outline", color: "#7A5AF8", background: "#F0ECFF", route: "/new-customer" },
   { title: "Meus clientes", subtitle: "Minha carteira", icon: "people-outline", color: colors.success, background: "#E7F7F0", route: "/(app)/customers" },
