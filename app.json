@@ -60,8 +60,8 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#052528",
-          "image": "./assets/images/android-adaptive-foreground.png",
-          "imageWidth": 160
+          "image": "./assets/images/hipersales-logo.png",
+          "imageWidth": 260
         }
       ],
       [

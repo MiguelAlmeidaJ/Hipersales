@@ -18,13 +18,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { EmptyState, ErrorState, LoadingState } from "@/components/list-states";
+import { AppIcon, type AppIconName } from "@/components/app-icon";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
 import { api, authenticatedResource } from "@/lib/api";
 import { useSession } from "@/contexts/session-context";
 import { SelectField } from "@/components/form-controls";
 import { PrimaryButton, SecondaryButton } from "@/components/module-ui";
-import { dateTime, money, shortDate } from "@/lib/format";
+import { dateTime, formatCnpj, money, shortDate } from "@/lib/format";
 import type { Proposal } from "@/types/commercial";
 
 const statusLabels: Record<string, string> = {
@@ -45,7 +46,7 @@ const statusColors: Record<string, { background: string; text: string }> = {
 };
 
 const proposalTotal = (proposal: Proposal) =>
-  (proposal.items ?? []).reduce((total, item) => total + Number(item.quantity) * Number(item.negotiated_price), 0);
+  proposal.net_value ?? (proposal.items ?? []).reduce((total, item) => total + Number(item.quantity) * Number(item.negotiated_price), 0);
 const orderNumber = (proposal: Proposal) =>
   `${proposal.order_number || proposal.id}/${/bonific/i.test(proposal.order_type) ? "B" : "V"}`;
 
@@ -91,6 +92,16 @@ export default function OrdersScreen() {
     });
   }, [orders, query, status]);
 
+  async function openOrder(item: Proposal) {
+    setSelected(item);
+    try {
+      const detail = await api<Proposal>((`/api/proposals/${item.id}`) as `/api/${string}`);
+      setSelected((current) => current?.id === item.id ? detail : current);
+    } catch {
+      // A lista já contém o resumo necessário; o detalhe pode ser atualizado ao tentar novamente.
+    }
+  }
+
   return (
     <View style={styles.screen}>
       <ScreenHeader eyebrow="Operação" title="Pedidos" subtitle={`${filtered.length} de ${orders.length} pedidos encontrados`} />
@@ -111,7 +122,7 @@ export default function OrdersScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} colors={[colors.brand]} tintColor={colors.brand} />}
           ListEmptyComponent={<EmptyState title="Nenhum pedido encontrado" description="Altere a busca ou o filtro de status para consultar outros pedidos." />}
           renderItem={({ item }) => (
-            <Pressable accessibilityRole="button" onPress={() => setSelected(item)} style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
+            <Pressable accessibilityRole="button" onPress={() => void openOrder(item)} style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
               <View style={styles.cardTop}><Text style={styles.number}>Pedido {orderNumber(item)}</Text><StatusBadge status={item.status} /></View>
               <Text style={styles.customer} numberOfLines={1}>{item.customer_trade_name || item.customer_name}</Text>
               <Text style={styles.company} numberOfLines={1}>{item.company_name}</Text>
@@ -122,25 +133,25 @@ export default function OrdersScreen() {
       )}
 
       <Modal visible={Boolean(selected)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
-        {selected ? <OrderDetails proposal={selected} admin={admin} onSaved={()=>{setSelected(null);void load(true);}} onClose={() => setSelected(null)} /> : null}
+        {selected ? <OrderDetails key={`${selected.id}-${selected.items?.length ?? 0}`} proposal={selected} admin={admin} onSaved={()=>{setSelected(null);void load(true);}} onClose={() => setSelected(null)} /> : null}
       </Modal>
     </View>
   );
 }
 
-function Detail({ label, value }: { label: string; value?: string | null }) {
-  return <View style={styles.detail}><Text style={styles.detailLabel}>{label}</Text><Text style={styles.detailValue}>{value || "—"}</Text></View>;
+function Detail({ label, value, icon, wide = false }: { label: string; value?: string | null; icon: AppIconName; wide?: boolean }) {
+  return <View style={[styles.detail, wide && styles.detailWide]}><View style={styles.detailIcon}><AppIcon name={icon} color={colors.brand} size={17} /></View><View style={styles.detailCopy}><Text style={styles.detailLabel}>{label}</Text><Text style={styles.detailValue}>{value || "—"}</Text></View></View>;
 }
 
 function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposal; onClose: () => void; admin:boolean; onSaved:()=>void }) {
   const [editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
   const [lines,setLines]=useState((proposal.items||[]).map(item=>({product_id:item.product_id,quantity:String(item.quantity),negotiated_price:String(item.negotiated_price)})));
-  const [products,setProducts]=useState<Array<{id:number;name:string;code:string;price:number}>>([]);
+  const [products,setProducts]=useState<{id:number;name:string;code:string;price:number}[]>([]);
   const [selectedProduct,setSelectedProduct]=useState("");
   useEffect(()=>{
     if(!admin||!proposal.company_id)return;
     let active=true;
-    api<{products:Array<{id:number;name:string;code:string;price:number;company_id:number;active:boolean|number}>}>(("/api/admin/products?company_id="+proposal.company_id) as never)
+    api<{products:{id:number;name:string;code:string;price:number;company_id:number;active:boolean|number}[]}>(("/api/admin/products?company_id="+proposal.company_id) as never)
       .then(result=>{if(active)setProducts(result.products.filter(p=>p.company_id===proposal.company_id&&Boolean(p.active)));}).catch(()=>{});
     return()=>{active=false;};
   },[admin,proposal.company_id]);
@@ -196,25 +207,32 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
   }
   return (
     <SafeAreaView style={styles.modal} edges={["top", "bottom"]}>
-      <View style={styles.modalHeader}><View><Text style={styles.modalEyebrow}>DETALHES DO PEDIDO</Text><Text style={styles.modalTitle}>{orderNumber(proposal)}</Text></View><Pressable accessibilityLabel="Fechar detalhes" onPress={onClose} style={styles.close}><Text style={styles.closeText}>×</Text></Pressable></View>
+      <View style={styles.modalHeader}><View><Text style={styles.modalEyebrow}>DETALHES DO PEDIDO</Text><Text style={styles.modalTitle}>Pedido {orderNumber(proposal)}</Text></View><Pressable accessibilityLabel="Fechar detalhes" onPress={onClose} style={styles.close}><AppIcon name="close" color={colors.ink} size={24}/></Pressable></View>
       <ScrollView contentContainerStyle={styles.modalContent}>
-        <View style={styles.summaryCard}><StatusBadge status={proposal.status} /><Text style={styles.summaryCustomer}>{proposal.customer_name}</Text><Text style={styles.summaryCompany}>{proposal.company_name}</Text><Text style={styles.summaryTotal}>{money(proposalTotal(proposal))}</Text></View>
-        <Text style={styles.sectionTitle}>Informações comerciais</Text>
-        <View style={styles.detailsGrid}>
-          <Detail label="Representante" value={proposal.seller_name} />
-          <Detail label="Data" value={dateTime(proposal.created_at)} />
-          <Detail label="Tipo" value={proposal.order_type} />
-          <Detail label="Pagamento" value={proposal.payment_terms} />
-          <Detail label="Frete" value={proposal.freight_type} />
-          <Detail label="Entrega" value={proposal.delivery_type} />
-          <Detail label="Prazo da empresa" value={proposal.lead_time_days!=null?String(proposal.lead_time_days)+" dias":null}/>
-          <Detail label="Previsão de entrega" value={proposal.delivery_forecast} />
-          <Detail label="Desconto" value={proposal.discount_percent!=null?String(proposal.discount_percent)+"%":null}/>
-          <Detail label="Pedido da indústria" value={proposal.industry_order_number} />
-          <Detail label="Nota fiscal" value={proposal.invoice_number} />
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryTop}><StatusBadge status={proposal.status}/><Text style={styles.summaryOrder}>{proposal.purchase_order ? `OC ${proposal.purchase_order}` : `#${proposal.id}`}</Text></View>
+          <Text style={styles.summaryCustomer}>{proposal.customer_trade_name || proposal.customer_name}</Text>
+          {proposal.customer_trade_name ? <Text style={styles.summaryLegalName}>{proposal.customer_name}</Text> : null}
+          <View style={styles.summaryMeta}><Text style={styles.summaryCompany}>{proposal.company_name}</Text>{proposal.customer_cnpj ? <Text style={styles.summaryCompany}>{formatCnpj(proposal.customer_cnpj)}</Text> : null}</View>
+          <View style={styles.summaryAmount}><Text style={styles.summaryAmountLabel}>VALOR LÍQUIDO</Text><Text style={styles.summaryTotal}>{money(proposalTotal(proposal))}</Text></View>
+          <View style={styles.summaryFacts}><View style={styles.summaryFact}><Text style={styles.summaryFactLabel}>Data</Text><Text style={styles.summaryFactValue}>{shortDate(proposal.created_at)}</Text></View><View style={styles.factDivider}/><View style={styles.summaryFact}><Text style={styles.summaryFactLabel}>Itens</Text><Text style={styles.summaryFactValue}>{proposal.items?.length || 0}</Text></View><View style={styles.factDivider}/><View style={styles.summaryFact}><Text style={styles.summaryFactLabel}>Tipo</Text><Text style={styles.summaryFactValue}>{proposal.order_type}</Text></View></View>
         </View>
-        <SecondaryButton title="Compartilhar PDF do pedido" onPress={()=>void shareOrderPdf()}/>
-        {proposal.has_invoice_pdf?<SecondaryButton title="Baixar nota fiscal PDF" onPress={()=>void shareInvoice()}/>:null}
+        <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Informações comerciais</Text><Text style={styles.sectionCaption}>Condições registradas no pedido</Text></View>
+        <View style={styles.detailsGrid}>
+          <Detail icon="person-outline" label="Representante" value={proposal.seller_name} wide />
+          <Detail icon="card-outline" label="Pagamento" value={proposal.payment_terms} />
+          <Detail icon="pricetag-outline" label="Desconto" value={proposal.discount_percent!=null?String(proposal.discount_percent)+"%":null}/>
+          <Detail icon="cube-outline" label="Frete" value={proposal.freight_type} />
+          <Detail icon="flash-outline" label="Entrega" value={proposal.delivery_type} />
+        </View>
+        <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Entrega e faturamento</Text><Text style={styles.sectionCaption}>Prazos e documentos da indústria</Text></View>
+        <View style={styles.detailsGrid}>
+          <Detail icon="time-outline" label="Prazo da empresa" value={proposal.lead_time_days!=null?String(proposal.lead_time_days)+" dias":null}/>
+          <Detail icon="calendar-outline" label="Previsão de entrega" value={proposal.delivery_forecast}/>
+          <Detail icon="business-outline" label="Pedido da indústria" value={proposal.industry_order_number}/>
+          <Detail icon="document-text-outline" label="Nota fiscal" value={proposal.invoice_number}/>
+        </View>
+        <View style={styles.actionsCard}><View style={styles.actionsTitleRow}><View style={styles.actionsIcon}><AppIcon name="share-social-outline" color={colors.brand} size={20}/></View><View><Text style={styles.actionsTitle}>Documentos do pedido</Text><Text style={styles.actionsCaption}>Compartilhe os arquivos disponíveis</Text></View></View><SecondaryButton title="Compartilhar PDF do pedido" onPress={()=>void shareOrderPdf()}/>{proposal.has_invoice_pdf?<SecondaryButton title="Baixar nota fiscal PDF" onPress={()=>void shareInvoice()}/>:null}</View>
         {admin && <View style={{marginVertical:15,gap:12}}>
           <SecondaryButton title={editing?"Fechar edição":"Editar dados da retaguarda"} onPress={()=>setEditing(!editing)}/>
           {editing && <>
@@ -245,10 +263,10 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
           </>}
           {error?<Text style={{color:colors.danger,fontSize:13}}>{error}</Text>:null}
         </View>}
-        <Text style={styles.sectionTitle}>Itens ({proposal.items?.length ?? 0})</Text>
-        {(proposal.items ?? []).map((item) => <View key={item.id} style={styles.itemRow}><View style={styles.itemCopy}><Text style={styles.itemName}>{item.name}</Text><Text style={styles.itemMeta}>{item.code} · {item.quantity} {item.unit || "un."} × {money(item.negotiated_price)}</Text></View><Text style={styles.itemTotal}>{money(item.quantity * item.negotiated_price)}</Text></View>)}
-        {proposal.notes ? <><Text style={styles.sectionTitle}>Observações</Text><Text style={styles.notes}>{proposal.notes}</Text></> : null}
-        <Text style={styles.sectionTitle}>Histórico</Text>
+        <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Itens do pedido</Text><Text style={styles.sectionCaption}>{proposal.items?.length ?? 0} produto(s)</Text></View>
+        <View style={styles.itemsCard}>{(proposal.items ?? []).map((item,index) => <View key={item.id} style={[styles.itemRow,index>0&&styles.itemBorder]}><View style={styles.itemIndex}><Text style={styles.itemIndexText}>{index+1}</Text></View><View style={styles.itemCopy}><Text style={styles.itemName}>{item.name}</Text><Text style={styles.itemCode}>Código {item.code}</Text><View style={styles.itemNumbers}><Text style={styles.itemMeta}>{item.quantity} {item.unit || "un."}</Text><Text style={styles.itemMeta}>× {money(item.negotiated_price)}</Text></View></View><View style={styles.itemTotalWrap}><Text style={styles.itemTotalLabel}>TOTAL</Text><Text style={styles.itemTotal}>{money(item.quantity * item.negotiated_price)}</Text></View></View>)}<View style={styles.itemsTotal}><Text style={styles.itemsTotalLabel}>Total do pedido</Text><Text style={styles.itemsTotalValue}>{money(proposalTotal(proposal))}</Text></View></View>
+        {proposal.notes ? <><View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Observações</Text></View><View style={styles.notes}><AppIcon name="chatbox-ellipses-outline" color={colors.muted} size={20}/><Text style={styles.notesText}>{proposal.notes}</Text></View></> : null}
+        <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Histórico</Text><Text style={styles.sectionCaption}>Atualizações deste pedido</Text></View>
         {(proposal.timeline ?? []).length ? proposal.timeline?.map((event, index) => <View key={event.id ?? index} style={styles.timeline}><View style={styles.timelineDot} /><View style={styles.timelineCopy}><Text style={styles.timelineTitle}>{event.title || statusLabels[event.status] || event.status}</Text><Text style={styles.timelineMeta}>{dateTime(event.created_at)}{event.created_by_name ? ` · ${event.created_by_name}` : ""}</Text>{event.notes ? <Text style={styles.timelineNotes}>{event.notes}</Text> : null}</View></View>) : <Text style={styles.muted}>Nenhum evento registrado.</Text>}
       </ScrollView>
     </SafeAreaView>
@@ -281,20 +299,34 @@ const styles = StyleSheet.create({
   modalEyebrow: { color: colors.brandDark, fontSize: 9, fontWeight: "900", letterSpacing: 1.2 },
   modalTitle: { color: colors.ink, fontSize: 25, fontWeight: "900", marginTop: 2 },
   close: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#EEF3F7" },
-  closeText: { color: colors.ink, fontSize: 28, lineHeight: 30 },
-  modalContent: { padding: 20, paddingBottom: 40 },
-  summaryCard: { borderRadius: 20, backgroundColor: colors.brandDark, padding: 20 },
-  summaryCustomer: { color: "#FFFFFF", fontSize: 20, fontWeight: "900", marginTop: 16 },
-  summaryCompany: { color: "#C9DEEF", fontSize: 13, marginTop: 4 },
-  summaryTotal: { color: "#FFFFFF", fontSize: 26, fontWeight: "900", marginTop: 20 },
-  sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: "900", marginTop: 25, marginBottom: 11 },
+  modalContent: { padding: 16, paddingBottom: 40 },
+  summaryCard: { borderRadius: 24, backgroundColor: colors.brandDark, padding: 20, overflow: "hidden" },
+  summaryTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  summaryOrder: { color: "#AFC7C9", fontSize: 11, fontWeight: "800" },
+  summaryCustomer: { color: "#FFFFFF", fontSize: 22, lineHeight: 28, fontWeight: "900", marginTop: 18 },
+  summaryLegalName: { color: "#C9DEDF", fontSize: 12, marginTop: 4 },
+  summaryMeta: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginTop: 7 },
+  summaryCompany: { color: "#AFC7C9", fontSize: 12, fontWeight: "600" },
+  summaryAmount: { marginTop: 24 },
+  summaryAmountLabel: { color: "#8EAAAC", fontSize: 9, fontWeight: "900", letterSpacing: 1.1 },
+  summaryTotal: { color: "#FFFFFF", fontSize: 30, fontWeight: "900", marginTop: 3 },
+  summaryFacts: { flexDirection: "row", alignItems: "stretch", marginTop: 20, paddingTop: 15, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,.15)" },
+  summaryFact: { flex: 1 }, summaryFactLabel: { color: "#8EAAAC", fontSize: 9, fontWeight: "800", textTransform: "uppercase" }, summaryFactValue: { color: "#FFFFFF", fontSize: 12, fontWeight: "800", marginTop: 4 }, factDivider: { width: 1, backgroundColor: "rgba(255,255,255,.15)", marginHorizontal: 12 },
+  sectionHeading: { marginTop: 26, marginBottom: 11 },
+  sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" },
+  sectionCaption: { color: colors.muted, fontSize: 11, marginTop: 3 },
   detailsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  detail: { width: "48%", flexGrow: 1, minHeight: 72, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 13 },
+  detail: { width: "48%", flexGrow: 1, minHeight: 78, flexDirection: "row", alignItems: "flex-start", borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 13 },
+  detailWide: { width: "100%" }, detailIcon: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#EDF4F4", marginRight: 10 }, detailCopy: { flex: 1 },
   detailLabel: { color: colors.muted, fontSize: 10, fontWeight: "700", textTransform: "uppercase" },
-  detailValue: { color: colors.ink, fontSize: 13, fontWeight: "700", marginTop: 6 },
-  itemRow: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 13, paddingHorizontal: 12 },
-  itemCopy: { flex: 1 }, itemName: { color: colors.ink, fontSize: 13, fontWeight: "800" }, itemMeta: { color: colors.muted, fontSize: 11, marginTop: 4 }, itemTotal: { color: colors.ink, fontSize: 13, fontWeight: "900" },
-  notes: { color: colors.muted, fontSize: 13, lineHeight: 20, borderRadius: 14, backgroundColor: colors.surface, padding: 14 },
+  detailValue: { color: colors.ink, fontSize: 13, fontWeight: "800", marginTop: 5 },
+  actionsCard: { gap: 10, marginTop: 16, padding: 14, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, actionsTitleRow: { flexDirection: "row", alignItems: "center", gap: 11, marginBottom: 3 }, actionsIcon: { width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: "#EDF4F4" }, actionsTitle: { color: colors.ink, fontSize: 14, fontWeight: "900" }, actionsCaption: { color: colors.muted, fontSize: 10, marginTop: 2 },
+  itemsCard: { overflow: "hidden", borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  itemRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 15, paddingHorizontal: 13 }, itemBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  itemIndex: { width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: "#EDF4F4" }, itemIndexText: { color: colors.brand, fontSize: 11, fontWeight: "900" },
+  itemCopy: { flex: 1 }, itemName: { color: colors.ink, fontSize: 12, lineHeight: 17, fontWeight: "900" }, itemCode: { color: colors.muted, fontSize: 10, marginTop: 2 }, itemNumbers: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 6 }, itemMeta: { color: colors.muted, fontSize: 10 }, itemTotalWrap: { alignItems: "flex-end" }, itemTotalLabel: { color: colors.muted, fontSize: 8, fontWeight: "800" }, itemTotal: { color: colors.ink, fontSize: 12, fontWeight: "900", marginTop: 3 },
+  itemsTotal: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 14, backgroundColor: "#F1F6F5", borderTopWidth: 1, borderTopColor: colors.border }, itemsTotalLabel: { color: colors.muted, fontSize: 11, fontWeight: "800" }, itemsTotalValue: { color: colors.ink, fontSize: 16, fontWeight: "900" },
+  notes: { flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 15 }, notesText: { flex: 1, color: colors.muted, fontSize: 13, lineHeight: 20 },
   timeline: { flexDirection: "row", paddingBottom: 16 }, timelineDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent, marginTop: 4, marginRight: 12 }, timelineCopy: { flex: 1, borderLeftWidth: 1, borderLeftColor: colors.border, paddingLeft: 12, paddingBottom: 5 }, timelineTitle: { color: colors.ink, fontSize: 13, fontWeight: "800" }, timelineMeta: { color: colors.muted, fontSize: 11, marginTop: 3 }, timelineNotes: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 },
   muted: { color: colors.muted, fontSize: 13 },
   fab: { position: "absolute", right: 20, bottom: 18, zIndex: 10, width: 56, height: 56, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.brand, shadowColor: colors.brandDark, shadowOpacity: 0.28, shadowRadius: 9, elevation: 6 },

@@ -1,4 +1,3 @@
-import type { ChangePasswordResponse } from "@hipersales/contracts";
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -24,7 +23,7 @@ export default function ChangePasswordScreen() {
     setBusy(true);
     setError("");
     try {
-      await api<ChangePasswordResponse>("/api/me/password", {
+      await api<{ message?: string }>("/api/me/password", {
         method: "POST",
         body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
       });

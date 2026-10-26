@@ -52,13 +52,6 @@ function SellerHome({ firstName }: { firstName: string }) {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <ScreenHeader eyebrow="Seu espaço de trabalho" title={`Olá, ${firstName}!`} subtitle="O que você precisa fazer hoje?" right={<NotificationBell />} />
-      <View style={styles.sellerHero}>
-        <View style={styles.sellerHeroIcon}><AppIcon name="briefcase-outline" color="#FFFFFF" size={28} /></View>
-        <View style={styles.sellerHeroCopy}>
-          <Text style={styles.sellerHeroTitle}>Sua rotina comercial</Text>
-          <Text style={styles.sellerHeroText}>Crie propostas, cuide da carteira e acompanhe seus resultados.</Text>
-        </View>
-      </View>
       <Text style={styles.actionHeading}>Ações rápidas</Text>
       <View style={styles.actionGrid}>
         {sellerActions.map((action) => (
@@ -142,7 +135,7 @@ const styles = StyleSheet.create({
   sellerHeroCopy: { flex: 1, marginLeft: 14 },
   sellerHeroTitle: { color: "#FFFFFF", fontSize: 17, fontWeight: "900" },
   sellerHeroText: { color: "#D7E8F7", fontSize: 12, lineHeight: 18, marginTop: 4 },
-  actionHeading: { color: colors.ink, fontSize: 18, fontWeight: "900", marginHorizontal: 20, marginBottom: 12 },
+  actionHeading: { color: colors.ink, fontSize: 18, fontWeight: "900", marginHorizontal: 20, marginTop: 22, marginBottom: 12 },
   actionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, paddingHorizontal: 20 },
   actionCard: { width: "48%", flexGrow: 1, minHeight: 142, padding: 16, borderRadius: 19, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   actionIcon: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 14 },

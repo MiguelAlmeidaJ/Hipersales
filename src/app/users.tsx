@@ -1,4 +1,4 @@
-import type { Role } from "@hipersales/contracts";
+import type { Role } from "@/types/session";
 import { Redirect, router as expoRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";

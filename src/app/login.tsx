@@ -6,15 +6,19 @@ import { ActivityIndicator, Image, ImageBackground, Keyboard, KeyboardAvoidingVi
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
+import { FeedbackDialog } from "@/components/feedback-dialog";
+import { AppIcon } from "@/components/app-icon";
 import { useSession } from "@/contexts/session-context";
+import { useMockApi } from "@/lib/api";
 
 export default function LoginScreen() {
   const { status, user, login } = useSession();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState(useMockApi ? "demo" : "");
+  const [password, setPassword] = useState(useMockApi ? "demo123" : "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [keepConnected, setKeepConnected] = useState(true);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const passwordInput = useRef<TextInput>(null);
   const appVersion = Constants.expoConfig?.version ?? "0.1.0";
@@ -32,7 +36,7 @@ export default function LoginScreen() {
     setBusy(true);
     setError("");
     try {
-      await login(username.trim(), password);
+      await login(username.trim(), password, keepConnected);
       router.replace("/");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao entrar.");
@@ -52,6 +56,7 @@ export default function LoginScreen() {
               <Text style={styles.eyebrow}>SUA OPERAÇÃO COMERCIAL, CONECTADA</Text>
               <Text style={styles.title}>Bem-vindo</Text>
               <Text style={styles.subtitle}>Sua gestão comercial em um só lugar.</Text>
+              {useMockApi ? <View style={styles.mockBadge}><AppIcon name="flask-outline" color={colors.accent} size={16} /><Text style={styles.mockBadgeText}>AMBIENTE DE DEMONSTRAÇÃO</Text></View> : null}
               <Text style={styles.label}>Usuário</Text>
               <TextInput accessibilityLabel="Usuário" autoCapitalize="none" autoComplete="username" editable={!busy}
                 onChangeText={setUsername} onSubmitEditing={() => passwordInput.current?.focus()}
@@ -67,7 +72,10 @@ export default function LoginScreen() {
                   <Text style={styles.passwordToggleText}>{passwordVisible ? "Ocultar" : "Mostrar"}</Text>
                 </Pressable>
               </View>
-              {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
+              <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: keepConnected }} onPress={() => setKeepConnected((value) => !value)} style={styles.rememberRow}>
+                <View style={[styles.checkbox, keepConnected && styles.checkboxChecked]}>{keepConnected ? <AppIcon name="checkmark" color="#FFFFFF" size={16} /> : null}</View>
+                <View style={styles.rememberCopy}><Text style={styles.rememberTitle}>Manter conectado</Text><Text style={styles.rememberHint}>Salva esta sessão com segurança neste aparelho.</Text></View>
+              </Pressable>
               <Pressable accessibilityRole="button" disabled={busy} onPress={submit}
                 style={({ pressed }) => [styles.button, pressed && styles.pressed, busy && styles.disabled]}>
                 {busy ? <ActivityIndicator color={colors.brandDark} /> : <Text style={styles.buttonText}>Entrar</Text>}
@@ -77,6 +85,7 @@ export default function LoginScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <FeedbackDialog visible={Boolean(error)} title="Não foi possível entrar" message={error} tone="error" onClose={() => setError("")} />
     </ImageBackground>
   );
 }
@@ -95,13 +104,20 @@ const styles = StyleSheet.create({
   eyebrow: { color: "#B2C3C0", fontSize: 10, fontWeight: "700", letterSpacing: 1.1, textAlign: "center", marginBottom: 20 },
   title: { color: "#FFF3E7", fontSize: 29, lineHeight: 36, fontWeight: "800" },
   subtitle: { color: "#B2C3C0", fontSize: 14, lineHeight: 21, marginTop: 5, marginBottom: 17 },
+  mockBadge: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 7, borderRadius: 10, backgroundColor: "rgba(255,149,30,0.13)", paddingHorizontal: 10, paddingVertical: 7, marginBottom: 8 },
+  mockBadgeText: { color: colors.accent, fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
   label: { color: "#FFF3E7", fontSize: 13, fontWeight: "700", marginBottom: 7, marginTop: 9 },
   input: { height: 53, borderWidth: 1, borderColor: "#CCD9D5", borderRadius: 13, backgroundColor: "#FFFFFF", color: colors.ink, fontSize: 16, paddingHorizontal: 16 },
   passwordField: { height: 53, flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#CCD9D5", borderRadius: 13, backgroundColor: "#FFFFFF" },
   passwordInput: { flex: 1, height: "100%", color: colors.ink, fontSize: 16, paddingLeft: 16, paddingRight: 8 },
   passwordToggle: { height: "100%", justifyContent: "center", paddingHorizontal: 14 },
   passwordToggleText: { color: "#07525A", fontSize: 12, fontWeight: "800" },
-  error: { color: "#FF9999", fontSize: 13, lineHeight: 19, marginTop: 12 },
+  rememberRow: { flexDirection: "row", alignItems: "center", marginTop: 15 },
+  checkbox: { width: 24, height: 24, alignItems: "center", justifyContent: "center", borderRadius: 8, borderWidth: 1.5, borderColor: "#8FA7A5", backgroundColor: "rgba(255,255,255,0.08)" },
+  checkboxChecked: { borderColor: colors.accent, backgroundColor: colors.accent },
+  rememberCopy: { flex: 1, marginLeft: 10 },
+  rememberTitle: { color: "#FFF3E7", fontSize: 13, fontWeight: "800" },
+  rememberHint: { color: "#9FB5B3", fontSize: 10, lineHeight: 14, marginTop: 2 },
   button: { height: 53, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: colors.accent, marginTop: 20 },
   buttonText: { color: colors.brandDark, fontSize: 16, fontWeight: "800" },
   pressed: { opacity: 0.86 },

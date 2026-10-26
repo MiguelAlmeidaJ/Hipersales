@@ -1,21 +1,26 @@
 import type { PublicUser } from "@/types/session";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
-import * as SecureStore from "expo-secure-store";
 
 import { api, ApiError, loginExternal, setSessionToken, setUnauthorizedHandler } from "@/lib/api";
-import { readStoredSession, removeStoredSession, storeSession } from "@/lib/session-storage";
+import {
+  readStoredProfile,
+  readStoredSession,
+  removeStoredProfile,
+  removeStoredSession,
+  storeProfile,
+  storeSession,
+} from "@/lib/session-storage";
 
 type SessionStatus = "loading" | "authenticated" | "anonymous" | "unavailable";
 type SessionContextValue = {
   status: SessionStatus;
   user: PublicUser | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, keepConnected: boolean) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   restore: () => Promise<void>;
 };
 
-const profileKey="hipersales_api_profile";
 const SessionContext = createContext<SessionContextValue | null>(null);
 let beforeLogoutHandler: (() => Promise<void>) | null = null;
 
@@ -30,13 +35,13 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const clearSession = useCallback(async () => {
     setSessionToken(null);
     await removeStoredSession();
-    await SecureStore.deleteItemAsync(profileKey).catch(()=>undefined);
+    await removeStoredProfile();
     setUser(null);
     setStatus("anonymous");
   }, []);
 
   const refresh = useCallback(async () => {
-    const raw=await SecureStore.getItemAsync(profileKey);
+    const raw=await readStoredProfile();
     if(!raw){await clearSession();return;}
     await api("/api/customers");
     setUser(JSON.parse(raw) as PublicUser);
@@ -72,11 +77,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
     return () => setUnauthorizedHandler(null);
   }, [clearSession]);
 
-  const login=useCallback(async(username:string,password:string)=>{
+  const login=useCallback(async(username:string,password:string,keepConnected:boolean)=>{
     const response=await loginExternal(username,password);
-    const profile:PublicUser={id:response.representante?.id||0,name:response.representante?.nome||response.usuario,email:response.usuario,role:response.admin?"admin":"seller",tenant_id:1,active:true,must_change_password:false};
-    await storeSession(response.accessToken);
-    await SecureStore.setItemAsync(profileKey,JSON.stringify(profile));
+    const profile:PublicUser={id:response.representante?.id||0,name:response.usuario,email:response.usuario,role:response.admin?"admin":"seller",tenant_id:1,active:true,must_change_password:false,representative_id:response.representante?.id??null,representative_name:response.representante?.nome??null};
+    await storeSession(response.accessToken,keepConnected);
+    await storeProfile(JSON.stringify(profile),keepConnected);
     setSessionToken(response.accessToken);setUser(profile);setStatus("authenticated");
   },[]);
 

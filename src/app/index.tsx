@@ -2,8 +2,8 @@ import Constants from "expo-constants";
 import { Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Image, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
@@ -12,19 +12,25 @@ void SplashScreen.preventAutoHideAsync();
 
 export default function IndexScreen() {
   const { status, user, restore } = useSession();
+  const [introVisible, setIntroVisible] = useState(true);
 
-  useEffect(() => { void SplashScreen.hideAsync(); }, []);
+  useEffect(() => {
+    void SplashScreen.hideAsync();
+    const timer = setTimeout(() => setIntroVisible(false), 900);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (status === "loading") {
+  if (status === "loading" || introVisible) {
     return (
-      <View style={styles.loading}>
+      <ImageBackground source={require("../../assets/images/login-background.png")} style={styles.loading} resizeMode="cover">
+        <View style={styles.loadingOverlay} />
         <StatusBar style="light" />
-        <Image source={require("../../assets/images/android-adaptive-foreground.png")} style={styles.brandMark} resizeMode="contain" />
-        <Text style={styles.brandName}>HiperSales</Text>
-        <Text style={styles.tagline}>Sua operação comercial, conectada</Text>
+        <Image source={require("../../assets/images/hipersales-logo.png")} style={styles.brandLogo} resizeMode="contain" />
+        <Text style={styles.loadingTitle}>Preparando seu espaço de trabalho</Text>
+        <Text style={styles.tagline}>Sua operação comercial, conectada.</Text>
         <ActivityIndicator color="#FFFFFF" size="small" style={styles.spinner} />
         <Text style={styles.loadingVersion}>Beta • v{Constants.expoConfig?.version ?? "0.1.0"}</Text>
-      </View>
+      </ImageBackground>
     );
   }
 
@@ -44,11 +50,12 @@ export default function IndexScreen() {
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.brandDark, padding: 24 },
-  brandMark: { width: 164, height: 164 },
-  brandName: { color: "#FFFFFF", fontSize: 28, fontWeight: "900", marginTop: 8 },
-  tagline: { color: "rgba(255,255,255,0.8)", fontSize: 14, marginTop: 5 },
-  spinner: { marginTop: 28 },
+  loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.brandDark, padding: 30 },
+  loadingOverlay: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,25,28,0.34)" },
+  brandLogo: { width: 270, height: 92 },
+  loadingTitle: { color: "#FFF3E7", fontSize: 19, fontWeight: "900", textAlign: "center", marginTop: 24 },
+  tagline: { color: "rgba(255,255,255,0.78)", fontSize: 13, textAlign: "center", marginTop: 7 },
+  spinner: { marginTop: 26 },
   loadingVersion: { position: "absolute", bottom: 32, color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: "600" },
   errorState: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.canvas, padding: 28 },
   errorTitle: { color: colors.ink, fontSize: 22, fontWeight: "900", textAlign: "center" },

@@ -16,9 +16,9 @@ export const dateTime = (value?: string | null) => {
 };
 
 export const formatCnpj = (value: string) => {
-  const digits = value.replace(/\D/g, "").slice(0, 14);
-  return digits.length === 14
-    ? digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")
+  const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 14);
+  return normalized.length === 14
+    ? normalized.replace(/^([A-Z0-9]{2})([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{4})(\d{2})$/, "$1.$2.$3/$4-$5")
     : value;
 };
 

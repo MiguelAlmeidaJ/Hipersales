@@ -1,0 +1,28 @@
+{
+  "login": { "usuario": "demo", "senha": "demo123", "representante": { "id": 12, "nome": "Representante Demonstração" } },
+  "customers": [
+    { "id": 575, "legal_name": "Mercado Central de Testes Ltda", "trade_name": "Mercado Central", "cnpj": "11444777000161", "phone": "11987654321", "email": "compras@mercadocentral.test", "address": "Rua das Palmeiras, 120 - São Paulo/SP", "active": true },
+    { "id": 576, "legal_name": "Distribuidora Web Demo Ltda", "trade_name": "Web Demo", "cnpj": "52789222000104", "phone": "11955551234", "email": "pedidos@webdemo.test", "address": "Avenida do Comércio, 808 - Campinas/SP", "active": true }
+  ],
+  "priceTables": [
+    { "idTabela": 7, "descricao": "DISTRIBUIDOR", "idEmpresa": 2, "empresaNome": "HIPER-ROLL", "frete": "CIF", "prazoEntregaDias": 30, "pedidoMinimo": 100, "idCondPagto": 4, "condPagtoDescricao": "35 DIAS", "condicoesPagamento": [{ "idCondPagto": 4, "descricao": "35 DIAS" }, { "idCondPagto": 5, "descricao": "28/35/42 DIAS" }] },
+    { "idTabela": 9, "descricao": "ATACADO", "idEmpresa": 3, "empresaNome": "HIPER-PACK", "frete": "FOB", "prazoEntregaDias": 15, "pedidoMinimo": 100, "idCondPagto": 2, "condPagtoDescricao": "21 DIAS", "condicoesPagamento": [{ "idCondPagto": 2, "descricao": "21 DIAS" }, { "idCondPagto": 3, "descricao": "28 DIAS" }] }
+  ],
+  "products": [
+    { "idProduto": 379, "idEmpresa": 2, "idTabela": 7, "codigo": "BR-3040", "descricao": "BOBINA FOLHA PICOTADA 30X40", "unidade": "FRD C/ 8", "precoUnitario": 125.5 },
+    { "idProduto": 380, "idEmpresa": 2, "idTabela": 7, "codigo": "BR-3545", "descricao": "BOBINA FOLHA PICOTADA 35X45", "unidade": "FRD C/ 6", "precoUnitario": 148.9 },
+    { "idProduto": 481, "idEmpresa": 3, "idTabela": 9, "codigo": "HP-100", "descricao": "EMBALAGEM REFORÇADA 100 UNIDADES", "unidade": "CX", "precoUnitario": 89.9 }
+  ],
+  "orders": [
+    {
+      "idPedido": 1001, "dataPedido": "23/10/2026", "status": "EM ANÁLISE", "tipoPedido": "Venda", "faturamentoPercentual": 100,
+      "idEmpresa": 2, "empresaNome": "HIPER-ROLL", "idCliente": 575, "clienteRazaoSocial": "Mercado Central de Testes Ltda", "clienteNomeFantasia": "Mercado Central", "clienteDocumento": "11.444.777/0001-61",
+      "idTabela": 7, "tabelaDescricao": "DISTRIBUIDOR", "frete": "CIF", "idCondPagto": 4, "condPagtoDescricao": "35 DIAS", "formatoEntrega": "Imediata", "dataProgramada": null,
+      "leadTimeDias": 30, "entregaPrevista": "22/11/2026", "observacoes": "Pedido criado pelo mock local.", "nroPedidoCliente": "WEB-001", "origem": "API", "valorBruto": 274.4, "descontoPercentual": 0, "valorLiquido": 274.4,
+      "itens": [
+        { "idItem": 1, "idProduto": 379, "descricao": "BOBINA FOLHA PICOTADA 30X40", "unidade": "FRD C/ 8", "quantidade": 1, "precoUnitario": 125.5, "precoComIpi": 133.03, "total": 125.5 },
+        { "idItem": 2, "idProduto": 380, "descricao": "BOBINA FOLHA PICOTADA 35X45", "unidade": "FRD C/ 6", "quantidade": 1, "precoUnitario": 148.9, "precoComIpi": 157.83, "total": 148.9 }
+      ]
+    }
+  ]
+}

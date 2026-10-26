@@ -49,6 +49,8 @@ export type Proposal = {
   customer_cnpj?: string | null;
   purchase_order?: string | null;
   notes?: string | null;
+  gross_value?: number;
+  net_value?: number;
   items?: ProposalItem[];
   timeline?: ProposalTimeline[];
 };
