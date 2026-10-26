@@ -11,7 +11,7 @@ import { api, useMockApi } from "@/lib/api";
 
 type DashboardData = { summary?: Record<string, number> };
 type SalesData = { resumo?: { qtdPedidos?: number; valorTotal?: number } };
-type NativeRoute = "/new-order" | "/new-customer" | "/price-tables" | "/(app)/orders" | "/(app)/customers" | "/(app)/modules" | "/occurrences" | "/goals";
+type NativeRoute = "/new-order" | "/new-customer" | "/price-tables" | "/activities" | "/(app)/orders" | "/(app)/customers" | "/(app)/modules" | "/occurrences" | "/goals";
 type Action = { title: string; subtitle: string; icon: AppIconName; color: string; background: string; route: NativeRoute };
 
 const labels: Record<string, string> = {
@@ -30,6 +30,7 @@ const sellerActions: Action[] = [
   { title: "Meus clientes", subtitle: "Minha carteira", icon: "people-outline", color: colors.success, background: "#E7F7F0", route: "/(app)/customers" },
   { title: "Meus pedidos", subtitle: "Acompanhar", icon: "receipt-outline", color: "#B54708", background: "#FFF1E5", route: "/(app)/orders" },
   { title: "Ocorrência", subtitle: "Registrar situação", icon: "alert-circle-outline", color: colors.danger, background: "#FDEBEC", route: "/occurrences" },
+  { title: "Minhas atividades", subtitle: "Acompanhar o mês", icon: "analytics-outline", color: "#02779F", background: "#E5F6FC", route: "/activities" },
   { title: "Minhas metas", subtitle: "Ver objetivos", icon: "flag-outline", color: "#4C7E27", background: "#EDF7E7", route: "/goals" },
 ];
 
@@ -56,10 +57,11 @@ export default function HomeScreen() {
 }
 
 function SellerHome({ firstName }: { firstName: string }) {
-  const [data,setData]=useState<DashboardData|null>(null);
-  useEffect(()=>{let active=true;fetchSalesDashboard().then(response=>{if(active)setData(response);}).catch(()=>undefined);return()=>{active=false;};},[]);
+  const [data,setData]=useState<DashboardData|null>(null),[loading,setLoading]=useState(true);
+  const load=async()=>{setLoading(true);try{setData(await fetchSalesDashboard());}finally{setLoading(false);}};
+  useEffect(()=>{let active=true;fetchSalesDashboard().then(response=>{if(active)setData(response);}).catch(()=>undefined).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={loading} onRefresh={()=>void load()} colors={[colors.brand]} tintColor={colors.brand}/>}>
       <ScreenHeader eyebrow="Seu espaço de trabalho" title={`Olá, ${firstName}!`} subtitle="O que você precisa fazer hoje?" right={<NotificationBell />} />
       {data?.summary?<View style={styles.sellerHero}><View style={styles.sellerHeroIcon}><AppIcon name="analytics-outline" color="#FFFFFF" size={25}/></View><View style={styles.sellerHeroCopy}><Text style={styles.sellerHeroTitle}>{formatValue("revenue",data.summary.revenue||0)}</Text><Text style={styles.sellerHeroText}>{data.summary.orders||0} pedido(s) no mês atual</Text></View></View>:null}
       <Text style={styles.actionHeading}>Ações rápidas</Text>

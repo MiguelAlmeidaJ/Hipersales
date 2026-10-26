@@ -9,7 +9,7 @@ const occurrences: MockOrder[] = data.occurrences.map((item) => structuredClone(
 const goalRecords: MockOrder[] = data.goals.map((item) => structuredClone(item));
 const idempotentOrders = new Map<string, MockOrder>();
 let currentMockUser={id:data.login.representante.id,name:data.login.representante.nome,admin:false};
-const wait = () => new Promise((resolve) => setTimeout(resolve, 180));
+const wait = () => new Promise((resolve) => setTimeout(resolve, 5000));
 const bodyOf = (options: ApiOptions) => options.body ? JSON.parse(String(options.body)) as Record<string, any> : {};
 const queryOf = (path: string) => new URLSearchParams(path.split("?")[1] || "");
 const pathnameOf = (path: string) => path.split("?")[0];

@@ -1,10 +1,11 @@
-import { Stack, type ErrorBoundaryProps } from "expo-router";
+import { Stack, type ErrorBoundaryProps, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/constants/colors";
-import { SessionProvider } from "@/contexts/session-context";
+import { SessionProvider, useSession } from "@/contexts/session-context";
 import { NotificationsProvider } from "@/contexts/notifications-context";
+import { BottomNavigation } from "@/components/bottom-navigation";
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
@@ -21,14 +22,23 @@ export default function RootLayout() {
   return (
     <SessionProvider>
       <NotificationsProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+        <AppShell />
       </NotificationsProvider>
     </SessionProvider>
   );
 }
 
+function AppShell(){
+  const {status,user}=useSession();
+  const segments=useSegments();
+  const first=String(segments[0]||"");
+  const hide=first===""||first==="(app)"||first==="login"||first==="change-password";
+  const showNavigation=status==="authenticated"&&!user?.must_change_password&&!hide;
+  return <View style={styles.shell}><StatusBar style="dark"/><View style={styles.stack}><Stack screenOptions={{headerShown:false,animation:"fade"}}/></View>{showNavigation?<BottomNavigation/>:null}</View>;
+}
+
 const styles = StyleSheet.create({
+  shell:{flex:1,backgroundColor:colors.canvas},stack:{flex:1},
   errorState: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28, backgroundColor: colors.canvas },
   errorTitle: { color: colors.ink, fontSize: 22, fontWeight: "900", textAlign: "center" },
   errorText: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 9 },
