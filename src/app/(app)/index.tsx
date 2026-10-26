@@ -7,9 +7,10 @@ import { ScreenHeader } from "@/components/screen-header";
 import { NotificationBell } from "@/components/notification-bell";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
-import { api } from "@/lib/api";
+import { api, useMockApi } from "@/lib/api";
 
 type DashboardData = { summary?: Record<string, number> };
+type SalesData = { resumo?: { qtdPedidos?: number; valorTotal?: number } };
 type NativeRoute = "/new-order" | "/new-customer" | "/(app)/orders" | "/(app)/customers" | "/(app)/modules" | "/occurrences" | "/goals";
 type Action = { title: string; subtitle: string; icon: AppIconName; color: string; background: string; route: NativeRoute };
 
@@ -38,7 +39,12 @@ function formatValue(key: string, value: number) {
   return new Intl.NumberFormat("pt-BR").format(value);
 }
 
-const fetchAdminDashboard = () => api<DashboardData>("/api/admin/executive-dashboard");
+function apiDate(value: Date) { return `${String(value.getDate()).padStart(2,"0")}/${String(value.getMonth()+1).padStart(2,"0")}/${value.getFullYear()}`; }
+const fetchSalesDashboard = async () => {
+  const today=new Date(), start=new Date(today.getFullYear(),today.getMonth(),1);
+  const response=await api<SalesData>((`/api/sales?de=${apiDate(start)}&ate=${apiDate(today)}&tamanho=1`) as `/api/${string}`);
+  return {summary:{orders:Number(response.resumo?.qtdPedidos||0),revenue:Number(response.resumo?.valorTotal||0)}} satisfies DashboardData;
+};
 
 function openAction(action: Action) { router.push(action.route as Href); }
 
@@ -49,9 +55,12 @@ export default function HomeScreen() {
 }
 
 function SellerHome({ firstName }: { firstName: string }) {
+  const [data,setData]=useState<DashboardData|null>(null);
+  useEffect(()=>{let active=true;fetchSalesDashboard().then(response=>{if(active)setData(response);}).catch(()=>undefined);return()=>{active=false;};},[]);
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <ScreenHeader eyebrow="Seu espaço de trabalho" title={`Olá, ${firstName}!`} subtitle="O que você precisa fazer hoje?" right={<NotificationBell />} />
+      {data?.summary?<View style={styles.sellerHero}><View style={styles.sellerHeroIcon}><AppIcon name="analytics-outline" color="#FFFFFF" size={25}/></View><View style={styles.sellerHeroCopy}><Text style={styles.sellerHeroTitle}>{formatValue("revenue",data.summary.revenue||0)}</Text><Text style={styles.sellerHeroText}>{data.summary.orders||0} pedido(s) no mês atual</Text></View></View>:null}
       <Text style={styles.actionHeading}>Ações rápidas</Text>
       <View style={styles.actionGrid}>
         {sellerActions.map((action) => (
@@ -73,7 +82,7 @@ function AdminHome({ firstName }: { firstName: string }) {
 
   useEffect(() => {
     let active = true;
-    fetchAdminDashboard()
+    fetchSalesDashboard()
       .then((response) => { if (active) { setData(response); setError(""); } })
       .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Falha ao carregar o painel."); })
       .finally(() => { if (active) setLoading(false); });
@@ -83,7 +92,7 @@ function AdminHome({ firstName }: { firstName: string }) {
   async function refresh() {
     setLoading(true);
     try {
-      const response = await fetchAdminDashboard();
+      const response = await fetchSalesDashboard();
       setData(response);
       setError("");
     } catch (cause) {
@@ -120,7 +129,7 @@ function AdminHome({ firstName }: { firstName: string }) {
       </View>
       <Pressable accessibilityRole="button" onPress={() => router.push("/(app)/modules" as Href)} style={({ pressed }) => [styles.modulesCta, pressed && styles.pressed]}>
         <View style={styles.modulesIcon}><AppIcon name="grid" color="#FFFFFF" size={24} /></View>
-        <View style={styles.modulesCopy}><Text style={styles.modulesTitle}>Todos os módulos</Text><Text style={styles.modulesText}>Usuários, catálogo, ocorrências, metas, relatórios e configurações.</Text></View>
+        <View style={styles.modulesCopy}><Text style={styles.modulesTitle}>Módulos disponíveis</Text><Text style={styles.modulesText}>{useMockApi?"Usuários, catálogo, ocorrências, metas, relatórios e configurações.":"Pedidos, clientes e indicadores publicados pela API atual."}</Text></View>
         <AppIcon name="chevron-forward" color="#9FD2F2" size={20} />
       </Pressable>
     </ScrollView>

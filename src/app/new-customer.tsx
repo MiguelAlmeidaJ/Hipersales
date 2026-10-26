@@ -166,7 +166,15 @@ export default function NewCustomerScreen() {
     if (!valid) { const firstInvalid = stepValid.findIndex((item) => !item); setStep(Math.max(firstInvalid, 0)); setError("Revise os campos obrigatórios antes de enviar."); return; }
     setBusy(true); setError("");
     try {
-      const payload = { ...form, cnpj: normalizeCnpj(form.cnpj), buyer_contact: form.contact_person, buyer_phone_1: form.phone_1, buyer_phone_2: form.phone_2, buyer_email: form.purchase_email, finance_email: form.billing_email, additional_notes: form.notes, ...(isAdmin ? { seller_ids: sellerIds, phone: form.phone_1, email: form.purchase_email, active: editId ? customerStatus === "ativo" : true, status: editId ? customerStatus : "ativo" } : {}) };
+      let municipalityId:number|undefined;
+      if(form.city.trim()&&form.state){
+        const support=await api<unknown>((`/api/support/cities?uf=${encodeURIComponent(form.state)}&busca=${encodeURIComponent(form.city.trim())}&tamanho=50`) as `/api/${string}`);
+        const rows=Array.isArray(support)?support:((support as {itens?:unknown[]})?.itens||[]);
+        const wanted=form.city.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim();
+        const found=rows.find(row=>{const item=row as {descricao?:string};return String(item.descricao||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("pt-BR").trim()===wanted;}) as {id?:number}|undefined;
+        municipalityId=found?.id;
+      }
+      const payload = { ...form, municipality_id:municipalityId, cnpj: normalizeCnpj(form.cnpj), buyer_contact: form.contact_person, buyer_phone_1: form.phone_1, buyer_phone_2: form.phone_2, buyer_email: form.purchase_email, finance_email: form.billing_email, additional_notes: form.notes, ...(isAdmin ? { seller_ids: sellerIds, phone: form.phone_1, email: form.purchase_email, active: editId ? customerStatus === "ativo" : true, status: editId ? customerStatus : "ativo" } : {}) };
       const result = await api<{ id: number; message?: string }>((editId && isAdmin ? `/api/admin/customers/${editId}` : isAdmin ? "/api/admin/customers" : "/api/customer-requests") as `/api/${string}`, { method: editId && isAdmin ? "PATCH" : "POST", body: JSON.stringify(payload), timeoutMs: 30_000 });
       setSuccess(result.message || "Operação concluída.");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível concluir o cadastro."); }

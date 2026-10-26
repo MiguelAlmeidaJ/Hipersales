@@ -9,7 +9,8 @@ import { api } from "@/lib/api";
 
 type Item={id:number;kind:string;title:string;body:string;route?:string|null;read_at?:string|null;created_at:string};
 const routes=new Set(["/(app)/orders","/(app)/customers","/approvals","/occurrences","/goals","/(app)/modules"]);
-function dateLabel(value:string){const date=new Date(value),minutes=Math.floor((Date.now()-date.getTime())/60000);if(minutes<1)return "Agora";if(minutes<60)return `Há ${minutes} min`;const hours=Math.floor(minutes/60);if(hours<24)return `Há ${hours} h`;return new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}).format(date);}
+function parseApiDate(value:string){const match=/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/.exec(value);return match?new Date(Number(match[3]),Number(match[2])-1,Number(match[1]),Number(match[4]||0),Number(match[5]||0),Number(match[6]||0)):new Date(value);}
+function dateLabel(value:string){const date=parseApiDate(value);if(Number.isNaN(date.getTime()))return value;const minutes=Math.max(0,Math.floor((Date.now()-date.getTime())/60000));if(minutes<1)return "Agora";if(minutes<60)return `Há ${minutes} min`;const hours=Math.floor(minutes/60);if(hours<24)return `Há ${hours} h`;return new Intl.DateTimeFormat("pt-BR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}).format(date);}
 
 export default function NotificationsScreen(){
   const {permission,enable,refresh:refreshBadge,markRead,markAllRead}=useNotifications();

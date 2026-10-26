@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ErrorState, LoadingState } from "@/components/list-states";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
-import { api, authenticatedResource } from "@/lib/api";
+import { api, authenticatedResource, useMockApi } from "@/lib/api";
 import { useSession } from "@/contexts/session-context";
 import { digitsOnly, formatCnpj } from "@/lib/format";
 import type { Customer } from "@/types/commercial";
@@ -57,7 +57,7 @@ export default function CustomersScreen() {
       <View style={styles.searchWrap}>
         <TextInput accessibilityLabel="Buscar clientes" autoCapitalize="none" keyboardType="default" onChangeText={setQuery} placeholder="Nome, CNPJ, telefone ou e-mail" placeholderTextColor="#8A99AA" style={styles.search} value={query} />
       </View>
-      <Pressable accessibilityLabel="Adicionar cliente" accessibilityRole="button" onPress={() => router.push("/new-customer")} style={styles.fab}><Text style={styles.fabPlus}>＋</Text></Pressable>
+      {!isAdmin||useMockApi?<Pressable accessibilityLabel="Adicionar cliente" accessibilityRole="button" onPress={() => router.push("/new-customer")} style={styles.fab}><Text style={styles.fabPlus}>＋</Text></Pressable>:null}
       {loading && !customers.length ? <LoadingState label="Carregando carteira…" /> : error && !customers.length ? <ErrorState message={error} onRetry={() => load()} /> : (
         <FlatList
           data={filtered}
@@ -69,7 +69,7 @@ export default function CustomersScreen() {
         />
       )}
       <Modal visible={Boolean(selected)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
-        {selected ? <CustomerDetails customer={selected} isAdmin={isAdmin} onClose={() => setSelected(null)} /> : null}
+        {selected ? <CustomerDetails customer={selected} isAdmin={isAdmin&&useMockApi} onClose={() => setSelected(null)} /> : null}
       </Modal>
     </View>
   );
@@ -80,13 +80,14 @@ function initials(customer: Customer) {
 }
 
 function CustomerCard({ customer, onPress }: { customer: Customer; onPress: () => void }) {
+  const status=customer.statusCadastro||(customer.active?"APROVADO":"");
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.avatar}><Text style={styles.avatarText}>{initials(customer)}</Text></View>
       <View style={styles.cardCopy}>
         <Text style={styles.tradeName} numberOfLines={1}>{customer.trade_name || customer.legal_name}</Text>
         {customer.trade_name ? <Text style={styles.legalName} numberOfLines={1}>{customer.legal_name}</Text> : null}
-        <Text style={styles.cnpj}>{formatCnpj(customer.cnpj)}</Text>
+        <View style={styles.cardMeta}><Text style={styles.cnpj}>{formatCnpj(customer.cnpj)}</Text>{status?<Text style={[styles.customerStatus,status==="APROVADO"&&styles.customerStatusApproved]}>{status.replaceAll("_"," ")}</Text>:null}</View>
       </View>
       <Text style={styles.chevron}>›</Text>
     </Pressable>
@@ -132,6 +133,8 @@ function CustomerDetails({ customer, onClose, isAdmin }: { customer: Customer; o
         <Text style={styles.sectionTitle}>Dados cadastrais</Text>
         <InfoRow label="Razão social" value={customer.legal_name} />
         <InfoRow label="CNPJ" value={formatCnpj(customer.cnpj)} />
+        <InfoRow label="Situação" value={(customer.statusCadastro||customer.status||"").replaceAll("_"," ")} />
+        {customer.rejection_reason?<InfoRow label="Motivo da rejeição" value={customer.rejection_reason} multiline />:null}
         <InfoRow label="Inscrição estadual" value={customer.state_registration} />
         <InfoRow label="Telefone" value={customer.phone} />
         <InfoRow label="E-mail" value={customer.email} />
@@ -157,7 +160,10 @@ const styles = StyleSheet.create({
   cardCopy: { flex: 1, marginLeft: 13 },
   tradeName: { color: colors.ink, fontSize: 15, fontWeight: "800" },
   legalName: { color: colors.muted, fontSize: 11, marginTop: 3 },
-  cnpj: { color: colors.brand, fontSize: 11, fontWeight: "700", marginTop: 5 },
+  cardMeta:{flexDirection:"row",alignItems:"center",flexWrap:"wrap",gap:7,marginTop:5},
+  cnpj: { color: colors.brand, fontSize: 11, fontWeight: "700" },
+  customerStatus:{color:"#8A6700",fontSize:8,fontWeight:"900",backgroundColor:"#FFF7D6",paddingHorizontal:7,paddingVertical:3,borderRadius:999},
+  customerStatusApproved:{color:"#05724D",backgroundColor:"#E5F7EF"},
   chevron: { color: "#94A3B8", fontSize: 28, marginLeft: 8 },
   modal: { flex: 1, backgroundColor: colors.canvas },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },

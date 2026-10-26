@@ -1,15 +1,22 @@
 export const money = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0);
 
+const apiDate = (value: string) => {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/.exec(value);
+  return match
+    ? new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]), Number(match[4] || 0), Number(match[5] || 0), Number(match[6] || 0))
+    : new Date(value);
+};
+
 export const shortDate = (value?: string | null) => {
   if (!value) return "—";
-  const date = new Date(value);
+  const date = apiDate(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("pt-BR");
 };
 
 export const dateTime = (value?: string | null) => {
   if (!value) return "—";
-  const date = new Date(value);
+  const date = apiDate(value);
   return Number.isNaN(date.getTime())
     ? value
     : date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });

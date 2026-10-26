@@ -21,7 +21,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/list-states";
 import { AppIcon, type AppIconName } from "@/components/app-icon";
 import { ScreenHeader } from "@/components/screen-header";
 import { colors } from "@/constants/colors";
-import { api, authenticatedResource } from "@/lib/api";
+import { api, authenticatedResource, useMockApi } from "@/lib/api";
 import { useSession } from "@/contexts/session-context";
 import { SelectField } from "@/components/form-controls";
 import { PrimaryButton, SecondaryButton } from "@/components/module-ui";
@@ -112,7 +112,7 @@ export default function OrdersScreen() {
           {statuses.map((item) => <Pressable key={item} onPress={() => setStatus(item)} style={[styles.chip, status === item && styles.chipActive]}><Text style={[styles.chipText, status === item && styles.chipTextActive]}>{statusLabels[item] ?? item.replaceAll("_", " ")}</Text></Pressable>)}
         </ScrollView>
       </View>
-      <Pressable accessibilityLabel="Criar proposta" accessibilityRole="button" onPress={() => router.push("/new-order")} style={styles.fab}><Text style={styles.fabPlus}>＋</Text></Pressable>
+      {!admin||useMockApi?<Pressable accessibilityLabel="Criar proposta" accessibilityRole="button" onPress={() => router.push("/new-order")} style={styles.fab}><Text style={styles.fabPlus}>＋</Text></Pressable>:null}
 
       {loading && !orders.length ? <LoadingState label="Carregando pedidos…" /> : error && !orders.length ? <ErrorState message={error} onRetry={() => load()} /> : (
         <FlatList
@@ -133,7 +133,7 @@ export default function OrdersScreen() {
       )}
 
       <Modal visible={Boolean(selected)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
-        {selected ? <OrderDetails key={`${selected.id}-${selected.items?.length ?? 0}`} proposal={selected} admin={admin} onSaved={()=>{setSelected(null);void load(true);}} onClose={() => setSelected(null)} /> : null}
+        {selected ? <OrderDetails key={`${selected.id}-${selected.items?.length ?? 0}`} proposal={selected} admin={admin&&useMockApi} onSaved={()=>{setSelected(null);void load(true);}} onClose={() => setSelected(null)} /> : null}
       </Modal>
     </View>
   );
@@ -172,15 +172,6 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
       Alert.alert("Pedido","Informações atualizadas.");onSaved();
     }catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível salvar.");}
     finally{setBusy(false);}
-  }
-  async function shareOrderPdf(){
-    try{
-      const resource=authenticatedResource(("/api/proposals/"+proposal.id+"/pdf") as never);
-      if(!resource.headers.Authorization)throw new Error("Sessão expirada.");
-      const result=await FileSystem.downloadAsync(resource.url,FileSystem.cacheDirectory+"pedido-"+proposal.id+".pdf",{headers:resource.headers});
-      if(result.status!==200)throw new Error("PDF do pedido não disponível.");
-      await Sharing.shareAsync(result.uri,{mimeType:"application/pdf"});
-    }catch(cause){Alert.alert("PDF do pedido",cause instanceof Error?cause.message:"Não foi possível gerar o documento.");}
   }
   async function shareInvoice(){
     try{
@@ -232,7 +223,7 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
           <Detail icon="business-outline" label="Pedido da indústria" value={proposal.industry_order_number}/>
           <Detail icon="document-text-outline" label="Nota fiscal" value={proposal.invoice_number}/>
         </View>
-        <View style={styles.actionsCard}><View style={styles.actionsTitleRow}><View style={styles.actionsIcon}><AppIcon name="share-social-outline" color={colors.brand} size={20}/></View><View><Text style={styles.actionsTitle}>Documentos do pedido</Text><Text style={styles.actionsCaption}>Compartilhe os arquivos disponíveis</Text></View></View><SecondaryButton title="Compartilhar PDF do pedido" onPress={()=>void shareOrderPdf()}/>{proposal.has_invoice_pdf?<SecondaryButton title="Baixar nota fiscal PDF" onPress={()=>void shareInvoice()}/>:null}</View>
+        {proposal.invoice_number?<View style={styles.actionsCard}><View style={styles.actionsTitleRow}><View style={styles.actionsIcon}><AppIcon name="share-social-outline" color={colors.brand} size={20}/></View><View><Text style={styles.actionsTitle}>Nota fiscal</Text><Text style={styles.actionsCaption}>Baixe o PDF anexado pela retaguarda</Text></View></View><SecondaryButton title="Baixar nota fiscal PDF" onPress={()=>void shareInvoice()}/></View>:null}
         {admin && <View style={{marginVertical:15,gap:12}}>
           <SecondaryButton title={editing?"Fechar edição":"Editar dados da retaguarda"} onPress={()=>setEditing(!editing)}/>
           {editing && <>

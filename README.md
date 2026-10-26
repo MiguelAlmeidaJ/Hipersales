@@ -17,7 +17,9 @@ Use `pnpm android`, `pnpm ios` ou `pnpm web`. Para verificar o projeto: `pnpm ch
 
 ## Integração com a API externa
 
-Configure `EXPO_PUBLIC_API_URL` com o endereço acessível pelo dispositivo. O cliente atual preserva **temporariamente** a interface REST antiga (rotas `/api/v1`, token Bearer e formatos de payload existentes) para manter as telas intactas. A integração definitiva depende do contrato da nova API; não assuma compatibilidade sem validá-la.
+Configure `EXPO_PUBLIC_API_URL` com o endereço acessível pelo dispositivo. O adaptador do aplicativo traduz a interface interna das telas para o contrato da HiperSales API v1, incluindo clientes, tabelas de preço, prazos, produtos, pedidos, vendas, notas fiscais, notificações e push tokens. Respostas paginadas, datas no formato `DD/MM/AAAA` e nomes de campos em português são normalizados antes de chegar às telas.
+
+As rotas administrativas da plataforma antiga (usuários, metas, ocorrências, configurações e manutenção de catálogo) não fazem parte da HiperSales API v1. Elas continuam disponíveis apenas no mock/legado até que o servidor publique contratos equivalentes; o app não tenta inventar chamadas incompatíveis para essas operações.
 
 Nunca coloque chaves privadas nas variáveis `EXPO_PUBLIC_*`. Para produção, a API deve usar HTTPS. As demais configurações públicas estão em `.env.example`.
 

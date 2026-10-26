@@ -19,8 +19,9 @@ export const apiUrl = normalizeApiUrl(process.env.EXPO_PUBLIC_API_URL || default
 export function authenticatedResource(path: `/api/${string}`) {
   const headers: Record<string, string> = {};
   if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
+  const route = externalRoute(path, "GET");
   return {
-    url: `${apiUrl}${path.slice("/api".length)}`,
+    url: `${apiUrl}${route ?? path.slice("/api".length)}`,
     headers,
   };
 }
@@ -125,17 +126,42 @@ const orderErrorMessages: Record<string, string> = {
   NAO_ENCONTRADO: "O pedido não foi encontrado ou não pertence a este representante.",
 };
 
-function externalRoute(path: string): string | null {
+function withDefaultPageSize(pathname: string, query: string) {
+  const params = new URLSearchParams(query);
+  if (!params.has("tamanho")) params.set("tamanho", "200");
+  return `${pathname}?${params.toString()}`;
+}
+
+function externalRoute(path: string, method = "GET"): string | null {
   const [pathname, query = ""] = path.split("?", 2);
   if (pathname === "/api/saude") return "/saude";
-  if (pathname === "/api/customers" || pathname === "/api/admin/customers") return `/clientes${query ? `?${query}` : "?tamanho=200"}`;
+  if (pathname === "/api/customers" || pathname === "/api/admin/customers") return method === "GET" ? withDefaultPageSize("/clientes", query) : "/clientes";
+  if (pathname === "/api/customer-requests") return "/clientes";
+  if (pathname === "/api/customer-ids") return `/clientes/atendidos/ids${query ? `?${query}` : ""}`;
   if (pathname === "/api/price-tables") return `/tabelas-preco${query ? `?${query}` : ""}`;
-  if (pathname === "/api/order-products") return `/produtos${query ? `?${query}` : ""}`;
-  if (pathname === "/api/orders" || pathname === "/api/proposals") return `/pedidos${query ? `?${query}` : ""}`;
+  if (pathname === "/api/payment-terms") return "/prazos";
+  if (pathname === "/api/order-products") return withDefaultPageSize("/produtos", query);
+  if (pathname === "/api/orders") return method === "GET" ? withDefaultPageSize("/pedidos", query) : "/pedidos";
+  if (pathname === "/api/proposals") return withDefaultPageSize("/pedidos", query);
+  if (pathname === "/api/sales") return `/vendas${query ? `?${query}` : ""}`;
+  if (pathname === "/api/invoices") return withDefaultPageSize("/notas-fiscais", query);
+  if (pathname === "/api/mobile/push-token") return `/mobile/push-token${query ? `?${query}` : ""}`;
+  if (pathname === "/api/notifications" || pathname === "/api/notifications/unread-count" || pathname === "/api/notifications/read-all") {
+    return `${pathname.slice("/api".length)}${query ? `?${query}` : ""}`;
+  }
+  const notificationMatch = pathname.match(/^\/api\/notifications\/(\d+)\/read$/);
+  if (notificationMatch) return `/notifications/${notificationMatch[1]}/read`;
   const orderMatch = pathname.match(/^\/api\/orders\/(\d+)(\/status)?$/);
   if (orderMatch) return `/pedidos/${orderMatch[1]}${orderMatch[2] || ""}`;
   const proposalMatch = pathname.match(/^\/api\/proposals\/(\d+)$/);
   if (proposalMatch) return `/pedidos/${proposalMatch[1]}`;
+  const invoiceMatch = pathname.match(/^\/api\/(?:invoices\/(\d+)\/pdf|proposals\/(\d+)\/invoice-pdf)$/);
+  if (invoiceMatch) return `/notas-fiscais/${invoiceMatch[1] || invoiceMatch[2]}/pdf`;
+  const invoiceDetailMatch = pathname.match(/^\/api\/invoices\/(\d+)$/);
+  if (invoiceDetailMatch) return `/notas-fiscais/${invoiceDetailMatch[1]}`;
+  if (pathname === "/api/support/activity-branches") return "/apoio/ramos-atividade";
+  if (pathname === "/api/support/service-regions") return "/apoio/regioes-atendimento";
+  if (pathname === "/api/support/cities") return `/apoio/municipios${query ? `?${query}` : ""}`;
   return null;
 }
 
@@ -160,14 +186,55 @@ function normalizeOrder(row: any) {
     delivery_forecast: row.entregaPrevista, lead_time_days: Number(row.leadTimeDias || 0), purchase_order: row.nroPedidoCliente,
     industry_order_number: row.nroPedidoEmpresa, invoice_number: row.nfNumero, billing_date: row.dtFaturamento,
     delivered_date: row.dtEntrega, notes: row.observacoes, discount_percent: Number(row.descontoPercentual || 0),
+    has_invoice_pdf: Boolean(row.temPdf || row.hasInvoicePdf),
     gross_value: Number(row.valorBruto || 0), net_value: Number(row.valorLiquido || row.valorBruto || 0), items,
   };
+}
+
+function normalizeCustomer(row: any) {
+  return {
+    id: Number(row.id || 0), legal_name: String(row.razaoSocial || ""), trade_name: row.nomeFantasia || null,
+    cnpj: String(row.documento || ""), state_registration: row.inscricaoEstadual || null,
+    address: [row.logradouro, row.numero, row.complemento, row.bairro, row.cidade, row.uf, row.cep].filter(Boolean).join(", "),
+    phone: row.telefoneCompras1 || row.telefoneCompras2 || null, email: row.emailCompras || null,
+    active: row.statusCadastro === "APROVADO", status: normalizedStatus(row.statusCadastro),
+    statusCadastro: row.statusCadastro, rejection_reason: row.motivoRejeicao || null, linked_at: row.vinculadoEm || null,
+  };
+}
+
+function normalizeNotification(row: any) {
+  const orderId = Number(row.idPedido || 0);
+  const customerId = Number(row.idCliente || 0);
+  return {
+    id: Number(row.id || 0), kind: String(row.tipo || ""), title: String(row.titulo || "Atualizacao"),
+    body: String(row.mensagem || ""), read_at: row.lidaEm || (row.lida ? row.criadaEm : null),
+    created_at: String(row.criadaEm || ""), route: orderId ? "/(app)/orders" : customerId ? "/(app)/customers" : null,
+    order_id: orderId || null, customer_id: customerId || null,
+  };
+}
+
+function mapCustomerPayload(body: BodyInit | null | undefined) {
+  if (typeof body !== "string") return body;
+  const source = JSON.parse(body) as Record<string, unknown>;
+  const mapped = {
+    razaoSocial: source.legal_name, nomeFantasia: source.trade_name, documento: source.cnpj,
+    inscricaoEstadual: source.state_registration, logradouro: source.address, numero: source.address_number,
+    bairro: source.neighborhood, cep: source.zip_code, uf: source.state, idMunicipio: source.municipality_id,
+    enderecoEntrega: source.delivery_address, advertenciasRecebimento: source.delivery_warnings,
+    respCompras: source.contact_person || source.buyer_contact,
+    telefoneCompras1: source.phone_1 || source.buyer_phone_1, telefoneCompras2: source.phone_2 || source.buyer_phone_2,
+    emailCompras: source.purchase_email || source.buyer_email, emailFinanceiro: source.billing_email || source.finance_email,
+    observacao: source.notes || source.additional_notes,
+    idRepresentante: Array.isArray(source.seller_ids) ? source.seller_ids[0] : source.id_representative,
+  };
+  return JSON.stringify(Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== "" && value !== null && value !== undefined)));
 }
 
 export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): Promise<T> {
   if(useMockApi)return mockApi<T>(path,options);
   ensureSecureProductionUrl();
-  const route = externalRoute(path);
+  const method = String(options.method || "GET").toUpperCase();
+  const route = externalRoute(path, method);
   if (!route) throw new ApiError("Funcionalidade ainda não adaptada à API externa.",0,"configuration");
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? defaultTimeoutMs);
@@ -178,6 +245,9 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
 
   try {
     const { timeoutMs: _timeoutMs, ...fetchOptions } = options;
+    if (path.split("?")[0] === "/api/customer-requests" || (path.split("?")[0] === "/api/admin/customers" && method === "POST")) {
+      fetchOptions.body = mapCustomerPayload(fetchOptions.body);
+    }
     const response = await fetch(`${apiUrl}${route}`, { ...fetchOptions, headers, signal: controller.signal });
     const data: unknown = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -196,7 +266,15 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
       if (response.status === 401) unauthorizedHandler?.();
       throw new ApiError(message, response.status, response.status === 401 ? "unauthorized" : response.status >= 500 ? "server" : "client");
     }
-    if(path==="/api/customers"||path==="/api/admin/customers") return {customers:((data as any).itens||[]).map((c:any)=>({id:c.id,legal_name:c.razaoSocial,trade_name:c.nomeFantasia,cnpj:c.documento,phone:c.telefoneCompras1,email:c.emailCompras,active:c.statusCadastro==="APROVADO",statusCadastro:c.statusCadastro}))} as T;
+    const pathname = path.split("?")[0];
+    if ((pathname === "/api/customers" || pathname === "/api/admin/customers") && method === "GET") return {customers:((data as any).itens||[]).map(normalizeCustomer)} as T;
+    if ((pathname === "/api/customer-requests" || pathname === "/api/admin/customers") && method === "POST") {
+      const result = data as any;
+      return { id: Number(result.cliente?.id || 0), message: result.mensagem, customer: result.cliente } as T;
+    }
+    if (pathname === "/api/notifications") return {notifications:((data as any).itens||[]).map(normalizeNotification)} as T;
+    if (pathname === "/api/notifications/unread-count") return {unread_count:Number((data as any).naoLidas ?? (data as any).count ?? 0)} as T;
+    if (/^\/api\/notifications\/\d+\/read$/.test(pathname)) return { unread_count: undefined, ...(data as object) } as T;
     if(path.split("?")[0]==="/api/proposals") return {proposals:(((data as any).itens||(Array.isArray(data)?data:[]))).map(normalizeOrder)} as T;
     if(/^\/api\/proposals\/\d+$/.test(path)) return normalizeOrder(data) as T;
     return data as T;

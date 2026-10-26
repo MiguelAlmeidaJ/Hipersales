@@ -73,8 +73,8 @@ export default function NewOrderScreen() {
   useEffect(() => {
     if (status !== "authenticated") return;
     let active = true;
-    Promise.all([api<{ customers: Customer[] }>("/api/customers"), api<unknown>("/api/price-tables")])
-      .then(([customerData, tableData]) => { if (active) { setCustomers(customerData.customers || []); setTables(normalizeTables(tableData)); } })
+    Promise.all([api<{ customers: Customer[] }>("/api/customers"), api<unknown>("/api/price-tables"), api<unknown>("/api/payment-terms")])
+      .then(([customerData, tableData, termData]) => { if (active) { const terms=readList(termData).map(row=>({id:number(row.id),name:text(row.descricao,row.nome)})).filter(term=>term.id);setCustomers((customerData.customers || []).filter(customer=>customer.active));setTables(normalizeTables(tableData).map(table=>({...table,paymentTerms:terms}))); } })
       .catch((cause) => { if (active) setDialog({ title: "Não foi possível preparar a proposta", message: cause instanceof Error ? cause.message : "Falha ao carregar clientes e tabelas de preço.", tone: "error" }); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -83,7 +83,7 @@ export default function NewOrderScreen() {
   useEffect(() => {
     if (!form.companyId || !form.tableId || status !== "authenticated") return;
     let active = true;
-    api<unknown>((`/api/order-products?idEmpresa=${form.companyId}&idTabela=${form.tableId}&tamanho=300`) as `/api/${string}`)
+    api<unknown>((`/api/order-products?idEmpresa=${form.companyId}&idTabela=${form.tableId}&tamanho=200`) as `/api/${string}`)
       .then((data) => { if (active) setProducts(normalizeProducts(data)); })
       .catch((cause) => { if (active) setDialog({ title: "Produtos indisponíveis", message: cause instanceof Error ? cause.message : "Não foi possível carregar os produtos desta tabela.", tone: "error" }); })
       .finally(() => { if (active) setProductsLoading(false); });

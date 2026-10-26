@@ -65,4 +65,8 @@ export type Customer = {
   phone?: string | null;
   email?: string | null;
   active?: boolean | number;
+  status?: string | null;
+  statusCadastro?: string | null;
+  rejection_reason?: string | null;
+  linked_at?: string | null;
 };

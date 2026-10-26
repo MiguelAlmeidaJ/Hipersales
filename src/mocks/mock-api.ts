@@ -52,6 +52,7 @@ export async function mockApi<T>(path: `/api/${string}`, options: ApiOptions = {
   if (pathname === "/api/saude") return { status: "ok", ambiente: "mock" } as T;
   if (pathname === "/api/customers" || pathname === "/api/admin/customers") return { customers: structuredClone(data.customers) } as T;
   if (pathname === "/api/price-tables") return { itens: structuredClone(data.priceTables) } as T;
+  if (pathname === "/api/payment-terms") return Array.from(new Map(data.priceTables.flatMap((table) => table.condicoesPagamento).map((term) => [term.idCondPagto, { id: term.idCondPagto, descricao: term.descricao }])).values()) as T;
   if (pathname === "/api/order-products") { const query = queryOf(path), companyId = Number(query.get("idEmpresa")), tableId = Number(query.get("idTabela")); return { itens: structuredClone(data.products.filter((item) => item.idEmpresa === companyId && item.idTabela === tableId)) } as T; }
   if (pathname === "/api/proposals") return { proposals: orders.map(toProposal) } as T;
   const proposalMatch = pathname.match(/^\/api\/proposals\/(\d+)$/);
@@ -70,6 +71,7 @@ export async function mockApi<T>(path: `/api/${string}`, options: ApiOptions = {
   if (pathname === "/api/notifications") return { notifications: [] } as T;
   if (pathname === "/api/notifications/read-all" || /\/api\/notifications\/\d+\/read$/.test(pathname)) return { unread_count: 0 } as T;
   if (pathname === "/api/mobile/push-token") return {} as T;
+  if (pathname === "/api/sales") return { resumo: { qtdPedidos: orders.length, valorTotal: orders.reduce((sum, order) => sum + Number(order.valorLiquido || 0), 0) }, porStatus: [], porEmpresa: [], pedidos: orders } as T;
   if (pathname === "/api/admin/executive-dashboard") return { summary: { orders: orders.length, revenue: orders.reduce((sum, order) => sum + Number(order.valorLiquido || 0), 0), customers: data.customers.length, products: data.products.length } } as T;
   return {} as T;
 }
