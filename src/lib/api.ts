@@ -147,6 +147,8 @@ function externalRoute(path: string, method = "GET"): string | null {
   if (pathname === "/api/saude") return "/saude";
   if (pathname === "/api/customers" || pathname === "/api/admin/customers") return method === "GET" ? withDefaultPageSize("/clientes", query) : "/clientes";
   if (pathname === "/api/customer-requests") return "/clientes";
+  const customerRequestMatch = pathname.match(/^\/api\/customer-requests\/(\d+)$/);
+  if (customerRequestMatch) return `/clientes/${customerRequestMatch[1]}`;
   if (pathname === "/api/customer-ids") return `/clientes/atendidos/ids${query ? `?${query}` : ""}`;
   if (pathname === "/api/price-tables") return `/tabelas-preco${query ? `?${query}` : ""}`;
   const priceTablePdfMatch = pathname.match(/^\/api\/price-tables\/(\d+)\/pdf$/);
@@ -223,6 +225,15 @@ function normalizeCustomer(row: any) {
     phone: row.telefoneCompras1 || row.telefoneCompras2 || null, email: row.emailCompras || null,
     active: row.statusCadastro === "APROVADO", status: normalizedStatus(row.statusCadastro),
     statusCadastro: row.statusCadastro, rejection_reason: row.motivoRejeicao || null, linked_at: row.vinculadoEm || null,
+    form_payload: {
+      address: row.logradouro || "", address_number: row.numero || "", neighborhood: row.bairro || "",
+      city: row.cidade || "", state: row.uf || "", zip_code: row.cep || "",
+      municipal_registration: row.inscricaoMunicipal || "",
+      buyer_contact: row.respCompras || "", buyer_phone_1: row.telefoneCompras1 || "", buyer_phone_2: row.telefoneCompras2 || "",
+      buyer_email: row.emailCompras || "", finance_email: row.emailFinanceiro || "", xml_email: row.emailXml || row.emailXML || "",
+      delivery_address: row.enderecoEntrega || "", delivery_warnings: row.advertenciasRecebimento || "",
+      additional_notes: row.observacao || "",
+    },
   };
 }
 
@@ -304,7 +315,7 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
 
   try {
     const { timeoutMs: _timeoutMs, ...fetchOptions } = options;
-    if (path.split("?")[0] === "/api/customer-requests" || (path.split("?")[0] === "/api/admin/customers" && method === "POST")) {
+    if (path.split("?")[0] === "/api/customer-requests" || /^\/api\/customer-requests\/\d+$/.test(path.split("?")[0]) || (path.split("?")[0] === "/api/admin/customers" && method === "POST")) {
       fetchOptions.body = mapCustomerPayload(fetchOptions.body);
     }
     const response = await fetch(`${apiUrl}${route}`, { ...fetchOptions, headers, signal: controller.signal });
@@ -327,7 +338,7 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
     }
     const pathname = path.split("?")[0];
     if ((pathname === "/api/customers" || pathname === "/api/admin/customers") && method === "GET") return {customers:((data as any).itens||[]).map(normalizeCustomer)} as T;
-    if ((pathname === "/api/customer-requests" || pathname === "/api/admin/customers") && method === "POST") {
+    if (((pathname === "/api/customer-requests" && method === "POST") || (/^\/api\/customer-requests\/\d+$/.test(pathname) && method === "PATCH") || (pathname === "/api/admin/customers" && method === "POST"))) {
       const result = data as any;
       return { id: Number(result.cliente?.id || 0), message: result.mensagem, customer: result.cliente } as T;
     }
