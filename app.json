@@ -28,10 +28,6 @@
         "android.permission.WRITE_CONTACTS",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "adaptiveIcon": {
-        "backgroundColor": "#052528",
-        "foregroundImage": "./assets/images/android-adaptive-foreground.png"
-      },
       "predictiveBackGestureEnabled": true
     },
     "androidNavigationBar": {
@@ -59,9 +55,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#022E33",
-          "image": "./assets/images/android-adaptive-foreground.png",
-          "imageWidth": 220
+          "backgroundColor": "#052528",
+          "image": "./assets/images/app-icon-store.png",
+          "imageWidth": 136
         }
       ],
       [
