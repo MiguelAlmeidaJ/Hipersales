@@ -9,6 +9,7 @@ import { Field, FormSection, SelectField } from "@/components/form-controls";
 import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { api, lookupCnpj, type CnpjLookupData } from "@/lib/api";
+import { isValidCnpj, maskCnpj, normalizeCnpj } from "@/lib/cnpj";
 import { digitsOnly } from "@/lib/format";
 import type { Customer } from "@/types/commercial";
 
@@ -38,24 +39,6 @@ const steps = [
 const states = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"].map((value) => ({ value, label: value }));
 const yesNo = [{ value: "no", label: "Não" }, { value: "yes", label: "Sim" }];
 
-function normalizeCnpj(value: string) { return value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 14); }
-function maskCnpj(value: string) {
-  const raw = normalizeCnpj(value);
-  return [raw.slice(0, 2), raw.slice(2, 5), raw.slice(5, 8), raw.slice(8, 12), raw.slice(12, 14)]
-    .filter(Boolean).map((part, index) => `${index === 1 || index === 2 ? "." : index === 3 ? "/" : index === 4 ? "-" : ""}${part}`).join("");
-}
-function cnpjDigit(base: string, weights: number[]) {
-  const sum = base.split("").reduce((total, character, index) => total + (character.charCodeAt(0) - 48) * weights[index], 0);
-  const digit = 11 - (sum % 11);
-  return digit >= 10 ? 0 : digit;
-}
-function isValidCnpj(value: string) {
-  const raw = normalizeCnpj(value);
-  if (!/^[A-Z0-9]{12}\d{2}$/.test(raw) || (/^\d+$/.test(raw) && /^(\d)\1{13}$/.test(raw))) return false;
-  const first = cnpjDigit(raw.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-  const second = cnpjDigit(`${raw.slice(0, 12)}${first}`, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-  return raw.endsWith(`${first}${second}`);
-}
 function maskPhone(value: string) { const raw = digitsOnly(value).slice(0, 11); if (raw.length <= 2) return raw.replace(/^(\d{1,2})/, "($1"); if (raw.length <= 6) return raw.replace(/^(\d{2})(\d+)/, "($1) $2"); if (raw.length <= 10) return raw.replace(/^(\d{2})(\d{4})(\d+)/, "($1) $2-$3"); return raw.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3"); }
 function maskZip(value: string) { return digitsOnly(value).slice(0, 8).replace(/^(\d{5})(\d+)/, "$1-$2"); }
 function billingAddress(form: CustomerForm) { return [form.address, form.address_number, form.neighborhood, [form.city, form.state].filter(Boolean).join("/"), form.zip_code].filter((value) => value.trim()).join(", "); }
@@ -98,6 +81,11 @@ function registrationFrom(data: CnpjLookupData, kind: "state" | "municipal") {
     if (active && typeof active === "object") return textFrom(active as CnpjLookupData, "inscricao_estadual", "inscricao_municipal", "numero", "inscricao");
   }
   return "";
+}
+function formatStateRegistration(value: string, state: string) {
+  const digits = digitsOnly(value);
+  if (state === "MG" && digits.length === 13) return digits.replace(/^(\d{9})(\d{2})(\d{2})$/, "$1.$2-$3");
+  return value;
 }
 
 export default function NewCustomerScreen() {
@@ -171,13 +159,14 @@ export default function NewCustomerScreen() {
     try {
       const result = await lookupCnpj(cnpj);
       const normalized = normalizeCnpjResult(result);
-      const stateRegistration = registrationFrom(normalized, "state");
+      const state = textFrom(normalized, "state", "uf", "sigla").toUpperCase();
+      const stateRegistration = formatStateRegistration(registrationFrom(normalized, "state"), state);
       const municipalRegistration = registrationFrom(normalized, "municipal");
       setForm((old) => normalizeCnpj(old.cnpj) !== cnpj ? old : ({ ...old,
         legal_name: textFrom(normalized, "legal_name", "razao_social", "razaoSocial", "razao", "nome_empresarial", "nomeEmpresarial", "nome") || old.legal_name,
         trade_name: textFrom(normalized, "trade_name", "nome_fantasia", "nomeFantasia", "fantasia") || old.trade_name,
         state_registration: stateRegistration || old.state_registration,
-        municipal_registration: municipalRegistration || old.municipal_registration || "ISENTO",
+        municipal_registration: municipalRegistration || old.municipal_registration,
         phone_1: maskPhone(phoneFrom(normalized)) || old.phone_1,
         phone_2: maskPhone(phoneFrom(normalized, true)) || old.phone_2,
         purchase_email: textFrom(normalized, "email", "correio_eletronico") || old.purchase_email,
@@ -185,7 +174,7 @@ export default function NewCustomerScreen() {
         address_number: textFrom(normalized, "number", "address_number", "numero") || old.address_number,
         neighborhood: textFrom(normalized, "neighborhood", "bairro") || old.neighborhood,
         city: textFrom(normalized, "city", "municipio", "nome_municipio") || old.city,
-        state: textFrom(normalized, "state", "uf", "sigla").toUpperCase() || old.state,
+        state: state || old.state,
         zip_code: maskZip(textFrom(normalized, "zip_code", "cep", "codigo_postal")) || old.zip_code,
       }));
       setVerified(cnpj);
@@ -221,7 +210,7 @@ export default function NewCustomerScreen() {
     <View style={styles.header}><Pressable accessibilityLabel="Voltar" accessibilityRole="button" onPress={() => router.back()} style={styles.back}><AppIcon name="arrow-back" color={colors.ink} size={22} /></Pressable><View style={styles.headerCopy}><Text style={styles.eyebrow}>{isResubmission?"REENVIO PARA APROVAÇÃO":"CADASTRO DE CLIENTES"}</Text><Text style={styles.title}>{isResubmission?"Ajustar cliente":editId ? "Editar cliente" : isAdmin ? "Cadastrar cliente" : "Solicitar novo cliente"}</Text><Text style={styles.subtitle}>Etapa {step + 1} de {steps.length} · {steps[step].title}</Text></View></View>
     <View style={styles.progress}>{steps.map((item, index) => <Pressable key={item.short} accessibilityLabel={`Etapa ${index + 1}: ${item.title}`} accessibilityRole="button" accessibilityState={{ selected: index === step, disabled: index > step && !stepValid[index - 1] }} disabled={index > step && !stepValid[index - 1]} onPress={() => setStep(index)} style={styles.progressItem}><View style={[styles.progressDot, index <= step && styles.progressDotActive]}>{index < step ? <AppIcon name="checkmark" size={13} color="#FFF" /> : <Text style={[styles.progressNumber, index <= step && styles.progressNumberActive]}>{index + 1}</Text>}</View><Text numberOfLines={1} style={[styles.progressLabel, index === step && styles.progressLabelActive]}>{item.short}</Text></Pressable>)}</View>
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
-      {step === 0 ? <FormSection title="Consulta cadastral" subtitle="Buscamos em mais de uma fonte para preencher o cadastro com o máximo de informações."><Field label="CNPJ *" value={form.cnpj} onChangeText={changeCnpj} autoCapitalize="characters" keyboardType="default" maxLength={18} placeholder="00.000.000/0000-00" hint="O novo CNPJ aceita letras nas 12 primeiras posições." /><Pressable accessibilityRole="button" disabled={searching} onPress={() => void lookup()} style={[styles.lookup, searching && styles.disabled]}>{searching ? <ActivityIndicator color="#FFF" /> : <AppIcon name="search" color="#FFF" size={18} />}<Text style={styles.lookupText}>{searching ? "Consultando fontes…" : "Consultar CNPJ"}</Text></Pressable>{verified ? <View style={styles.verified}><AppIcon name="checkmark-circle" color={colors.success} size={18} /><Text style={styles.verifiedText}>Consulta concluída</Text></View> : null}</FormSection> : null}
+      {step === 0 ? <FormSection title="Consulta cadastral" subtitle="Buscamos em fontes reais para preencher o cadastro, inclusive no ambiente de demonstração."><Field label="CNPJ *" value={form.cnpj} onChangeText={changeCnpj} autoCapitalize="characters" keyboardType="default" maxLength={18} placeholder="00.000.000/0000-00" hint="As 12 primeiras posições aceitam letras e números; os 2 dígitos finais aceitam somente números." /><Pressable accessibilityRole="button" disabled={searching} onPress={() => void lookup()} style={[styles.lookup, searching && styles.disabled]}>{searching ? <ActivityIndicator color="#FFF" /> : <AppIcon name="search" color="#FFF" size={18} />}<Text style={styles.lookupText}>{searching ? "Consultando fontes…" : "Consultar CNPJ"}</Text></Pressable>{verified ? <View style={styles.verified}><AppIcon name="checkmark-circle" color={colors.success} size={18} /><Text style={styles.verifiedText}>Consulta concluída</Text></View> : null}</FormSection> : null}
 
       {step === 1 ? <FormSection title="Dados cadastrais" subtitle="Confira os dados encontrados e complete o que estiver faltando.">
         {isAdministrativeEdit ? <SelectField label="Status cadastral" value={customerStatus} onChange={setCustomerStatus} options={[{ value: "ativo", label: "Ativo" }, { value: "inativo", label: "Inativo" }, { value: "bloqueado", label: "Bloqueado" }]} /> : null}

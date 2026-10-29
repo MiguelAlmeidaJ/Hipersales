@@ -29,6 +29,7 @@ export function authenticatedResource(path: `/api/${string}`) {
 export type CnpjLookupData = Record<string, unknown> & {
   _sources?: string[];
 };
+const cnpjLookupCache = new Map<string, { expiresAt: number; data: CnpjLookupData }>();
 
 async function fetchCnpjSource(url: string, headers?: Record<string, string>): Promise<Record<string, unknown> | null> {
   const controller = new AbortController();
@@ -49,15 +50,18 @@ async function fetchCnpjSource(url: string, headers?: Record<string, string>): P
 }
 
 export async function lookupCnpj(cnpj: string): Promise<CnpjLookupData> {
-  if (useMockApi) return mockApi<CnpjLookupData>((`/api/integrations/cnpj?cnpj=${encodeURIComponent(cnpj)}`) as `/api/${string}`);
-
-  const internal = authenticatedResource((`/api/integrations/cnpj?cnpj=${encodeURIComponent(cnpj)}`) as `/api/${string}`);
-  const candidates: { name: string; request: Promise<Record<string, unknown> | null> }[] = [
-    { name: "HiperSales", request: fetchCnpjSource(internal.url, internal.headers) },
-    { name: "BrasilAPI", request: fetchCnpjSource(`https://brasilapi.com.br/api/cnpj/v1/${encodeURIComponent(cnpj)}`) },
-  ];
+  const cacheKey = cnpj.toUpperCase();
+  const cached = cnpjLookupCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+  const candidates: { name: string; request: Promise<Record<string, unknown> | null> }[] = [];
+  if (!useMockApi) {
+    const internal = authenticatedResource((`/api/integrations/cnpj?cnpj=${encodeURIComponent(cnpj)}`) as `/api/${string}`);
+    candidates.push({ name: "HiperSales", request: fetchCnpjSource(internal.url, internal.headers) });
+  }
+  candidates.push({ name: "BrasilAPI", request: fetchCnpjSource(`https://brasilapi.com.br/api/cnpj/v1/${encodeURIComponent(cnpj)}`) });
   if (/^\d{14}$/.test(cnpj)) {
     candidates.push({ name: "OpenCNPJ", request: fetchCnpjSource(`https://kitana.opencnpj.com/cnpj/${cnpj}`) });
+    candidates.push({ name: "CNPJ.ws", request: fetchCnpjSource(`https://publica.cnpj.ws/cnpj/${cnpj}`) });
   }
 
   const settled = await Promise.all(candidates.map(async ({ name, request }) => ({ name, data: await request })));
@@ -71,6 +75,7 @@ export async function lookupCnpj(cnpj: string): Promise<CnpjLookupData> {
     }
   }
   merged._sources = found.map((result) => result.name);
+  cnpjLookupCache.set(cacheKey, { expiresAt: Date.now() + 15 * 60_000, data: merged });
   return merged;
 }
 
@@ -124,6 +129,11 @@ const orderErrorMessages: Record<string, string> = {
   PEDIDO_MINIMO: "O valor do pedido não atingiu o mínimo exigido pela tabela de preço.",
   VALIDACAO: "Revise os campos e as quantidades informadas.",
   NAO_ENCONTRADO: "O pedido não foi encontrado ou não pertence a este representante.",
+  OCORRENCIAS_INDISPONIVEIS: "O módulo de ocorrências ainda não foi habilitado no servidor.",
+  ANEXO_TIPO_NAO_PERMITIDO: "Um dos anexos possui um tipo de arquivo não permitido.",
+  ANEXOS_GRANDES: "Os anexos ultrapassam o limite total de 25 MB.",
+  RESOLUCAO_OBRIGATORIA: "Informe o parecer antes de recusar ou solucionar a ocorrência.",
+  ACESSO_NEGADO: "Seu usuário não tem permissão para executar esta ação.",
 };
 
 function withDefaultPageSize(pathname: string, query: string) {
@@ -164,6 +174,16 @@ function externalRoute(path: string, method = "GET"): string | null {
   if (pathname === "/api/support/activity-branches") return "/apoio/ramos-atividade";
   if (pathname === "/api/support/service-regions") return "/apoio/regioes-atendimento";
   if (pathname === "/api/support/cities") return `/apoio/municipios${query ? `?${query}` : ""}`;
+  if (pathname === "/api/occurrences/reasons") return "/occurrences/reasons";
+  if (pathname === "/api/occurrences") return method === "GET" ? withDefaultPageSize("/occurrences", query) : "/occurrences";
+  const occurrenceDetailMatch = pathname.match(/^\/api\/occurrences\/(\d+)$/);
+  if (occurrenceDetailMatch) return `/occurrences/${occurrenceDetailMatch[1]}`;
+  const occurrenceAttachmentMatch = pathname.match(/^\/api\/occurrences\/(\d+)\/attachments\/(\d+)$/);
+  if (occurrenceAttachmentMatch) return `/occurrences/${occurrenceAttachmentMatch[1]}/attachments/${occurrenceAttachmentMatch[2]}`;
+  const occurrencePdfMatch = pathname.match(/^\/api\/occurrences\/(\d+)\/pdf$/);
+  if (occurrencePdfMatch) return `/occurrences/${occurrencePdfMatch[1]}/pdf`;
+  const adminOccurrenceMatch = pathname.match(/^\/api\/admin\/occurrences\/(\d+)$/);
+  if (adminOccurrenceMatch) return `/admin/occurrences/${adminOccurrenceMatch[1]}`;
   return null;
 }
 
@@ -188,6 +208,8 @@ function normalizeOrder(row: any) {
     delivery_forecast: row.entregaPrevista, lead_time_days: Number(row.leadTimeDias || 0), purchase_order: row.nroPedidoCliente,
     industry_order_number: row.nroPedidoEmpresa, invoice_number: row.nfNumero, billing_date: row.dtFaturamento,
     delivered_date: row.dtEntrega, notes: row.observacoes, discount_percent: Number(row.descontoPercentual || 0),
+    discount_on: row.descontoEm, tax_operator_invoice: row.operadorFiscal,
+    invoice_type: row.faturamentoPercentual === 0 ? "Sem Nota" : row.faturamentoPercentual != null ? `${row.faturamentoPercentual}% Nota` : null,
     has_invoice_pdf: Boolean(row.temPdf || row.hasInvoicePdf),
     gross_value: Number(row.valorBruto || 0), net_value: Number(row.valorLiquido || row.valorBruto || 0), items,
   };
@@ -207,11 +229,43 @@ function normalizeCustomer(row: any) {
 function normalizeNotification(row: any) {
   const orderId = Number(row.idPedido || 0);
   const customerId = Number(row.idCliente || 0);
+  const occurrenceId = Number(row.idOcorrencia || 0);
   return {
     id: Number(row.id || 0), kind: String(row.tipo || ""), title: String(row.titulo || "Atualizacao"),
     body: String(row.mensagem || ""), read_at: row.lidaEm || (row.lida ? row.criadaEm : null),
-    created_at: String(row.criadaEm || ""), route: orderId ? "/(app)/orders" : customerId ? "/(app)/customers" : null,
-    order_id: orderId || null, customer_id: customerId || null,
+    created_at: String(row.criadaEm || ""), route: occurrenceId ? "/occurrences" : orderId ? "/(app)/orders" : customerId ? "/(app)/customers" : null,
+    order_id: orderId || null, customer_id: customerId || null, occurrence_id: occurrenceId || null,
+  };
+}
+
+function normalizeOccurrence(row: any) {
+  return {
+    ...row,
+    id: Number(row.id || 0),
+    customer_id: Number(row.customer_id || 0) || undefined,
+    seller_id: Number(row.seller_id || 0) || undefined,
+    reason_id: Number(row.reason_id || 0) || undefined,
+    order_id: Number(row.order_id || 0) || undefined,
+    company_id: Number(row.company_id || 0) || undefined,
+    responsible_user_id: Number(row.responsible_user_id || 0) || undefined,
+    attachments: (row.attachments || []).map((file: any) => ({
+      id: Number(file.id || 0),
+      filename: String(file.name || file.filename || "anexo"),
+      mimetype: String(file.mime || file.mimetype || "application/octet-stream"),
+      size: Number(file.size || 0),
+      created_at: file.created_at,
+      url: file.url,
+    })),
+    timeline: (row.timeline || []).map((event: any, index: number) => ({
+      id: Number(event.id || 0) || index + 1,
+      title: String(event.title || event.action || "Atualização").replaceAll("_", " "),
+      notes: event.notes ?? event.text ?? null,
+      created_at: event.created_at || event.at || "",
+      created_by_name: event.created_by_name || event.user || "Sistema",
+      status_from: event.status_from,
+      status_to: event.status_to,
+      origin: event.origin,
+    })),
   };
 }
 
@@ -282,6 +336,10 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
     if (/^\/api\/notifications\/\d+\/read$/.test(pathname)) return { unread_count: undefined, ...(data as object) } as T;
     if(path.split("?")[0]==="/api/proposals") return {proposals:(((data as any).itens||(Array.isArray(data)?data:[]))).map(normalizeOrder)} as T;
     if(/^\/api\/proposals\/\d+$/.test(path)) return normalizeOrder(data) as T;
+    if (pathname === "/api/occurrences" && method === "GET") return { occurrences: ((data as any).itens || []).map(normalizeOccurrence) } as T;
+    if (pathname === "/api/occurrences" && method === "POST") return normalizeOccurrence(data) as T;
+    if (/^\/api\/occurrences\/\d+$/.test(pathname)) return normalizeOccurrence(data) as T;
+    if (/^\/api\/admin\/occurrences\/\d+$/.test(pathname)) return normalizeOccurrence(data) as T;
     return data as T;
   } catch (cause) {
     if (cause instanceof ApiError) throw cause;
