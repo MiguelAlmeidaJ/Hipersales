@@ -24,7 +24,7 @@ async function getNotifications(){
 function projectId(){const extra=Constants.expoConfig?.extra as {eas?:{projectId?:string}}|undefined;return Constants.easConfig?.projectId??extra?.eas?.projectId;}
 function openNotification(data:Record<string,unknown>|undefined){
   const explicit=typeof data?.route==="string"?data.route:"";
-  const route=explicit||(data?.idPedido?"/(app)/orders":data?.idCliente?"/(app)/customers":"");
+  const route=explicit||(data?.idOcorrencia?"/occurrences":data?.idMeta?"/goals":data?.idPedido?"/(app)/orders":data?.idCliente?"/(app)/customers":"");
   if(allowedRoutes.has(route))router.push(route as Href);
 }
 

@@ -50,6 +50,7 @@ async function fetchCnpjSource(url: string, headers?: Record<string, string>): P
 }
 
 export async function lookupCnpj(cnpj: string): Promise<CnpjLookupData> {
+  if (useMockApi) return mockApi<CnpjLookupData>((`/api/integrations/cnpj?cnpj=${encodeURIComponent(cnpj)}`) as `/api/${string}`);
   const cacheKey = cnpj.toUpperCase();
   const cached = cnpjLookupCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
@@ -130,6 +131,7 @@ const orderErrorMessages: Record<string, string> = {
   VALIDACAO: "Revise os campos e as quantidades informadas.",
   NAO_ENCONTRADO: "O pedido não foi encontrado ou não pertence a este representante.",
   OCORRENCIAS_INDISPONIVEIS: "O módulo de ocorrências ainda não foi habilitado no servidor.",
+  METAS_INDISPONIVEIS: "O módulo de metas ainda não foi habilitado no servidor.",
   ANEXO_TIPO_NAO_PERMITIDO: "Um dos anexos possui um tipo de arquivo não permitido.",
   ANEXOS_GRANDES: "Os anexos ultrapassam o limite total de 25 MB.",
   RESOLUCAO_OBRIGATORIA: "Informe o parecer antes de recusar ou solucionar a ocorrência.",
@@ -169,6 +171,8 @@ function externalRoute(path: string, method = "GET"): string | null {
   if (orderMatch) return `/pedidos/${orderMatch[1]}${orderMatch[2] || ""}`;
   const proposalMatch = pathname.match(/^\/api\/proposals\/(\d+)$/);
   if (proposalMatch) return `/pedidos/${proposalMatch[1]}`;
+  const orderPdfMatch = pathname.match(/^\/api\/proposals\/(\d+)\/pdf$/);
+  if (orderPdfMatch) return `/pedidos/${orderPdfMatch[1]}/pdf`;
   const invoiceMatch = pathname.match(/^\/api\/(?:invoices\/(\d+)\/pdf|proposals\/(\d+)\/invoice-pdf)$/);
   if (invoiceMatch) return `/notas-fiscais/${invoiceMatch[1] || invoiceMatch[2]}/pdf`;
   const invoiceDetailMatch = pathname.match(/^\/api\/invoices\/(\d+)$/);
@@ -176,6 +180,13 @@ function externalRoute(path: string, method = "GET"): string | null {
   if (pathname === "/api/support/activity-branches") return "/apoio/ramos-atividade";
   if (pathname === "/api/support/service-regions") return "/apoio/regioes-atendimento";
   if (pathname === "/api/support/cities") return `/apoio/municipios${query ? `?${query}` : ""}`;
+  if (pathname === "/api/goals/my") {
+    const params = new URLSearchParams(query);
+    const year = params.get("year");
+    const month = params.get("month");
+    const competencia = year && month ? `${year}-${month.padStart(2, "0")}` : "";
+    return `/metas${competencia ? `?competencia=${encodeURIComponent(competencia)}` : ""}`;
+  }
   if (pathname === "/api/occurrences/reasons") return "/occurrences/reasons";
   if (pathname === "/api/occurrences") return method === "GET" ? withDefaultPageSize("/occurrences", query) : "/occurrences";
   const occurrenceDetailMatch = pathname.match(/^\/api\/occurrences\/(\d+)$/);
@@ -218,6 +229,11 @@ function normalizeOrder(row: any) {
 }
 
 function normalizeCustomer(row: any) {
+  const yesNoValue = (value: unknown) => {
+    if (value === true || value === 1 || ["true", "sim", "yes", "1"].includes(String(value).toLocaleLowerCase("pt-BR"))) return "yes";
+    if (value === false || value === 0 || ["false", "não", "nao", "no", "0"].includes(String(value).toLocaleLowerCase("pt-BR"))) return "no";
+    return value == null ? "" : String(value);
+  };
   return {
     id: Number(row.id || 0), legal_name: String(row.razaoSocial || ""), trade_name: row.nomeFantasia || null,
     cnpj: String(row.documento || ""), state_registration: row.inscricaoEstadual || null,
@@ -229,9 +245,21 @@ function normalizeCustomer(row: any) {
       address: row.logradouro || "", address_number: row.numero || "", neighborhood: row.bairro || "",
       city: row.cidade || "", state: row.uf || "", zip_code: row.cep || "",
       municipal_registration: row.inscricaoMunicipal || "",
+      network_member: yesNoValue(row.pertenceRede ?? row.rede), network_name: row.nomeRede || "",
+      tax_regime: row.regimeFiscal || "", has_tax_benefit: yesNoValue(row.possuiBeneficioFiscal), tax_benefit: row.beneficioFiscal || "",
       buyer_contact: row.respCompras || "", buyer_phone_1: row.telefoneCompras1 || "", buyer_phone_2: row.telefoneCompras2 || "",
-      buyer_email: row.emailCompras || "", finance_email: row.emailFinanceiro || "", xml_email: row.emailXml || row.emailXML || "",
+      buyer_email: row.emailCompras || "", finance_contact: row.respFinanceiro || "", finance_phone_1: row.telefoneFinanceiro1 || "",
+      finance_phone_2: row.telefoneFinanceiro2 || "", finance_email: row.emailFinanceiro || "",
+      logistics_contact: row.respLogistica || "", logistics_phone_1: row.telefoneLogistica1 || "",
+      logistics_phone_2: row.telefoneLogistica2 || "", xml_email: row.emailXml || row.emailXML || "",
       delivery_address: row.enderecoEntrega || "", delivery_warnings: row.advertenciasRecebimento || "",
+      delivery_address_type: row.tipoEnderecoEntrega || "", delivery_street: row.logradouroEntrega || "",
+      delivery_number: row.numeroEntrega || "", delivery_neighborhood: row.bairroEntrega || "",
+      delivery_city: row.cidadeEntrega || "", delivery_state: row.ufEntrega || "", delivery_zip_code: row.cepEntrega || "",
+      unloading_type: row.tipoDescarga || "", scheduling_instructions: row.comoAgendar || "",
+      receiving_days: row.diasRecebimento || "", receiving_hours: row.horarioRecebimento || "",
+      load_type: row.tipoCarga || "", unloading_helper: row.ajudanteDescarga || "",
+      unloading_charge: row.cobrancaDescarga || "", unloading_value: row.valorDescarga || "", unloading_paid_by: row.descargaPagaPor || "",
       additional_notes: row.observacao || "",
     },
   };
@@ -241,11 +269,36 @@ function normalizeNotification(row: any) {
   const orderId = Number(row.idPedido || 0);
   const customerId = Number(row.idCliente || 0);
   const occurrenceId = Number(row.idOcorrencia || 0);
+  const goalId = Number(row.idMeta || 0);
   return {
     id: Number(row.id || 0), kind: String(row.tipo || ""), title: String(row.titulo || "Atualizacao"),
     body: String(row.mensagem || ""), read_at: row.lidaEm || (row.lida ? row.criadaEm : null),
-    created_at: String(row.criadaEm || ""), route: occurrenceId ? "/occurrences" : orderId ? "/(app)/orders" : customerId ? "/(app)/customers" : null,
-    order_id: orderId || null, customer_id: customerId || null, occurrence_id: occurrenceId || null,
+    created_at: String(row.criadaEm || ""), route: occurrenceId ? "/occurrences" : goalId ? "/goals" : orderId ? "/(app)/orders" : customerId ? "/(app)/customers" : null,
+    order_id: orderId || null, customer_id: customerId || null, occurrence_id: occurrenceId || null, goal_id: goalId || null,
+  };
+}
+
+function normalizeGoalMetric(row: any) {
+  return {
+    enabled: Boolean(row?.ativo),
+    goal: row?.meta == null ? null : Number(row.meta),
+    realized: Number(row?.realizado || 0),
+    missing: Number(row?.falta || 0),
+    percent: Number(row?.percentual || 0),
+  };
+}
+
+function normalizeGoals(row: any) {
+  return {
+    available: Boolean(row?.disponivel),
+    competence: row?.competencia,
+    revision: row?.revisao,
+    sent_at: row?.enviadaEm,
+    goals: row?.disponivel ? {
+      sales: normalizeGoalMetric(row?.metas?.faturamento),
+      new_customers: normalizeGoalMetric(row?.metas?.novosClientes),
+      customer_positivation: normalizeGoalMetric(row?.metas?.positivacao),
+    } : null,
   };
 }
 
@@ -283,17 +336,30 @@ function normalizeOccurrence(row: any) {
 function mapCustomerPayload(body: BodyInit | null | undefined) {
   if (typeof body !== "string") return body;
   const source = JSON.parse(body) as Record<string, unknown>;
-  const schedulingSummary = source.scheduled_delivery
-    ? `Entrega agendada: ${source.scheduled_delivery === "yes" ? "Sim" : "Não"}.${source.scheduling_instructions ? ` ${source.scheduling_instructions}` : ""}`
-    : "";
+  const deliveryWarnings = [
+    source.scheduled_delivery ? `Entrega agendada: ${source.scheduled_delivery === "yes" ? "Sim" : "Não"}` : "",
+    source.scheduling_instructions ? `Agendamento: ${source.scheduling_instructions}` : "",
+    source.receiving_days ? `Dias de recebimento: ${source.receiving_days}` : "",
+    source.receiving_hours ? `Horário: ${source.receiving_hours}` : "",
+    source.load_type ? `Tipo de carga: ${source.load_type}` : "",
+    source.unloading_helper ? `Ajudante: ${source.unloading_helper}` : "",
+    source.unloading_charge ? `Descarga: ${source.unloading_charge}` : "",
+    source.unloading_value ? `Valor da descarga: ${source.unloading_value}` : "",
+    source.unloading_paid_by ? `Cobrança por: ${source.unloading_paid_by}` : "",
+    source.delivery_warnings,
+  ].filter(Boolean).join("\n");
   const mapped = {
     razaoSocial: source.legal_name, nomeFantasia: source.trade_name, documento: source.cnpj,
-    inscricaoEstadual: source.state_registration, logradouro: source.address, numero: source.address_number,
+    inscricaoEstadual: source.state_registration, logradouro: source.address, numero: source.address_number, complemento: source.address_complement,
     bairro: source.neighborhood, cep: source.zip_code, uf: source.state, idMunicipio: source.municipality_id,
-    enderecoEntrega: source.delivery_address, advertenciasRecebimento: [schedulingSummary, source.delivery_warnings].filter(Boolean).join("\n"),
+    rede: source.network_member === "yes" ? source.network_name : undefined,
+    regimeFiscal: source.tax_regime, beneficioFiscal: source.has_tax_benefit === "yes" ? source.tax_benefit : undefined,
+    enderecoEntrega: source.delivery_address, advertenciasRecebimento: deliveryWarnings,
     respCompras: source.contact_person || source.buyer_contact,
     telefoneCompras1: source.phone_1 || source.buyer_phone_1, telefoneCompras2: source.phone_2 || source.buyer_phone_2,
     emailCompras: source.purchase_email || source.buyer_email, emailFinanceiro: source.billing_email || source.finance_email,
+    respFinanceiro: source.finance_contact, telefoneFinanceiro1: source.finance_phone_1, telefoneFinanceiro2: source.finance_phone_2,
+    respLogistica: source.logistics_contact, telefoneLogistica1: source.logistics_phone_1, emailLogistica: source.xml_email,
     observacao: source.notes || source.additional_notes,
     idRepresentante: Array.isArray(source.seller_ids) ? source.seller_ids[0] : source.id_representative,
   };
@@ -347,6 +413,7 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
     if (/^\/api\/notifications\/\d+\/read$/.test(pathname)) return { unread_count: undefined, ...(data as object) } as T;
     if(path.split("?")[0]==="/api/proposals") return {proposals:(((data as any).itens||(Array.isArray(data)?data:[]))).map(normalizeOrder)} as T;
     if(/^\/api\/proposals\/\d+$/.test(path)) return normalizeOrder(data) as T;
+    if (pathname === "/api/goals/my") return normalizeGoals(data) as T;
     if (pathname === "/api/occurrences" && method === "GET") return { occurrences: ((data as any).itens || []).map(normalizeOccurrence) } as T;
     if (pathname === "/api/occurrences" && method === "POST") return normalizeOccurrence(data) as T;
     if (/^\/api\/occurrences\/\d+$/.test(pathname)) return normalizeOccurrence(data) as T;

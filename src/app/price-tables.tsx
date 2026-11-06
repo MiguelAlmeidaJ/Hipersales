@@ -1,8 +1,6 @@
-import * as FileSystem from "expo-file-system/legacy";
 import { Redirect, router } from "expo-router";
-import * as Sharing from "expo-sharing";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppIcon } from "@/components/app-icon";
@@ -12,6 +10,7 @@ import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { api, authenticatedResource, useMockApi } from "@/lib/api";
 import { money } from "@/lib/format";
+import { shareRemoteFile, shareTextFile } from "@/lib/share-file";
 
 type PriceTable = {
   id: number;
@@ -156,38 +155,18 @@ export default function PriceTablesScreen() {
   async function sharePdf(){
     if(!selected)return;
     setSharing(true);
-    let previewWindow: Window | null = null;
     try{
       if(useMockApi){
-        if(Platform.OS==="web"){
-          previewWindow=window.open("", "_blank");
-          if(!previewWindow)throw new Error("O navegador bloqueou a abertura do PDF. Libere os pop-ups e tente novamente.");
-          previewWindow.document.title="Gerando PDF...";
-          previewWindow.document.body.innerHTML="<p style='font:16px sans-serif;padding:24px'>Gerando PDF de exemplo...</p>";
-        }
         const allProducts=(await fetchProducts(selected,"",1)).products;
         const pdf=buildMockPriceTablePdf(selected,allProducts);
-        if(Platform.OS==="web"){
-          const url=URL.createObjectURL(new Blob([pdf],{type:"application/pdf"}));
-          previewWindow!.location.href=url;
-          setTimeout(()=>URL.revokeObjectURL(url),60_000);
-          setDialog({title:"PDF de exemplo aberto",message:"A tabela completa foi aberta em uma nova guia. Este é o arquivo de demonstração que poderá ser enviado ao cliente.",tone:"success"});
-          return;
-        }
-        const target=`${FileSystem.cacheDirectory}tabela-preco-${selected.id}-mock.pdf`;
-        await FileSystem.writeAsStringAsync(target,pdf,{encoding:FileSystem.EncodingType.UTF8});
-        if(!await Sharing.isAvailableAsync())throw new Error("O compartilhamento não está disponível neste aparelho.");
-        await Sharing.shareAsync(target,{mimeType:"application/pdf",dialogTitle:`Compartilhar ${selected.description}`,UTI:"com.adobe.pdf"});
+        await shareTextFile(pdf,{filename:`tabela-preco-${selected.id}-mock.pdf`,title:`Compartilhar ${selected.description}`,mimeType:"application/pdf"});
+        setDialog({title:"PDF preparado",message:"Escolha onde compartilhar ou salvar a tabela de preço.",tone:"success"});
         return;
       }
-      if(Platform.OS==="web")throw new Error("A visualização do PDF oficial está disponível no aplicativo instalado.");
       const resource=authenticatedResource((`/api/price-tables/${selected.id}/pdf`) as `/api/${string}`);
-      const target=`${FileSystem.cacheDirectory}tabela-preco-${selected.id}.pdf`;
-      const result=await FileSystem.downloadAsync(resource.url,target,{headers:resource.headers});
-      if(result.status<200||result.status>=300)throw new Error(result.status===404?"O PDF oficial desta tabela ainda não está disponível na retaguarda.":"Não foi possível baixar o PDF da tabela.");
-      if(!await Sharing.isAvailableAsync())throw new Error("O compartilhamento não está disponível neste aparelho.");
-      await Sharing.shareAsync(result.uri,{mimeType:"application/pdf",dialogTitle:`Compartilhar ${selected.description}`,UTI:"com.adobe.pdf"});
-    }catch(cause){previewWindow?.close();setDialog({title:"Não foi possível abrir o PDF",message:cause instanceof Error?cause.message:"Não foi possível compartilhar a tabela.",tone:"error"});}
+      await shareRemoteFile(resource,{filename:`tabela-preco-${selected.id}.pdf`,title:`Compartilhar ${selected.description}`,mimeType:"application/pdf",errorMessage:"O PDF oficial desta tabela ainda não está disponível na retaguarda."});
+      setDialog({title:"PDF preparado",message:"Escolha onde compartilhar ou salvar a tabela de preço.",tone:"success"});
+    }catch(cause){setDialog({title:"Não foi possível compartilhar o PDF",message:cause instanceof Error?cause.message:"Não foi possível compartilhar a tabela.",tone:"error"});}
     finally{setSharing(false);}
   }
 

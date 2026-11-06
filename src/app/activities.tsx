@@ -12,7 +12,7 @@ import { formatCnpj, money } from "@/lib/format";
 import type { Customer } from "@/types/commercial";
 
 type Progress={enabled:boolean;goal:number|null;realized:number;missing:number;percent:number};
-type Goals={sales:Progress;new_customers:Progress;customer_positivation:Progress;portfolio:{customers:number;attended:number}};
+type Goals={sales:Progress;new_customers:Progress;customer_positivation:Progress;portfolio?:{customers:number;attended:number}};
 type Sales={resumo?:{qtdPedidos?:number;valorTotal?:number};pedidos?:Record<string,unknown>[]};
 type ActivityData={orders:number;revenue:number;goals:Goals|null;customersToVisit:Customer[];visitListAvailable:boolean};
 
@@ -58,9 +58,9 @@ export default function ActivitiesScreen(){
         <Metric icon="cash-outline" title="Vendas" value={money(goals?.sales.realized??data?.revenue??0)} detail={goals?.sales.enabled?`Meta ${money(goals.sales.goal||0)}`:"Realizado no período"} percent={goals?.sales.enabled?goals.sales.percent:undefined}/>
         <Metric icon="receipt-outline" title="Pedidos" value={String(data?.orders||0)} detail="Pedidos no período"/>
         <Metric icon="person-add-outline" title="Novos clientes" value={String(goals?.new_customers.realized||0)} detail={goals?.new_customers.enabled?`Meta ${goals.new_customers.goal}`:"Sem meta cadastrada"} percent={goals?.new_customers.enabled?goals.new_customers.percent:undefined}/>
-        <Metric icon="people-outline" title="Positivação" value={`${Math.round(goals?.customer_positivation.realized||0)}%`} detail={goals?.customer_positivation.enabled?`Meta ${goals.customer_positivation.goal}%`:"Sem meta cadastrada"} percent={goals?.customer_positivation.enabled?goals.customer_positivation.percent:undefined}/>
+        <Metric icon="people-outline" title="Positivação" value={String(Math.round(goals?.customer_positivation.realized||0))} detail={goals?.customer_positivation.enabled?`Meta ${goals.customer_positivation.goal} clientes`:"Clientes com pedidos no período"} percent={goals?.customer_positivation.enabled?goals.customer_positivation.percent:undefined}/>
       </View>
-      {goals?<Card><Text style={styles.sectionTitle}>Sua carteira neste mês</Text><View style={styles.portfolioRow}><View style={styles.portfolioNumber}><Text style={styles.big}>{goals.portfolio.attended}</Text><Text style={styles.caption}>atendidos</Text></View><View style={styles.divider}/><View style={styles.portfolioNumber}><Text style={styles.big}>{goals.portfolio.customers}</Text><Text style={styles.caption}>na carteira</Text></View><View style={styles.divider}/><View style={styles.portfolioNumber}><Text style={styles.big}>{Math.max(0,goals.portfolio.customers-goals.portfolio.attended)}</Text><Text style={styles.caption}>a visitar</Text></View></View></Card>:<Notice tone="info">Ainda não existem metas cadastradas para este período. Os pedidos e as vendas continuam disponíveis acima.</Notice>}
+      {goals?.portfolio?<Card><Text style={styles.sectionTitle}>Sua carteira neste mês</Text><View style={styles.portfolioRow}><View style={styles.portfolioNumber}><Text style={styles.big}>{goals.portfolio.attended}</Text><Text style={styles.caption}>atendidos</Text></View><View style={styles.divider}/><View style={styles.portfolioNumber}><Text style={styles.big}>{goals.portfolio.customers}</Text><Text style={styles.caption}>na carteira</Text></View><View style={styles.divider}/><View style={styles.portfolioNumber}><Text style={styles.big}>{Math.max(0,goals.portfolio.customers-goals.portfolio.attended)}</Text><Text style={styles.caption}>a visitar</Text></View></View></Card>:null}
       <VisitList customers={data?.customersToVisit||[]} available={Boolean(data?.visitListAvailable)} />
     </>}
   </ModulePage>;

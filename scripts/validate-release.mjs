@@ -1,3 +1,16 @@
+import fs from "node:fs";
+import path from "node:path";
+
+for (const filename of [".env", ".env.local"]) {
+  const filepath = path.resolve(process.cwd(), filename);
+  if (!fs.existsSync(filepath)) continue;
+  for (const line of fs.readFileSync(filepath, "utf8").split(/\r?\n/)) {
+    const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line.trim());
+    if (!match || process.env[match[1]] !== undefined) continue;
+    process.env[match[1]] = match[2].trim().replace(/^(['"])(.*)\1$/, "$2");
+  }
+}
+
 const isEasProduction = process.argv.includes("--eas") && process.env.EAS_BUILD_PROFILE === "production";
 const isExplicitValidation = !process.argv.includes("--eas");
 

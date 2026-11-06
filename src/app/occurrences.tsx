@@ -1,7 +1,6 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
-import * as Sharing from "expo-sharing";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -13,6 +12,7 @@ import { colors } from "@/constants/colors";
 import { useSession } from "@/contexts/session-context";
 import { api, authenticatedResource, useMockApi } from "@/lib/api";
 import { shortDate } from "@/lib/format";
+import { shareRemoteFile } from "@/lib/share-file";
 
 type Customer={id:number;legal_name:string;trade_name?:string;cnpj?:string;active?:boolean|number};
 type OccurrenceReason={id:number;reason:string};
@@ -48,11 +48,7 @@ export default function OccurrencesScreen(){
       if(useMockApi){Alert.alert("Arquivo de demonstração",`O registro simulado contém o arquivo ${filename}. O download real será feito pela API da retaguarda.`);return;}
       const resource=authenticatedResource(path);
       if(!resource.headers.Authorization)throw new Error("Sessão expirada. Faça login novamente.");
-      const target=FileSystem.cacheDirectory+filename.replace(/[^a-zA-Z0-9._-]/g,"_");
-      const result=await FileSystem.downloadAsync(resource.url,target,{headers:resource.headers});
-      if(result.status!==200)throw new Error("Não foi possível obter o arquivo.");
-      if(!await Sharing.isAvailableAsync())throw new Error("Compartilhamento indisponível neste aparelho.");
-      await Sharing.shareAsync(result.uri);
+      await shareRemoteFile(resource,{filename,title:`Compartilhar ${filename}`,mimeType:filename.toLocaleLowerCase("pt-BR").endsWith(".pdf")?"application/pdf":undefined,errorMessage:"Não foi possível obter o arquivo."});
     }catch(error){Alert.alert("Arquivo",error instanceof Error?error.message:"Falha ao abrir arquivo.");}
   }
   function openEdit(row:Occurrence){setEditing(row);setStatus(row.status||"aberta");setResolution(row.resolution||"");setPriority(row.priority||"media");setResponsibleUserId(row.responsible_user_id?String(row.responsible_user_id):"");setDueAt(row.due_at?.slice(0,10)||"");setEditOrderId(row.order_id?String(row.order_id):"");setEditCompanyId(row.company_id?String(row.company_id):"");setError("");}

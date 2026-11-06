@@ -1,6 +1,5 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
-import * as Sharing from "expo-sharing";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import {
@@ -26,6 +25,7 @@ import { useSession } from "@/contexts/session-context";
 import { SelectField } from "@/components/form-controls";
 import { PrimaryButton, SecondaryButton } from "@/components/module-ui";
 import { dateTime, formatCnpj, money, shortDate } from "@/lib/format";
+import { shareRemoteFile, shareTextFile } from "@/lib/share-file";
 import type { Proposal } from "@/types/commercial";
 
 const statusLabels: Record<string, string> = {
@@ -112,7 +112,7 @@ export default function OrdersScreen() {
           {statuses.map((item) => <Pressable key={item} onPress={() => setStatus(item)} style={[styles.chip, status === item && styles.chipActive]}><Text style={[styles.chipText, status === item && styles.chipTextActive]}>{statusLabels[item] ?? item.replaceAll("_", " ")}</Text></Pressable>)}
         </ScrollView>
       </View>
-      {!admin||useMockApi?<Pressable accessibilityLabel="Criar proposta" accessibilityRole="button" onPress={() => router.push("/new-order")} style={styles.fab}><Text style={styles.fabPlus}>＋</Text></Pressable>:null}
+      {!admin?<Pressable accessibilityLabel="Criar proposta" accessibilityRole="button" onPress={() => router.push("/new-order")} style={styles.fab}><Text style={styles.fabPlus}>＋</Text></Pressable>:null}
 
       {loading && !orders.length ? <LoadingState label="Carregando pedidos…" /> : error && !orders.length ? <ErrorState message={error} onRetry={() => load()} /> : (
         <FlatList
@@ -133,7 +133,7 @@ export default function OrdersScreen() {
       )}
 
       <Modal visible={Boolean(selected)} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelected(null)}>
-        {selected ? <OrderDetails key={`${selected.id}-${selected.items?.length ?? 0}`} proposal={selected} admin={admin&&useMockApi} onSaved={()=>{setSelected(null);void load(true);}} onClose={() => setSelected(null)} /> : null}
+        {selected ? <OrderDetails key={`${selected.id}-${selected.items?.length ?? 0}`} proposal={selected} admin={false} onSaved={()=>{setSelected(null);void load(true);}} onClose={() => setSelected(null)} /> : null}
       </Modal>
     </View>
   );
@@ -144,7 +144,7 @@ function Detail({ label, value, icon, wide = false }: { label: string; value?: s
 }
 
 function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposal; onClose: () => void; admin:boolean; onSaved:()=>void }) {
-  const [editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
+  const [editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[sharingOrder,setSharingOrder]=useState(false),[error,setError]=useState("");
   const [lines,setLines]=useState((proposal.items||[]).map(item=>({product_id:item.product_id,quantity:String(item.quantity),negotiated_price:String(item.negotiated_price)})));
   const [products,setProducts]=useState<{id:number;name:string;code:string;price:number}[]>([]);
   const [selectedProduct,setSelectedProduct]=useState("");
@@ -177,11 +177,25 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
     try{
       const resource=authenticatedResource(("/api/proposals/"+proposal.id+"/invoice-pdf") as never);
       if(!resource.headers.Authorization)throw new Error("Sessão expirada.");
-      const target=FileSystem.cacheDirectory+"nota-fiscal-"+proposal.id+".pdf";
-      const result=await FileSystem.downloadAsync(resource.url,target,{headers:resource.headers});
-      if(result.status!==200)throw new Error("A nota fiscal não pôde ser obtida.");
-      await Sharing.shareAsync(result.uri,{mimeType:"application/pdf"});
+      await shareRemoteFile(resource,{filename:`nota-fiscal-${proposal.id}.pdf`,title:"Compartilhar nota fiscal",mimeType:"application/pdf",errorMessage:"A nota fiscal não pôde ser obtida."});
     }catch(cause){Alert.alert("Nota fiscal",cause instanceof Error?cause.message:"Falha no arquivo.");}
+  }
+  async function shareOrderPdf(){
+    try{
+      setSharingOrder(true);
+      const path=(`/api/proposals/${proposal.id}/pdf`) as `/api/${string}`;
+      const filename=`pedido-venda-${proposal.id}.pdf`;
+      if(useMockApi){
+        const mock=await api<{filename:string;mimeType:string;content:string}>(path);
+        await shareTextFile(mock.content,{filename:mock.filename||filename,title:"Compartilhar pedido de venda",mimeType:mock.mimeType||"application/pdf"});
+        return;
+      }
+      const resource=authenticatedResource(path);
+      if(!resource.headers.Authorization)throw new Error("Sessão expirada.");
+      await shareRemoteFile(resource,{filename,title:"Compartilhar pedido de venda",mimeType:"application/pdf",errorMessage:"O PDF do pedido ainda não está disponível na API."});
+    }catch(cause){
+      Alert.alert("Pedido de venda",cause instanceof Error?cause.message:"Falha ao abrir o PDF.");
+    }finally{setSharingOrder(false);}
   }
   async function uploadInvoice(){
     try{
@@ -208,6 +222,7 @@ function OrderDetails({ proposal, onClose, admin, onSaved }: { proposal: Proposa
           <View style={styles.summaryAmount}><Text style={styles.summaryAmountLabel}>VALOR LÍQUIDO</Text><Text style={styles.summaryTotal}>{money(proposalTotal(proposal))}</Text></View>
           <View style={styles.summaryFacts}><View style={styles.summaryFact}><Text style={styles.summaryFactLabel}>Data</Text><Text style={styles.summaryFactValue}>{shortDate(proposal.created_at)}</Text></View><View style={styles.factDivider}/><View style={styles.summaryFact}><Text style={styles.summaryFactLabel}>Itens</Text><Text style={styles.summaryFactValue}>{proposal.items?.length || 0}</Text></View><View style={styles.factDivider}/><View style={styles.summaryFact}><Text style={styles.summaryFactLabel}>Tipo</Text><Text style={styles.summaryFactValue}>{proposal.order_type}</Text></View></View>
         </View>
+        <View style={styles.actionsCard}><View style={styles.actionsTitleRow}><View style={styles.actionsIcon}><AppIcon name="share-social-outline" color={colors.brand} size={20}/></View><View><Text style={styles.actionsTitle}>Pedido de venda</Text><Text style={styles.actionsCaption}>Compartilhe ou salve o PDF oficial do pedido</Text></View></View><SecondaryButton title={sharingOrder?"Preparando PDF…":"Compartilhar PDF do pedido"} disabled={sharingOrder} onPress={()=>void shareOrderPdf()}/></View>
         <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Informações comerciais</Text><Text style={styles.sectionCaption}>Condições registradas no pedido</Text></View>
         <View style={styles.detailsGrid}>
           <Detail icon="person-outline" label="Representante" value={proposal.seller_name} wide />

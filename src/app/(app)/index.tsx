@@ -132,7 +132,7 @@ function AdminHome({ firstName }: { firstName: string }) {
       </View>
       <Pressable accessibilityRole="button" onPress={() => router.push("/(app)/modules" as Href)} style={({ pressed }) => [styles.modulesCta, pressed && styles.pressed]}>
         <View style={styles.modulesIcon}><AppIcon name="grid" color="#FFFFFF" size={24} /></View>
-        <View style={styles.modulesCopy}><Text style={styles.modulesTitle}>Módulos disponíveis</Text><Text style={styles.modulesText}>{useMockApi?"Usuários, catálogo, ocorrências, metas, relatórios e configurações.":"Pedidos, clientes e indicadores publicados pela API atual."}</Text></View>
+        <View style={styles.modulesCopy}><Text style={styles.modulesTitle}>Módulos disponíveis</Text><Text style={styles.modulesText}>{useMockApi?"Demonstração de pedidos, clientes, indicadores e ocorrências da API definitiva.":"Pedidos, clientes, indicadores e ocorrências publicados pela API definitiva."}</Text></View>
         <AppIcon name="chevron-forward" color="#9FD2F2" size={20} />
       </Pressable>
     </ScrollView>
