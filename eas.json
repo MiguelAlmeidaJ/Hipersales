@@ -13,6 +13,10 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_USE_MOCK_API": "false",
+        "EXPO_PUBLIC_API_URL": "https://api.hipersalesweb.com.br/api/v1"
+      },
       "android": {
         "buildType": "apk"
       }
