@@ -11,7 +11,7 @@ import { useSession } from "@/contexts/session-context";
 void SplashScreen.preventAutoHideAsync();
 
 export default function IndexScreen() {
-  const { status, user, restore } = useSession();
+  const { status, restore } = useSession();
   const [introVisible, setIntroVisible] = useState(true);
 
   useEffect(() => {
@@ -45,7 +45,6 @@ export default function IndexScreen() {
   }
 
   if (status === "anonymous") return <Redirect href="/login" />;
-  if (user?.must_change_password) return <Redirect href="/change-password" />;
   return <Redirect href="/(app)" />;
 }
 

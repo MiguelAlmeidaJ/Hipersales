@@ -12,7 +12,7 @@ import { useSession } from "@/contexts/session-context";
 import { useMockApi } from "@/lib/api";
 
 export default function LoginScreen() {
-  const { status, user, login } = useSession();
+  const { status, login } = useSession();
   const [username, setUsername] = useState(useMockApi ? "demo" : "");
   const [password, setPassword] = useState(useMockApi ? "demo123" : "");
   const [busy, setBusy] = useState(false);
@@ -29,7 +29,7 @@ export default function LoginScreen() {
     return () => { show.remove(); hide.remove(); };
   }, []);
 
-  if (status === "authenticated") return <Redirect href={user?.must_change_password ? "/change-password" : "/(app)"} />;
+  if (status === "authenticated") return <Redirect href="/(app)" />;
 
   async function submit() {
     if (!username.trim() || !password) { setError("Informe usuário e senha."); return; }

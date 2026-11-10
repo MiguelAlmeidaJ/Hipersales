@@ -10,7 +10,7 @@ import { api } from "@/lib/api";
 type PermissionState = "checking" | "granted" | "denied" | "unavailable";
 type NotificationsContextValue = { unreadCount:number; permission:PermissionState; enable:()=>Promise<boolean>; refresh:()=>Promise<void>; markRead:(id:number)=>Promise<void>; markAllRead:()=>Promise<void> };
 const NotificationsContext=createContext<NotificationsContextValue|null>(null);
-const allowedRoutes=new Set(["/(app)/orders","/(app)/customers","/approvals","/occurrences","/goals","/(app)/modules"]);
+const allowedRoutes=new Set(["/(app)/orders","/(app)/customers","/occurrences","/goals","/(app)/modules"]);
 const nativePushAvailable=Platform.OS!=="web"&&Constants.appOwnership!=="expo";
 type NotificationsModule=typeof import("expo-notifications");
 let notificationsPromise:Promise<NotificationsModule>|null=null;

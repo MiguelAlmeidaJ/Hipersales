@@ -10,7 +10,6 @@ export type PublicUser = {
   tenant_id: number;
   tenant_name?: string | null;
   active: boolean;
-  must_change_password: boolean;
   representative_id?: number | null;
   representative_name?: string | null;
   password_updated_at?: string | null;

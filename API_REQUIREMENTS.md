@@ -59,11 +59,10 @@ O campo `campo` é opcional. Status HTTP usados pelo app: `400`, `401`, `403`, `
 | GET | `/pedidos` | Lista de pedidos |
 | GET | `/pedidos/{id}` | Detalhe do pedido |
 | GET | `/pedidos/{id}/status` | Atualização rápida do status |
-| GET | `/pedidos/{id}/pdf` | PDF do pedido de venda; rota preparada no app e pendente na API |
 | GET | `/vendas` | Painel, atividades e totais do período |
-| GET | `/notas-fiscais` | Lista de notas fiscais |
-| GET | `/notas-fiscais/{idPedido}` | Detalhe da nota fiscal |
-| GET | `/notas-fiscais/{idPedido}/pdf` | Compartilhar PDF da nota fiscal |
+| GET | `/notasfiscais` | Lista de notas fiscais |
+| GET | `/notasfiscais/{idPedido}` | Detalhe da nota fiscal |
+| GET | `/notasfiscais/{idPedido}/pdf` | Compartilhar PDF da nota fiscal |
 | GET | `/metas` | Metas do representante |
 | GET | `/notifications` | Central de notificações |
 | GET | `/notifications/unread-count` | Contador de não lidas |
@@ -469,20 +468,6 @@ Retorna o cabeçalho completo e `itens`:
 
 Status reconhecidos: `EM ANÁLISE`, `APROVADO`, `RECUSADO`, `CANCELADO`, `EM PRODUÇÃO`, `FATURADO`, `ENTREGUE` e `DEVOLVIDO`.
 
-### `GET /pedidos/{id}/pdf` — contrato preparado, pendente no backend
-
-O app já chama esta rota e compartilha o arquivo no Android, iOS e navegador.
-
-Requisitos:
-
-- `Authorization: Bearer` obrigatório.
-- `200` com o corpo binário do PDF.
-- `Content-Type: application/pdf`.
-- `Content-Disposition: inline; filename="pedido-venda-1003.pdf"`.
-- Representante só acessa pedidos do próprio escopo.
-- `404 NAO_ENCONTRADO` para pedido inexistente ou sem acesso.
-- `404 PDF_INDISPONIVEL` caso o pedido exista, mas o PDF ainda não esteja pronto.
-
 ### `GET /vendas?de=01/11/2026&ate=30/11/2026`
 
 ```json
@@ -505,11 +490,11 @@ Requisitos:
 
 ## 8. Notas fiscais
 
-### `GET /notas-fiscais`
+### `GET /notasfiscais`
 
 Filtros: `de`, `ate`, `idCliente`, `numero`, `pagina` e `tamanho`.
 
-### `GET /notas-fiscais/{idPedido}`
+### `GET /notasfiscais/{idPedido}`
 
 ```json
 {
@@ -528,7 +513,7 @@ Filtros: `de`, `ate`, `idCliente`, `numero`, `pagina` e `tamanho`.
 }
 ```
 
-### `GET /notas-fiscais/{idPedido}/pdf`
+### `GET /notasfiscais/{idPedido}/pdf`
 
 Retorna `application/pdf`. Deve responder `404` quando o arquivo ainda não estiver anexado.
 
@@ -752,7 +737,7 @@ Valor `0` remove `responsible_user_id`, `order_id` ou `company_id`; string vazia
 
 ## 12. Rotas fora do contrato obrigatório
 
-O repositório ainda contém telas administrativas antigas, mas elas não aparecem nos módulos da versão definitiva e o adaptador externo recusa essas chamadas. A API atual não precisa implementar, para o lançamento móvel:
+As telas administrativas antigas foram removidas do aplicativo. A API atual não precisa implementar, para o lançamento móvel:
 
 - CRUD de usuários.
 - CRUD de empresas e produtos.
@@ -764,7 +749,7 @@ O repositório ainda contém telas administrativas antigas, mas elas não aparec
 - Upload de nota fiscal pelo aplicativo.
 - Troca de senha pelo aplicativo, enquanto não houver contrato publicado.
 
-Se essas funções voltarem ao escopo, os contratos devem ser definidos antes de reativar as telas.
+Se essas funções voltarem ao escopo, os contratos devem ser definidos antes de recriar as telas.
 
 ## 13. Checklist de homologação
 
@@ -777,7 +762,6 @@ Se essas funções voltarem ao escopo, os contratos devem ser definidos antes de
 - [ ] Pedido duplicado com a mesma chave não é recriado.
 - [ ] Pedido abaixo do mínimo retorna `422 PEDIDO_MINIMO`.
 - [ ] Lista e detalhe de pedidos retornam itens e totais.
-- [ ] PDF do pedido pode ser baixado com Bearer Token.
 - [ ] PDF da tabela e da nota fiscal retornam `application/pdf`.
 - [ ] Metas sem cadastro retornam `200` com `disponivel: false`.
 - [ ] Push token pode ser registrado e removido.

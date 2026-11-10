@@ -79,7 +79,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const login=useCallback(async(username:string,password:string,keepConnected:boolean)=>{
     const response=await loginExternal(username,password);
-    const profile:PublicUser={id:response.representante?.id||0,name:response.usuario,email:response.usuario,role:response.admin?"admin":"seller",tenant_id:1,active:true,must_change_password:false,representative_id:response.representante?.id??null,representative_name:response.representante?.nome??null};
+    const profile:PublicUser={id:response.representante?.id||0,name:response.usuario,email:response.usuario,role:response.admin?"admin":"seller",tenant_id:1,active:true,representative_id:response.representante?.id??null,representative_name:response.representante?.nome??null};
     await storeSession(response.accessToken,keepConnected);
     await storeProfile(JSON.stringify(profile),keepConnected);
     setSessionToken(response.accessToken);setUser(profile);setStatus("authenticated");

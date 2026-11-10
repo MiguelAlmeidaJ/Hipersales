@@ -29,11 +29,11 @@ export default function RootLayout() {
 }
 
 function AppShell(){
-  const {status,user}=useSession();
+  const {status}=useSession();
   const segments=useSegments();
   const first=String(segments[0]||"");
-  const hide=first===""||first==="(app)"||first==="login"||first==="change-password";
-  const showNavigation=status==="authenticated"&&!user?.must_change_password&&!hide;
+  const hide=first===""||first==="(app)"||first==="login";
+  const showNavigation=status==="authenticated"&&!hide;
   return <View style={styles.shell}><StatusBar style="dark"/><View style={styles.stack}><Stack screenOptions={{headerShown:false,animation:"fade"}}/></View>{showNavigation?<BottomNavigation/>:null}</View>;
 }
 

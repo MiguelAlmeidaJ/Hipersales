@@ -1,4 +1,4 @@
-import { mockApi, mockLogin } from "@/mocks/mock-api";
+import { MockApiError, mockApi, mockLogin } from "@/mocks/mock-api";
 
 const defaultApiUrl = "https://api.hipersalesweb.com.br/api/v1";
 const defaultTimeoutMs = 15_000;
@@ -50,7 +50,7 @@ async function fetchCnpjSource(url: string, headers?: Record<string, string>): P
 }
 
 export async function lookupCnpj(cnpj: string): Promise<CnpjLookupData> {
-  if (useMockApi) return mockApi<CnpjLookupData>((`/api/integrations/cnpj?cnpj=${encodeURIComponent(cnpj)}`) as `/api/${string}`);
+  if (useMockApi) return mockApi<CnpjLookupData>(`/integrations/cnpj?cnpj=${encodeURIComponent(cnpj)}`);
   const cacheKey = cnpj.toUpperCase();
   const cached = cnpjLookupCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
@@ -160,7 +160,7 @@ function externalRoute(path: string, method = "GET"): string | null {
   if (pathname === "/api/orders") return method === "GET" ? withDefaultPageSize("/pedidos", query) : "/pedidos";
   if (pathname === "/api/proposals") return withDefaultPageSize("/pedidos", query);
   if (pathname === "/api/sales") return `/vendas${query ? `?${query}` : ""}`;
-  if (pathname === "/api/invoices") return withDefaultPageSize("/notas-fiscais", query);
+  if (pathname === "/api/invoices") return withDefaultPageSize("/notasfiscais", query);
   if (pathname === "/api/mobile/push-token") return `/mobile/push-token${query ? `?${query}` : ""}`;
   if (pathname === "/api/notifications" || pathname === "/api/notifications/unread-count" || pathname === "/api/notifications/read-all") {
     return `${pathname.slice("/api".length)}${query ? `?${query}` : ""}`;
@@ -171,12 +171,10 @@ function externalRoute(path: string, method = "GET"): string | null {
   if (orderMatch) return `/pedidos/${orderMatch[1]}${orderMatch[2] || ""}`;
   const proposalMatch = pathname.match(/^\/api\/proposals\/(\d+)$/);
   if (proposalMatch) return `/pedidos/${proposalMatch[1]}`;
-  const orderPdfMatch = pathname.match(/^\/api\/proposals\/(\d+)\/pdf$/);
-  if (orderPdfMatch) return `/pedidos/${orderPdfMatch[1]}/pdf`;
-  const invoiceMatch = pathname.match(/^\/api\/(?:invoices\/(\d+)\/pdf|proposals\/(\d+)\/invoice-pdf)$/);
-  if (invoiceMatch) return `/notas-fiscais/${invoiceMatch[1] || invoiceMatch[2]}/pdf`;
+  const invoiceMatch = pathname.match(/^\/api\/invoices\/(\d+)\/pdf$/);
+  if (invoiceMatch) return `/notasfiscais/${invoiceMatch[1]}/pdf`;
   const invoiceDetailMatch = pathname.match(/^\/api\/invoices\/(\d+)$/);
-  if (invoiceDetailMatch) return `/notas-fiscais/${invoiceDetailMatch[1]}`;
+  if (invoiceDetailMatch) return `/notasfiscais/${invoiceDetailMatch[1]}`;
   if (pathname === "/api/support/activity-branches") return "/apoio/ramos-atividade";
   if (pathname === "/api/support/service-regions") return "/apoio/regioes-atendimento";
   if (pathname === "/api/support/cities") return `/apoio/municipios${query ? `?${query}` : ""}`;
@@ -367,8 +365,7 @@ function mapCustomerPayload(body: BodyInit | null | undefined) {
 }
 
 export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): Promise<T> {
-  if(useMockApi)return mockApi<T>(path,options);
-  ensureSecureProductionUrl();
+  if(!useMockApi)ensureSecureProductionUrl();
   const method = String(options.method || "GET").toUpperCase();
   const route = externalRoute(path, method);
   if (!route) throw new ApiError("Funcionalidade ainda não adaptada à API externa.",0,"configuration");
@@ -384,23 +381,23 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
     if (path.split("?")[0] === "/api/customer-requests" || /^\/api\/customer-requests\/\d+$/.test(path.split("?")[0]) || (path.split("?")[0] === "/api/admin/customers" && method === "POST")) {
       fetchOptions.body = mapCustomerPayload(fetchOptions.body);
     }
-    const response = await fetch(`${apiUrl}${route}`, { ...fetchOptions, headers, signal: controller.signal });
-    const data: unknown = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const message =
-        typeof data === "object" && data !== null && "error" in data
-          ? String(data.error)
-          : response.status >= 500
-            ? "O serviço está temporariamente indisponível."
-            : "Não foi possível concluir a solicitação.";
-      if (typeof data === "object" && data !== null && "erro" in data) {
-        const errorData=(data as {erro?:{codigo?:string;mensagem?:string;campo?:string}}).erro;
-        const remoteCode=String(errorData?.codigo||"");
-        const messageText=orderErrorMessages[remoteCode] || errorData?.mensagem;
-        if(messageText){if(response.status===401)unauthorizedHandler?.();throw new ApiError(errorData?.campo?`${messageText} Campo: ${errorData.campo}.`:messageText,response.status,response.status===401?"unauthorized":"client",remoteCode,errorData?.campo);}
+    let data:unknown;
+    if(useMockApi){
+      data=await mockApi(route,{...fetchOptions,headers,signal:controller.signal});
+    }else{
+      const response=await fetch(`${apiUrl}${route}`,{...fetchOptions,headers,signal:controller.signal});
+      data=await response.json().catch(()=>({}));
+      if(!response.ok){
+        const message=typeof data==="object"&&data!==null&&"error" in data?String(data.error):response.status>=500?"O serviço está temporariamente indisponível.":"Não foi possível concluir a solicitação.";
+        if(typeof data==="object"&&data!==null&&"erro" in data){
+          const errorData=(data as {erro?:{codigo?:string;mensagem?:string;campo?:string}}).erro;
+          const remoteCode=String(errorData?.codigo||"");
+          const messageText=orderErrorMessages[remoteCode]||errorData?.mensagem;
+          if(messageText){if(response.status===401)unauthorizedHandler?.();throw new ApiError(errorData?.campo?`${messageText} Campo: ${errorData.campo}.`:messageText,response.status,response.status===401?"unauthorized":"client",remoteCode,errorData?.campo);}
+        }
+        if(response.status===401)unauthorizedHandler?.();
+        throw new ApiError(message,response.status,response.status===401?"unauthorized":response.status>=500?"server":"client");
       }
-      if (response.status === 401) unauthorizedHandler?.();
-      throw new ApiError(message, response.status, response.status === 401 ? "unauthorized" : response.status >= 500 ? "server" : "client");
     }
     const pathname = path.split("?")[0];
     if ((pathname === "/api/customers" || pathname === "/api/admin/customers") && method === "GET") return {customers:((data as any).itens||[]).map(normalizeCustomer)} as T;
@@ -421,6 +418,10 @@ export async function api<T>(path: `/api/${string}`, options: ApiOptions = {}): 
     return data as T;
   } catch (cause) {
     if (cause instanceof ApiError) throw cause;
+    if(cause instanceof MockApiError){
+      const message=orderErrorMessages[cause.remoteCode]||cause.message;
+      throw new ApiError(cause.field?`${message} Campo: ${cause.field}.`:message,cause.status,cause.status===401?"unauthorized":cause.status>=500?"server":"client",cause.remoteCode,cause.field);
+    }
     if (cause instanceof Error && cause.name === "AbortError") {
       throw new ApiError("A conexão demorou mais que o esperado. Tente novamente.", 0, "timeout");
     }

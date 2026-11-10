@@ -20,8 +20,6 @@ export default function AppLayout() {
 
   if (status === "anonymous") return <Redirect href="/login" />;
   if (status === "unavailable") return <Redirect href="/" />;
-  if (user?.must_change_password) return <Redirect href="/change-password" />;
-
   return (
     <Tabs
       screenOptions={({ route }) => ({
